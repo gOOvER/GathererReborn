@@ -1,0 +1,34 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+<!--
+	Gatherer Reborn Addon for World of Warcraft(tm).
+	Version: 1.0.0
+	Author: gOOvER
+	License: GNU General Public License v3.0 (GPL-3.0)
+-->
+	<Frame name="GathererFrame" hidden="true">
+		<Scripts>
+			<OnLoad>
+				Gatherer.Event.RegisterEvents(self)
+			</OnLoad>
+			<OnEvent>
+				Gatherer.Event.OnEvent(event, ...)
+			</OnEvent>
+			<OnUpdate>
+				Gatherer.Event.OnUpdate(elapsed)
+			</OnUpdate>
+		</Scripts>
+	</Frame>
+
+	<GameTooltip name="GathererTooltipTemplate" virtual="true" frameStrata="TOOLTIP" hidden="true" inherits="GameTooltipTemplate">
+		<Scripts>
+			<OnLoad>
+				if ( self.SetBackdropBorderColor and TOOLTIP_DEFAULT_COLOR ) then
+					self:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b);
+				end
+				if ( self.SetBackdropColor and TOOLTIP_DEFAULT_BACKGROUND_COLOR ) then
+					self:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
+				end
+			</OnLoad>
+		</Scripts>
+	</GameTooltip>
+</Ui>

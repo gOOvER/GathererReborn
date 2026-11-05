@@ -1,0 +1,91 @@
+## Interface: 11508, 11509, 16001, 20505, 20506, 30405, 38002, 40402, 50503, 50504, 120007, 120100, 120105, 120107
+## Interface-Mainline: 120107, 120105, 120100, 120007
+## Interface-Camelot: 16001
+## Interface-Classic: 11509, 11508
+## Interface-BCC: 20506, 20505
+## Interface-Wrath: 38002, 30405
+## Interface-Cata: 40402
+## Interface-Mists: 50504, 50503
+## 
+## Title: Gatherer Reborn
+## 
+## Notes: Gatherer Reborn remembers your gathering locations (herbs, ores, treasures, archaeology) and displays them on the World Map, Minimap, or in a 3D HUD overlay, with automatic guild and group sharing.
+## Notes-itIT: Gatherer Reborn è un addon che ti consente di memorizzare i luoghi di raccolta e vederli tutti o alcuni sulla mappa principale, la tua minimappa, o su un'interfaccia a schermo. Consente inoltre di condividere le scoperte con la tua gilda, raid o i tuoi amici.
+## Notes-ptBR: Gatherer Reborn é um addon que permite que você lembre-se dos locais de coleta e visualize-os em seu mapa principal, seu minimapa, ou em uma exibição no seu HUD. Ele também permite que você compartilhe suas descobertas com a sua guilda, raid ou seus amigos.
+## Notes-frFR: Gatherer Reborn est un addon qui vous permet de mémoriser les emplacements de collecte et de les revoir sur votre Carte, Minimap ou de les afficher sur une interface à l'écran. Il vous permet également de faire un partage des marques découvertes avec votre guilde, raid ou vos amis en groupe.
+## Notes-deDE: Gatherer Reborn speichert deine Fundorte von Kräutern, Erzen, Schätzen sowie Archäologie-Funden und zeigt sie auf der Weltkarte, der Minikarte oder im HUD an. Fundorte lassen sich zudem automatisch mit Gilde, Gruppe und Schlachtzug teilen.
+## Notes-zhTW: 採集助手(Gatherer)是一個允許你紀錄你的採集點位置並顯示於你的大小地圖和採集助手附加的抬頭顯示模式的插件。並允許你向你的隊友、團隊成員以及朋友來分享你的採集資料。
+## Notes-ruRU: Gatherer это дополнение, которое позволяет Вам запоминать точки сбора ресурсов и показывать их на Вашей карте или радаре, или внутри интерфейса игры. Также оно позволяет расшаривать свои находки с Вашей гильдией или рейдом.
+## Notes-zhCN: 采集助手(Gatherer)是一个允许你纪录你的采集点位置并显示于你的大小地图和采集助手附加的抬头显示模式的插件。并允许你向你的队友、团队成员以及朋友来分享你的采集数据。
+## Notes-esES: Gatherer es un addon que te permite recordar las zonas de recolección y verlas ya sea en todo el mapa del mundo o en tu minimapa. Tambien te permite compartir tus zonas de recolección con tu hermandad, raids o amigos.
+## Notes-trTR: Gatherer, sizin toplama bölgelerinizi hatırlayan ve bunları oyun içinde, haritanızda ve küçük haritanızda göstermeyi sağlayan bir eklentidir. Ayrıca bu bilgileri arkadaşlarınız, guild veya raid'de ki kişilerle paylaşır.
+## Notes-esMX: Este es un accesorio que te permite rastrear los nodos de las profesiones de herboristeria y mineria.  'Lordnica'
+## 
+## Version: 1.0.0
+## Author: gOOvER
+## X-License: GPL-3.0
+## X-Website: https://github.com/gOOvER/GathererReborn
+## IconTexture: 133939
+## AddonCompartmentFunc: Gatherer_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: Gatherer_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: Gatherer_OnAddonCompartmentLeave
+## 
+## SavedVariables: GatherItems, Gatherer_DropRates, Gatherer_SavedSettings_AccountWide, Gatherer_DynamicNodes, Gatherer_SharingBlacklist
+## SavedVariablesPerCharacter: Gatherer_SavedSettings_PerCharacter
+## OptionalDeps: Ace3, LibSharedMedia-3.0, LibDBIcon-1.0, LibDataBroker-1.1, LibStub
+
+#@no-lib-strip@
+embeds.xml
+#@end-no-lib-strip@
+
+# Core: Polyfills, Scanner, Base Object & Mapping Engine
+Core\GatherPolyfills.lua
+Core\GatherScanner.lua
+Core\GatherObjects.lua
+Core\GatherMap.lua
+
+# Data & Locales
+Data\GatherNodes.lua
+Locales\GatherStrings.lua
+Locales\GatherLocale.lua
+
+# Core: Initialization & Events
+Core\GatherMain.lua
+Core\GatherEvent.lua
+
+# GUI: Notification System
+GUI\GatherNotifications.lua
+GUI\GatherNotifications.xml
+
+# Data: Icons & Zone Tokens
+Data\GatherIcons.lua
+Data\GatherZoneTokens.lua
+
+# Core: Storage, Base Frame & Utilities
+Core\GatherStorage.lua
+Core\GatherMain.xml
+Core\GatherUtil.lua
+
+# Core & Data Modules
+Core\GatherApi.lua
+Data\GatherCategories.lua
+Core\GatherComm.lua
+Core\GatherCommand.lua
+Core\GatherConfig.lua
+Data\GatherConstants.lua
+Core\GatherConvert.lua
+Data\GatherDropRates.lua
+Core\GatherPlugins.lua
+Data\GatherSpecialCases.lua
+
+# GUI: Ace3 Options, Map/Minimap Notes, HUD, Tooltips, Reports & Search
+GUI\GatherAceGUI.lua
+GUI\GatherMapNotes.xml
+GUI\GatherMiniIcon.lua
+GUI\GatherMiniNotes.xml
+GUI\GatherHUD.lua
+GUI\GatherHUD.xml
+GUI\GatherTooltip.lua
+GUI\GatherReport.lua
+GUI\ReportFilters.lua
+GUI\GathererNodeSearch.lua

@@ -1,0 +1,67 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+<!--
+	Gatherer Reborn Addon for World of Warcraft(tm).
+	Version: 1.0.0
+	Author: gOOvER
+	License: GNU General Public License v3.0 (GPL-3.0)
+-->
+	<Script file = "GatherMapNotes.lua"/>
+	
+	<!-- World Map Display Templates -->
+	<Frame name="GathererMapOverlayTemplate" hidden="true" virtual="true" setAllPoints="true">
+		<Scripts>
+			<OnLoad>
+				if self:GetParent() then
+					self:SetFrameLevel(self:GetParent():GetFrameLevel() + 2)
+					if self:GetParent():GetWidth() > 0 then
+						self:SetWidth(self:GetParent():GetWidth())
+						self:SetHeight(self:GetParent():GetHeight())
+					end
+				end
+			</OnLoad>
+			<OnHide>
+				Gatherer.MapNotes.MapOverlayFrame_OnHide(self)
+			</OnHide>
+		</Scripts>
+	</Frame>
+	<Button name="GatherMainTemplate" hidden="true" virtual="true">
+		<Size x="12" y="12"/>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+				self:SetFrameLevel(self:GetParent():GetFrameLevel() + 1)
+			</OnLoad>
+			<OnEnter>
+				Gatherer.MapNotes.MapNoteOnEnter(self)
+			</OnEnter>
+			<OnLeave>
+				Gatherer.Tooltip.HideTooltips()
+			</OnLeave>
+			<OnMouseUp>
+				if ( WorldMapButton and WorldMapButton.GetScript ) then
+					local func = WorldMapButton:GetScript("OnMouseUp")
+					if ( func ) then
+						func(WorldMapButton, button)
+					end
+				end
+			</OnMouseUp>
+		</Scripts>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentTexture" file="Interface\Icons\INV_Misc_QuestionMark" setAllPoints="true"/>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Parent Frame for all World Map Note Objects -->
+	<Frame name="GathererMapOverlayParent" inherits="GathererMapOverlayTemplate" parent="WorldMapButton">
+		<Scripts>
+			<OnShow>
+				Gatherer.MapNotes.MapDraw()
+			</OnShow>
+		</Scripts>
+	</Frame>
+</Ui>
