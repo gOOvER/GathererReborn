@@ -88,13 +88,11 @@ end
 
 local function detectGatherTypeFromTooltip()
 	if not GameTooltip or not GameTooltip:IsShown() then return nil end
-	local okUnit, hasUnit = pcall(function() return GameTooltip:GetUnit() end)
-	if okUnit and isSafeValue(hasUnit) and hasUnit then return nil end
 
 	for i = 2, math.min(4, GameTooltip:NumLines() or 0) do
 		local lineObj = _G["GameTooltipTextLeft" .. i]
-		local text = lineObj and lineObj:GetText()
-		if isSafeString(text) then
+		local ok, text = pcall(function() return lineObj and lineObj:GetText() end)
+		if ok and isSafeString(text) then
 			if Gatherer and Gatherer.Locale and Gatherer.Locale.TrClient then
 				local herbName = Gatherer.Locale.TrClient("TRADE_HERBALISM")
 				local mineName = Gatherer.Locale.TrClient("TRADE_MINING")
@@ -107,22 +105,24 @@ local function detectGatherTypeFromTooltip()
 end
 
 function Scanner.SetTooltip()
-	if not GameTooltip or not GameTooltip:IsShown() then return end
-	local owner = GameTooltip:GetOwner()
-	if owner and owner ~= UIParent and owner ~= WorldFrame then return end
-	local okUnit, hasUnit = pcall(function() return GameTooltip:GetUnit() end)
-	if okUnit and isSafeValue(hasUnit) and hasUnit then return end
+	pcall(function()
+		if not GameTooltip or not GameTooltip:IsShown() then return end
+		if UnitExists and UnitExists("mouseover") then return end
+		local owner = GameTooltip:GetOwner()
+		if owner and owner ~= UIParent and owner ~= WorldFrame then return end
 
-	local line1 = _G["GameTooltipTextLeft1"]
-	local text = line1 and line1:GetText()
-	if isSafeString(text) then
-		lastTip.tip = text
-		lastTip.time = GetTime()
-		lastTip.gType = detectGatherTypeFromTooltip()
-		if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[text] and lastTip.gType and Gatherer.Nodes.RegisterDynamicNode then
-			Gatherer.Nodes.RegisterDynamicNode(text, lastTip.gType)
+		local line1 = _G["GameTooltipTextLeft1"]
+		if not line1 then return end
+		local text = line1:GetText()
+		if isSafeString(text) then
+			lastTip.tip = text
+			lastTip.time = GetTime()
+			lastTip.gType = detectGatherTypeFromTooltip()
+			if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[text] and lastTip.gType and Gatherer.Nodes.RegisterDynamicNode then
+				Gatherer.Nodes.RegisterDynamicNode(text, lastTip.gType)
+			end
 		end
-	end
+	end)
 end
 
 function Scanner.GetLastTip()

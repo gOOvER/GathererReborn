@@ -63,6 +63,8 @@ local reqMINE2 = LOCKED_WITH_SPELL_KNOWN and LOCKED_WITH_SPELL_KNOWN:format(_trC
 local GAME_OBJECT_REQUIRES_REWRITE = _trC("GAME_OBJECT_REQUIRES_REWRITE") or _trL("GAME_OBJECT_REQUIRES_REWRITE")
 
 function Gatherer.GameTooltip_OnShow()
+	pcall(function()
+		if UnitExists and UnitExists("mouseover") then return end
 		if GameTooltip:NumLines() ~= 2 then return end
 		
 		local line = {}
@@ -109,6 +111,7 @@ function Gatherer.GameTooltip_OnShow()
 		
 		line[2]:SetText(locked_format_string:format(GAME_OBJECT_REQUIRES_REWRITE:format(profession, skill)))
 		GameTooltip:Show()
+	end)
 end
 
 GameTooltip:HookScript("OnShow", Gatherer.GameTooltip_OnShow)
