@@ -76,6 +76,9 @@ function Gatherer.GameTooltip_OnShow()
 		
 		local profession, locked_format_string;
 		local requires = line[2]:GetText()
+		local nodeName = line[1]:GetText()
+		if not Gatherer.IsSafeString(requires) or not Gatherer.IsSafeString(nodeName) then return end
+
 		if ( requires == reqHERB1 ) then
 			profession = _trC("TRADE_HERBALISM")
 			locked_format_string = LOCKED_WITH_SPELL
@@ -95,7 +98,6 @@ function Gatherer.GameTooltip_OnShow()
 		end
 		if not profession then return end
 		
-		local nodeName = line[1]:GetText()
 		local nodeID = Gatherer.Nodes.Names[nodeName]
 		if not nodeID then return end
 		

@@ -39,8 +39,29 @@ local OPEN_SPELLS = {
 	[3365] = true, [6247] = true, [6477] = true, [6478] = true, [22810] = true,
 }
 
+local function isSafeString(val)
+	if Gatherer and Gatherer.IsSafeString then
+		return Gatherer.IsSafeString(val)
+	end
+	if type(val) ~= "string" then return false end
+	if _G.issecretvalue and _G.issecretvalue(val) then return false end
+	if _G.canaccessvalue and not _G.canaccessvalue(val) then return false end
+	local ok, nonEmpty = pcall(function() return val ~= "" end)
+	return ok and nonEmpty
+end
+
+local function isSafeValue(val)
+	if Gatherer and Gatherer.IsSafeValue then
+		return Gatherer.IsSafeValue(val)
+	end
+	if val == nil then return false end
+	if _G.issecretvalue and _G.issecretvalue(val) then return false end
+	if _G.canaccessvalue and not _G.canaccessvalue(val) then return false end
+	return true
+end
+
 local function detectGatherTypeFromSpell(spellID)
-	if not spellID then return nil end
+	if not isSafeValue(spellID) or type(spellID) ~= "number" then return nil end
 	if MINE_SPELLS[spellID] then return "MINE" end
 	if HERB_SPELLS[spellID] then return "HERB" end
 	if ARCH_SPELLS[spellID] then return "ARCH" end
@@ -55,7 +76,7 @@ local function detectGatherTypeFromSpell(spellID)
 		return "ARCH"
 	end
 
-	if name and Gatherer and Gatherer.Locale and Gatherer.Locale.TrClient then
+	if isSafeString(name) and Gatherer and Gatherer.Locale and Gatherer.Locale.TrClient then
 		local herbName = Gatherer.Locale.TrClient("TRADE_HERBALISM")
 		local mineName = Gatherer.Locale.TrClient("TRADE_MINING")
 		if herbName and name:find(herbName, 1, true) then return "HERB" end
@@ -67,12 +88,13 @@ end
 
 local function detectGatherTypeFromTooltip()
 	if not GameTooltip or not GameTooltip:IsShown() then return nil end
-	if GameTooltip:GetUnit() then return nil end
+	local okUnit, hasUnit = pcall(function() return GameTooltip:GetUnit() end)
+	if okUnit and isSafeValue(hasUnit) and hasUnit then return nil end
 
 	for i = 2, math.min(4, GameTooltip:NumLines() or 0) do
 		local lineObj = _G["GameTooltipTextLeft" .. i]
 		local text = lineObj and lineObj:GetText()
-		if text then
+		if isSafeString(text) then
 			if Gatherer and Gatherer.Locale and Gatherer.Locale.TrClient then
 				local herbName = Gatherer.Locale.TrClient("TRADE_HERBALISM")
 				local mineName = Gatherer.Locale.TrClient("TRADE_MINING")
@@ -86,10 +108,14 @@ end
 
 function Scanner.SetTooltip()
 	if not GameTooltip or not GameTooltip:IsShown() then return end
-	if GameTooltip:GetUnit() then return end
+	local owner = GameTooltip:GetOwner()
+	if owner and owner ~= UIParent and owner ~= WorldFrame then return end
+	local okUnit, hasUnit = pcall(function() return GameTooltip:GetUnit() end)
+	if okUnit and isSafeValue(hasUnit) and hasUnit then return end
+
 	local line1 = _G["GameTooltipTextLeft1"]
 	local text = line1 and line1:GetText()
-	if text and text ~= "" then
+	if isSafeString(text) then
 		lastTip.tip = text
 		lastTip.time = GetTime()
 		lastTip.gType = detectGatherTypeFromTooltip()
@@ -220,14 +246,16 @@ function Scanner.Init()
 	scannerFrame:SetScript("OnEvent", function(self, event, ...)
 		if event == "UNIT_SPELLCAST_SENT" then
 			local unit, target, castGUID, spellID = ...
-			if unit == "player" then
+			if isSafeString(unit) and unit == "player" then
 				-- In older clients UNIT_SPELLCAST_SENT passed (unit, spellName, rank, target)
-				if type(spellID) ~= "number" then
-					local spellName, _, oldTarget, oldSpellID = select(2, ...)
-					target = oldTarget or target
-					spellID = tonumber(oldSpellID)
+				if not isSafeValue(spellID) or type(spellID) ~= "number" then
+					local _, _, oldTarget, oldSpellID = select(2, ...)
+					if isSafeString(oldTarget) then
+						target = oldTarget
+					end
+					spellID = isSafeValue(oldSpellID) and tonumber(oldSpellID) or nil
 				end
-				if target and target ~= "" then
+				if isSafeString(target) then
 					lastCast.target = target
 					lastCast.spellID = spellID
 					lastCast.gType = detectGatherTypeFromSpell(spellID) or lastTip.gType
@@ -241,14 +269,13 @@ function Scanner.Init()
 			processLoot()
 		elseif event == "LOOT_CLOSED" then
 			lootProcessed = false
+		elseif event == "UPDATE_MOUSEOVER_UNIT" then
+			Scanner.SetTooltip()
 		end
 	end)
 
 	if GameTooltip then
 		GameTooltip:HookScript("OnShow", function()
-			Scanner.SetTooltip()
-		end)
-		GameTooltip:HookScript("OnUpdate", function()
 			Scanner.SetTooltip()
 		end)
 	end

@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated profession skill detection (`GatherUtil.lua`) to support expansion-tiered profession skills where base rank can be `0`.
 
 ### Fixed
+- Fixed red question mark icons (`134400` / `INV_Misc_QuestionMark`) in the Herbalism, Mining, and Treasure filter lists by detecting question-mark returns from `C_Item.GetItemIconByID` (when expansion items do not exist in the current client flavor DB) and mapping all `Herb\*`, `Mine\*`, and `Open\*` icon categories to universal built-in FileDataIDs in `Core/GatherUtil.lua`.
+- Fixed WoW 12.x `<secret string>` taint comparison error in `Core/GatherScanner.lua` and `GUI/GatherTooltip.lua` (`attempt to compare local 'text' (a secret string value)`) by adding `Gatherer.IsSafeString` / `Gatherer.IsSafeValue` checks (`issecretvalue`, `canaccessvalue`, `pcall`) and ignoring non-world UI frame tooltips.
 - Fixed `AceConfigRegistry-3.0:ValidateOptionsTable(): unknown parameter` error when opening the Ace3 options dialog by removing unsupported `imageWidth` / `imageHeight` fields from `toggle` entries in `GUI/GatherAceGUI.lua`.
 - Fixed keyboard input and mouse click lock at startup caused by an unparented `CreateFrame("EditBox")` (with default `autoFocus = true`) and global Frame/EditBox metatable overrides in `Core/GatherPolyfills.lua`, as well as unfocused `EditBox` instances in `GUI/GatherReport.lua` and `GUI/GathererNodeSearch.lua` and mouse-enabled HUD frames in `GUI/GatherHUD.xml` / `GUI/GatherHUD.lua`.
 - Fixed `ADDON_LOADED` check in `Core/GatherEvent.lua` and `Core/GatherStorage.lua` so initialization and database loading trigger properly under the AddOn folder name `GathererReborn`.

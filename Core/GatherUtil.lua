@@ -301,6 +301,7 @@ function Gatherer.Util.ParseFormattedMessage(format, message)
 end
 
 local BuiltinCategoryIcons = {
+	-- Treasure / Openable Nodes
 	["Open\\Chest"] = 132594,
 	["Open\\Crate"] = 132763,
 	["Open\\Barrel"] = 132622,
@@ -317,17 +318,133 @@ local BuiltinCategoryIcons = {
 	["Open\\ShellfishTrap"] = 132596,
 	["UngoroCrystal"] = 134077,
 	["UngoroSprout"] = 134221,
+
+	-- Mining Nodes (Classic-compatible FileDataIDs available across all clients)
+	["Mine\\Copper"] = 134566,
+	["Mine\\Tin"] = 134579,
+	["Mine\\Silver"] = 134577,
+	["Mine\\Iron"] = 134572,
+	["Mine\\Gold"] = 134570,
+	["Mine\\Mithril"] = 134576,
+	["Mine\\TrueSilver"] = 134580,
+	["Mine\\Thorium"] = 134578,
+	["Mine\\RichThorium"] = 134578,
+	["Mine\\DarkIron"] = 134573,
+	["Mine\\LesserBloodstone"] = 134574,
+	["Mine\\FelIron"] = 134569,
+	["Mine\\Adamantite"] = 134561,
+	["Mine\\Khorium"] = 134575,
+	["Mine\\Nethercite"] = 134568,
+	["Mine\\Cobalt"] = 134565,
+	["Mine\\Saronite"] = 134576,
+	["Mine\\Titanium"] = 134580,
+	["Mine\\Obsidium"] = 134573,
+	["Mine\\Pyrite"] = 134570,
+	["Mine\\Elementium"] = 134574,
+	["Mine\\GhostIron"] = 134572,
+	["Mine\\Kyparite"] = 134561,
+	["Mine\\Trillium"] = 134580,
+	["Mine\\TrueIron"] = 134572,
+	["Mine\\Blackrock"] = 134573,
+	["Mine\\Leystone"] = 134576,
+	["Mine\\Felslate"] = 134569,
+	["Mine\\EmpyriumDeposit"] = 134575,
+	["Mine\\EmpyriumSeam"] = 134575,
+
+	-- Herbalism Nodes (Classic-compatible FileDataIDs available across all clients)
+	["Herb\\Silverleaf"] = 134199,
+	["Herb\\Peacebloom"] = 134187,
+	["Herb\\Earthroot"] = 134196,
+	["Herb\\Mageroyal"] = 134193,
+	["Herb\\Briarthorn"] = 134200,
+	["Herb\\Bruiseweed"] = 134190,
+	["Herb\\WildSteelbloom"] = 134186,
+	["Herb\\Kingsblood"] = 134192,
+	["Herb\\GraveMoss"] = 134191,
+	["Herb\\Liferoot"] = 134201,
+	["Herb\\Fadeleaf"] = 134197,
+	["Herb\\KhadgarsWhisker"] = 134194,
+	["Herb\\Wintersbite"] = 134188,
+	["Herb\\Stranglekelp"] = 134198,
+	["Herb\\Goldthorn"] = 134195,
+	["Herb\\Firebloom"] = 134209,
+	["Herb\\PurpleLotus"] = 134207,
+	["Herb\\ArthasTears"] = 134203,
+	["Herb\\Sungrass"] = 134208,
+	["Herb\\Blindweed"] = 134204,
+	["Herb\\GhostMushroom"] = 134202,
+	["Herb\\Gromsblood"] = 134206,
+	["Herb\\GoldenSansam"] = 134221,
+	["Herb\\Dreamfoil"] = 134213,
+	["Herb\\MountainSilversage"] = 134215,
+	["Herb\\Plaguebloom"] = 134219,
+	["Herb\\Icecap"] = 134214,
+	["Herb\\BlackLotus"] = 134212,
+	["Herb\\Felweed"] = 134190,
+	["Herb\\DreamingGlory"] = 134213,
+	["Herb\\Ragveil"] = 134202,
+	["Herb\\FlameCap"] = 134209,
+	["Herb\\Terocone"] = 134221,
+	["Herb\\AncientLichen"] = 134191,
+	["Herb\\Netherbloom"] = 134207,
+	["Herb\\NightmareVine"] = 134206,
+	["Herb\\ManaThistle"] = 134214,
+	["Herb\\Netherdust"] = 134203,
+	["Herb\\GoldClover"] = 134208,
+	["Herb\\TigerLily"] = 134186,
+	["Herb\\TalandrasRose"] = 134187,
+	["Herb\\LichBloom"] = 134219,
+	["Herb\\IceThorn"] = 134214,
+	["Herb\\FrostLotus"] = 134212,
+	["Herb\\AddersTongue"] = 134198,
+	["Herb\\Cinderbloom"] = 134209,
+	["Herb\\Stormvine"] = 134213,
+	["Herb\\AzsharasVeil"] = 134207,
+	["Herb\\Heartblossom"] = 134192,
+	["Herb\\TwilightJasmine"] = 134203,
+	["Herb\\Whiptail"] = 134201,
+	["Herb\\GreenTeaLeaf"] = 134199,
+	["Herb\\Silkweed"] = 134197,
+	["Herb\\SnowLilly"] = 134188,
+	["Herb\\RainPoppy"] = 134187,
+	["Herb\\GoldenLotus"] = 134208,
+	["Herb\\FoolsCap"] = 134202,
+	["Herb\\ShaTouchedHerb"] = 134212,
+	["Herb\\Frostweed"] = 134214,
+	["Herb\\Fireweed"] = 134209,
+	["Herb\\GorgrondFlytrap"] = 134221,
+	["Herb\\Starflower"] = 134186,
+	["Herb\\NagrandArrowbloom"] = 134192,
+	["Herb\\TaladorOrchid"] = 134207,
+	["Herb\\WitheredHerb"] = 134196,
+	["Herb\\Aethril"] = 134204,
+	["Herb\\Dreamleaf"] = 134213,
+	["Herb\\Foxflower"] = 134209,
+	["Herb\\Fjarnskaggl"] = 134195,
+	["Herb\\StarlightRose"] = 134203,
+	["Herb\\FelEncrustedHerb"] = 134206,
+	["Herb\\FelEncrustedHerbCluster"] = 134206,
+	["Herb\\AstralGlory"] = 134215,
 }
 
 local BuiltinGatherTypeIcons = {
 	MINE = 134708,
 	HERB = 136246,
 	OPEN = 132594,
-	ARCH = 441139,
+	ARCH = 134435,
 }
 
+local function isQuestionMarkIcon(tex)
+	if not tex then return true end
+	if tex == 134400 then return true end
+	if type(tex) == "string" and tex:lower():find("inv_misc_questionmark", 1, true) then
+		return true
+	end
+	return false
+end
+
 function Gatherer.Util.GetNodeTexture( mapZone, gatherType, index )
-	local texture, trimTexture = BuiltinGatherTypeIcons[gatherType] or 134400, true
+	local texture, trimTexture = BuiltinGatherTypeIcons[gatherType] or 132594, true
 	local maxCount = -1
 	for _, gatherID, count in Gatherer.Storage.GetNodeGatherNames(mapZone, gatherType, index) do
 		if ( count > maxCount ) then
@@ -344,6 +461,9 @@ function Gatherer.Util.GetGatherTexture( nodeID )
 
 	if ( Gatherer.Nodes.PrimaryItems[nodeID] ) then
 		selectedTexture = GetItemIcon(Gatherer.Nodes.PrimaryItems[nodeID])
+		if isQuestionMarkIcon(selectedTexture) then
+			selectedTexture = nil
+		end
 		trimTexture = selectedTexture and true or false
 	end
 
@@ -355,6 +475,9 @@ function Gatherer.Util.GetGatherTexture( nodeID )
 				primaryName, _, nodeTexture = GetCurrencyInfo(-prime)
 			else
 				nodeTexture = GetItemIcon(prime) or select(10, GetItemInfo(prime))
+			end
+			if isQuestionMarkIcon(nodeTexture) then
+				nodeTexture = nil
 			end
 			selectedTexture = nodeTexture
 			trimTexture = selectedTexture and true or false
@@ -372,7 +495,7 @@ function Gatherer.Util.GetGatherTexture( nodeID )
 	-- Fallback by gatherType
 	if ( not selectedTexture ) then
 		local gType = Gatherer.Nodes.Objects[nodeID]
-		selectedTexture = BuiltinGatherTypeIcons[gType] or 134400
+		selectedTexture = BuiltinGatherTypeIcons[gType] or 132594
 		trimTexture = true
 	end
 

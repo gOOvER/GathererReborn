@@ -8,6 +8,22 @@ local _G = _G
 Gatherer = Gatherer or {}
 Gatherer.UI = Gatherer.UI or {}
 
+-- Helper to safely inspect strings without triggering WoW 12.x '<secret string>' taint errors
+function Gatherer.IsSafeString(val)
+	if type(val) ~= "string" then return false end
+	if _G.issecretvalue and _G.issecretvalue(val) then return false end
+	if _G.canaccessvalue and not _G.canaccessvalue(val) then return false end
+	local ok, nonEmpty = pcall(function() return val ~= "" end)
+	return ok and nonEmpty
+end
+
+function Gatherer.IsSafeValue(val)
+	if val == nil then return false end
+	if _G.issecretvalue and _G.issecretvalue(val) then return false end
+	if _G.canaccessvalue and not _G.canaccessvalue(val) then return false end
+	return true
+end
+
 --------------------------------------------------------------------------
 -- 1. Lua & WoW API Polyfills (Retail 11.x / 12.x / Classic Forever)
 --------------------------------------------------------------------------
