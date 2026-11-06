@@ -139,7 +139,7 @@ local function harvestModernMaps()
 		}
 	end
 
-	-- Scan Cosmic (946) and World (947) roots, plus direct IDs 1..3000 for future expansions
+	-- Scan Cosmic (946) and World (947) roots, plus direct IDs 1..3500 for future expansions
 	local roots = { 946, 947 }
 	for _, rootID in ipairs(roots) do
 		local conts = C_Map.GetMapChildrenInfo(rootID, Enum and Enum.UIMapType and Enum.UIMapType.Continent or 2, true)
@@ -151,11 +151,85 @@ local function harvestModernMaps()
 	end
 
 	-- Fallback scan if root scan returned nothing or missed standalone continents/worlds
-	for mapID = 1, 3000 do
+	for mapID = 1, 3500 do
 		local info = C_Map.GetMapInfo(mapID)
 		if info and info.mapType == (Enum and Enum.UIMapType and Enum.UIMapType.Continent or 2) then
 			addContinent(info)
 		end
+	end
+
+	-- Catch standalone/custom zones (e.g. WoW Forever custom islands/zones like 2521 Zephras Isle, 2548 Riverglades, 2652 Shen'dralas)
+	local orphanZones = {}
+	for mapID = 1, 3500 do
+		if not seenZones[mapID] and not seenContinents[mapID] then
+			local info = C_Map.GetMapInfo(mapID)
+			if info and info.mapID then
+				local isZone = (not Enum or not Enum.UIMapType)
+					or info.mapType == Enum.UIMapType.Zone
+					or info.mapType == Enum.UIMapType.Micro
+					or info.mapType == Enum.UIMapType.Orphan
+				if isZone then
+					-- Walk up parentMapID to see if it belongs to an already-registered continent
+					local parentID = info.parentMapID
+					local targetContIdx = nil
+					local hops = 0
+					while parentID and parentID > 0 and hops < 6 do
+						hops = hops + 1
+						local parentData = Map.HarvestedMapData[parentID]
+						if parentData and parentData.cont and parentData.zone == 0 then
+							targetContIdx = parentData.cont
+							break
+						end
+						local pInfo = C_Map.GetMapInfo(parentID)
+						parentID = pInfo and pInfo.parentMapID or nil
+					end
+					if targetContIdx and continentRecords[targetContIdx] then
+						seenZones[mapID] = true
+						local rec = continentRecords[targetContIdx]
+						local zIdx = #rec.zones + 1
+						rec.zones[zIdx] = mapID
+						rec.zoneNames[zIdx] = info.name or ("Zone " .. mapID)
+						local zw, zh = queryMapSize(mapID)
+						Map.HarvestedMapData[mapID] = {
+							mapName = info.name or ("Zone " .. mapID),
+							cont = targetContIdx,
+							zone = zIdx,
+							width = zw,
+							height = zh,
+						}
+					else
+						table.insert(orphanZones, info)
+					end
+				end
+			end
+		end
+	end
+
+	if #orphanZones > 0 then
+		local contIdx = #continentRecords + 1
+		local zList = { [0] = 947 }
+		local zNames = {}
+		for _, zInfo in ipairs(orphanZones) do
+			seenZones[zInfo.mapID] = true
+			local zIdx = #zList + 1
+			zList[zIdx] = zInfo.mapID
+			zNames[zIdx] = zInfo.name or ("Zone " .. zInfo.mapID)
+			local zw, zh = queryMapSize(zInfo.mapID)
+			Map.HarvestedMapData[zInfo.mapID] = {
+				mapName = zInfo.name or ("Zone " .. zInfo.mapID),
+				cont = contIdx,
+				zone = zIdx,
+				width = zw,
+				height = zh,
+			}
+		end
+		Map.ContinentList[contIdx] = zList
+		continentRecords[contIdx] = {
+			mapID = 947,
+			name = "Azeroth",
+			zones = zList,
+			zoneNames = zNames,
+		}
 	end
 end
 
@@ -291,6 +365,14 @@ function Map:TranslateWorldMapPosition(M, F, xPos, yPos, nM, nF)
 			end
 		end
 	end
+
+	if C_Map and type(C_Map.GetMapRectOnMap) == "function" then
+		local ok, l, r, t, b = pcall(C_Map.GetMapRectOnMap, tonumber(M), tonumber(nM))
+		if ok and l and r and t and b and r > l and b > t then
+			return l + xPos * (r - l), t + yPos * (b - t)
+		end
+	end
+
 	return nil, nil
 end
 
@@ -315,6 +397,17 @@ function Map:Register_TargetMinimapChanged_Callback(func, id)
 	end
 end
 
+function Map:SetTargetMinimap(newMinimap)
+	if not newMinimap or newMinimap == processingFrame:GetParent() then return end
+	processingFrame:SetParent(newMinimap)
+	for icon in pairs(self.MinimapIcons) do
+		icon:SetParent(newMinimap)
+	end
+	for _, cb in pairs(self.TargetMinimapChanged_Callbacks) do
+		pcall(cb, newMinimap)
+	end
+end
+
 function Map:AssociateIcon(icon, group)
 	if icon then
 		self.IconAssociations[icon] = group
@@ -335,7 +428,36 @@ function Map:GetDistanceToIcon(icon)
 	return dist
 end
 
+-- Standard Minimap shapes table (supports ElvUI square/round minimap, SexyMap, BasicMinimap, Chinchilla, etc.)
+local MinimapShapes = {
+	["ROUND"]                 = { true,  true,  true,  true  },
+	["SQUARE"]                = { false, false, false, false },
+	["CORNER-TOPLEFT"]        = { true,  false, false, false },
+	["CORNER-TOPRIGHT"]       = { false, false, true,  false },
+	["CORNER-BOTTOMLEFT"]     = { false, true,  false, false },
+	["CORNER-BOTTOMRIGHT"]    = { false, false, false, true  },
+	["SIDE-LEFT"]             = { true,  true,  false, false },
+	["SIDE-RIGHT"]            = { false, false, true,  true  },
+	["SIDE-TOP"]              = { true,  false, true,  false },
+	["SIDE-BOTTOM"]           = { false, true,  false, true  },
+	["TRICORNER-TOPLEFT"]     = { true,  true,  true,  false },
+	["TRICORNER-TOPRIGHT"]    = { true,  false, true,  true  },
+	["TRICORNER-BOTTOMLEFT"]  = { true,  true,  false, true  },
+	["TRICORNER-BOTTOMRIGHT"] = { false, true,  true,  true  },
+}
+
+local function isRotateMinimapEnabled()
+	if C_Minimap and C_Minimap.IsRotateMinimapIgnored and C_Minimap.IsRotateMinimapIgnored() then
+		return false
+	end
+	if C_CVar and C_CVar.GetCVar then
+		return C_CVar.GetCVar("rotateMinimap") == "1"
+	end
+	return GetCVar and GetCVar("rotateMinimap") == "1" or false
+end
+
 local function positionMinimapIcon(icon, data, pm, pf, px, py, radius, rotateMinimap, facing)
+	local targetMinimap = processingFrame:GetParent() or Minimap
 	local dist, xDist, yDist = Map:ComputeDistance(pm, pf, px, py, data.mapID, data.mapFloor, data.x, data.y)
 	if not dist then
 		icon:Hide()
@@ -353,26 +475,56 @@ local function positionMinimapIcon(icon, data, pm, pf, px, py, radius, rotateMin
 		xDist, yDist = rx, ry
 	end
 
-	local mapW = Minimap:GetWidth() / 2
-	local mapH = Minimap:GetHeight() / 2
-	local scaleX = mapW / radius
-	local scaleY = mapH / radius
+	local mapW = targetMinimap:GetWidth() / 2
+	local mapH = targetMinimap:GetHeight() / 2
+	if mapW <= 0 or mapH <= 0 then
+		icon:Hide()
+		return
+	end
 
-	local ix = xDist * scaleX
-	local iy = -yDist * scaleY
+	local diffX = xDist / radius
+	local diffY = yDist / radius
 
-	-- Clamp to circular/square minimap edge
-	local normDist = math.sqrt((ix / mapW) ^ 2 + (iy / mapH) ^ 2)
-	if normDist > 1 then
-		ix = ix / normDist
-		iy = iy / normDist
+	local shapeName = (_G.GetMinimapShape and _G.GetMinimapShape()) or "ROUND"
+	local quadTable = MinimapShapes[shapeName] or MinimapShapes["ROUND"]
+	local isRound = true
+	if diffX ~= 0 or diffY ~= 0 then
+		local q = (diffX < 0) and 1 or 3
+		if diffY < 0 then
+			isRound = quadTable[q]
+		else
+			isRound = quadTable[q + 1]
+		end
+	end
+
+	local normDist
+	if isRound then
+		normDist = math.sqrt(diffX * diffX + diffY * diffY)
+	else
+		normDist = math.max(math.abs(diffX), math.abs(diffY))
+	end
+
+	if normDist > 0.94 then
+		diffX = diffX * (0.94 / normDist)
+		diffY = diffY * (0.94 / normDist)
 		Map.IconsOnEdge[icon] = true
 	else
 		Map.IconsOnEdge[icon] = nil
 	end
 
+	local ix = diffX * mapW
+	local iy = -diffY * mapH
+
+	if icon:GetParent() ~= targetMinimap then
+		icon:SetParent(targetMinimap)
+	end
+	local desiredLevel = (targetMinimap:GetFrameLevel() or 1) + 5
+	if icon:GetFrameLevel() < desiredLevel then
+		icon:SetFrameLevel(desiredLevel)
+	end
+
 	icon:ClearAllPoints()
-	icon:SetPoint("CENTER", Minimap, "CENTER", ix, iy)
+	icon:SetPoint("CENTER", targetMinimap, "CENTER", ix, iy)
 	icon:Show()
 end
 
@@ -389,7 +541,7 @@ function Map:PlaceIconOnMinimap(icon, mapID, mapFloor, xPos, yPos)
 	self.MinimapIcons[icon] = data
 
 	local radius = getMinimapRadius()
-	local rotateMinimap = (GetCVar("rotateMinimap") == "1")
+	local rotateMinimap = isRotateMinimapEnabled()
 	local facing = rotateMinimap and GetPlayerFacing() or 0
 	positionMinimapIcon(icon, data, pm, pf, px, py, radius, rotateMinimap, facing)
 	return 0
@@ -402,6 +554,25 @@ function Map:RemoveIconFromMinimap(icon)
 	icon:Hide()
 end
 
+function Map:GetCanvasScale(canvas)
+	if WorldMapFrame and WorldMapFrame.ScrollContainer and type(WorldMapFrame.ScrollContainer.GetCanvasScale) == "function" then
+		local ok, scale = pcall(WorldMapFrame.ScrollContainer.GetCanvasScale, WorldMapFrame.ScrollContainer)
+		if ok and type(scale) == "number" and scale > 0 then
+			return scale
+		end
+	end
+	if _G.MapWiseAPI and MapWiseAPI.Map and type(MapWiseAPI.Map.scale) == "number" and MapWiseAPI.Map.scale > 0 then
+		return MapWiseAPI.Map.scale
+	end
+	if canvas and type(canvas.GetScale) == "function" then
+		local s = canvas:GetScale()
+		if type(s) == "number" and s > 0 then
+			return s
+		end
+	end
+	return 1
+end
+
 function Map:PlaceIconOnWorldMap(worldMapFrame, icon, mapID, mapFloor, xPos, yPos)
 	if not (icon and mapID and xPos and yPos) then return -1 end
 	local canvas = (WorldMapFrame and WorldMapFrame.GetCanvas and WorldMapFrame:GetCanvas())
@@ -410,12 +581,42 @@ function Map:PlaceIconOnWorldMap(worldMapFrame, icon, mapID, mapFloor, xPos, yPo
 	if not canvas then return -1 end
 
 	local curMapID = _G.GetCurrentMapAreaID()
-	if curMapID and curMapID ~= mapID then
-		xPos, yPos = self:TranslateWorldMapPosition(mapID, mapFloor, xPos, yPos, curMapID, 0)
-		if not (xPos and yPos) or xPos < 0 or xPos > 1 or yPos < 0 or yPos > 1 then
-			icon:Hide()
-			return -1
+	local projX, projY
+
+	-- MapWise integration: use MapWiseAPI.Project when MapWise is active so Gatherer pins match both
+	-- MapWise's calibrated terrain projection (aspect-fitted tiles) and continent/Azeroth views
+	local mw = _G.MapWiseAPI
+	if mw and mw.Map and mw.Data and mw.Data.maps and mw.db and type(mw.Project) == "function" then
+		local mwMapKey = mw.db.map
+		local mwMap = mwMapKey and mw.Data.maps[mwMapKey]
+		if mwMap then
+			if mw.NativeMap and type(mw.NativeMap.CanvasSize) == "function" then
+				local cw, ch = canvas:GetWidth(), canvas:GetHeight()
+				if cw and ch and cw > 0 and ch > 0 then
+					pcall(mw.NativeMap.CanvasSize, mw.NativeMap, cw, ch)
+				end
+			end
+			local ok, px, py = pcall(mw.Project, mwMap, mapID, xPos, yPos, mw.Map.active == true)
+			if ok and type(px) == "number" and type(py) == "number" then
+				projX, projY = px, py
+			elseif curMapID and curMapID ~= mapID then
+				icon:Hide()
+				return -1
+			end
 		end
+	end
+
+	if not (projX and projY) then
+		if curMapID and curMapID ~= mapID then
+			projX, projY = self:TranslateWorldMapPosition(mapID, mapFloor, xPos, yPos, curMapID, 0)
+		else
+			projX, projY = xPos, yPos
+		end
+	end
+
+	if not (projX and projY) or projX < 0 or projX > 1 or projY < 0 or projY > 1 then
+		icon:Hide()
+		return -1
 	end
 
 	local w = canvas:GetWidth()
@@ -425,8 +626,12 @@ function Map:PlaceIconOnWorldMap(worldMapFrame, icon, mapID, mapFloor, xPos, yPo
 		return -1
 	end
 
+	-- Counteract canvas zoom scale so WorldMap pins remain crisp and constant size when zooming
+	local canvasScale = self:GetCanvasScale(canvas)
+	local pinScale = 1 / canvasScale
+	icon:SetScale(pinScale)
 	icon:ClearAllPoints()
-	icon:SetPoint("CENTER", canvas, "TOPLEFT", xPos * w, -yPos * h)
+	icon:SetPoint("CENTER", canvas, "TOPLEFT", (projX * w) / pinScale, -(projY * h) / pinScale)
 	icon:Show()
 	return 0
 end
@@ -446,7 +651,7 @@ processingFrame:SetScript("OnUpdate", function(self, elapsed)
 	if not (pm and px and py) then return end
 
 	local radius = getMinimapRadius()
-	local rotateMinimap = (GetCVar("rotateMinimap") == "1")
+	local rotateMinimap = isRotateMinimapEnabled()
 	local facing = rotateMinimap and GetPlayerFacing() or 0
 
 	for icon, data in pairs(Map.MinimapIcons) do

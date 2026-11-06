@@ -46,8 +46,164 @@ end
 function Gatherer.MapNotes.Update()
 	if ( Gatherer.Config.GetSetting("mainmap.enable") ) then
 		GathererMapOverlayParent:Show()
+		Gatherer.MapNotes.MapDraw()
 	else
 		GathererMapOverlayParent:Hide()
+	end
+	if Gatherer.MapNotes.UpdateWorldMapButton then
+		Gatherer.MapNotes.UpdateWorldMapButton()
+	end
+end
+
+-- Dynamically ensure GathererMapOverlayParent & child frames sit ABOVE Blizzard MapExplorationPinTemplate,
+-- Leatrix_Maps reveal overlays, and MapWise's ForeverAtlasTerrainLayer (MapWiseAPI.Map.view / pinLevel)
+function Gatherer.MapNotes.UpdateOverlayLayering()
+	if not GathererMapOverlayParent then return end
+	local canvas = (WorldMapFrame and WorldMapFrame.GetCanvas and WorldMapFrame:GetCanvas())
+		or _G.WorldMapButton
+	if not canvas then return end
+
+	if GathererMapOverlayParent:GetParent() ~= canvas then
+		GathererMapOverlayParent:SetParent(canvas)
+		GathererMapOverlayParent:ClearAllPoints()
+		GathererMapOverlayParent:SetAllPoints(canvas)
+	end
+
+	local cw, ch = canvas:GetWidth(), canvas:GetHeight()
+	if cw and ch and cw > 0 and ch > 0 then
+		GathererMapOverlayParent:SetSize(cw, ch)
+	end
+
+	local baseLevel = (canvas:GetFrameLevel() or 1) + 50
+	if WorldMapFrame and type(WorldMapFrame.GetPinFrameLevelsManager) == "function" then
+		local ok, manager = pcall(WorldMapFrame.GetPinFrameLevelsManager, WorldMapFrame)
+		if ok and manager and type(manager.GetValidFrameLevel) == "function" then
+			local ok1, poiLevel = pcall(manager.GetValidFrameLevel, manager, "PIN_FRAME_LEVEL_AREA_POI")
+			if ok1 and type(poiLevel) == "number" then
+				baseLevel = math.max(baseLevel, poiLevel + 10)
+			end
+			local ok2, expLevel = pcall(manager.GetValidFrameLevel, manager, "PIN_FRAME_LEVEL_MAP_EXPLORATION")
+			if ok2 and type(expLevel) == "number" then
+				baseLevel = math.max(baseLevel, expLevel + 20)
+			end
+		end
+	end
+
+	if _G.ForeverAtlasTerrainLayer and _G.ForeverAtlasTerrainLayer.GetFrameLevel then
+		local ok, mwViewLevel = pcall(_G.ForeverAtlasTerrainLayer.GetFrameLevel, _G.ForeverAtlasTerrainLayer)
+		if ok and type(mwViewLevel) == "number" then
+			baseLevel = math.max(baseLevel, mwViewLevel + 10)
+		end
+	end
+
+	if _G.MapWiseAPI and MapWiseAPI.Map and type(MapWiseAPI.Map.pinLevel) == "number" then
+		baseLevel = math.max(baseLevel, MapWiseAPI.Map.pinLevel + 5)
+	end
+
+	baseLevel = math.max(baseLevel, 2100)
+
+	if GathererMapOverlayParent:GetFrameLevel() ~= baseLevel then
+		GathererMapOverlayParent:SetFrameLevel(baseLevel)
+	end
+
+	for _, overlayFrame in ipairs(GathererMapOverlayParent) do
+		if overlayFrame:GetFrameLevel() ~= baseLevel + 1 then
+			overlayFrame:SetFrameLevel(baseLevel + 1)
+		end
+		if cw and ch and cw > 0 and ch > 0 then
+			overlayFrame:SetSize(cw, ch)
+		end
+		for _, noteBtn in ipairs(overlayFrame) do
+			if noteBtn:GetFrameLevel() ~= baseLevel + 2 then
+				noteBtn:SetFrameLevel(baseLevel + 2)
+			end
+		end
+	end
+end
+
+-- WorldMap Toggle Button (automatically detected by MapWise's "Addons" toolbar menu and usable on all WorldMap addons)
+function Gatherer.MapNotes.UpdateWorldMapButton()
+	local btn = Gatherer.MapNotes.WorldMapButton
+	if not btn then return end
+	local enabled = Gatherer.Config.GetSetting("mainmap.enable")
+	if btn.Icon then
+		btn.Icon:SetDesaturated(not enabled)
+		btn.Icon:SetAlpha(enabled and 1.0 or 0.5)
+	end
+end
+
+function Gatherer.MapNotes.CreateWorldMapButton()
+	if Gatherer.MapNotes.WorldMapButton or not WorldMapFrame then return end
+	local parent = WorldMapFrame.ScrollContainer or WorldMapFrame
+	local btn = CreateFrame("Button", "GathererRebornWorldMapButton", parent)
+	btn:SetSize(28, 28)
+	btn:SetToplevel(true)
+	btn:SetFrameStrata("HIGH")
+	btn:SetFrameLevel((parent:GetFrameLevel() or 10) + 50)
+	btn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -6, -6)
+	btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+	local bg = btn:CreateTexture(nil, "BACKGROUND")
+	bg:SetSize(24, 24)
+	bg:SetPoint("CENTER", 0, 0)
+	bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+	btn.Background = bg
+
+	local icon = btn:CreateTexture(nil, "ARTWORK")
+	icon:SetSize(18, 18)
+	icon:SetPoint("CENTER", 0, 0)
+	-- Use addon path so MapWise AddonMenu:Owner() recognizes "GathererReborn" via texture folder path
+	local ok = pcall(icon.SetTexture, icon, "Interface\\AddOns\\GathererReborn\\Skin\\GatherOrb")
+	if not ok or not icon:GetTexture() then
+		icon:SetTexture(133939)
+	end
+	icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	btn.Icon = icon
+
+	local border = btn:CreateTexture(nil, "OVERLAY")
+	border:SetSize(48, 48)
+	border:SetPoint("TOPLEFT", -2, 2)
+	border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+	btn.Border = border
+
+	btn:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight", "ADD")
+
+	btn:SetScript("OnClick", function(self, button)
+		if button == "RightButton" then
+			if IsShiftKeyDown() or IsControlKeyDown() then
+				Gatherer.Config.ToggleOptions()
+			else
+				Gatherer.Report.Toggle()
+			end
+		else
+			Gatherer.MapNotes.ToggleDisplay()
+		end
+		Gatherer.MapNotes.UpdateWorldMapButton()
+	end)
+
+	btn:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+		GameTooltip:SetFrameStrata("TOOLTIP")
+		GameTooltip:ClearLines()
+		GameTooltip:AddLine("Gatherer Reborn", 1, 0.82, 0)
+		local enabled = Gatherer.Config.GetSetting("mainmap.enable")
+		GameTooltip:AddLine(_tr("MAP_NOTES_SHOW") .. ": " .. (enabled and "|cff00ff00Ein|r" or "|cffff4040Aus|r"), 1, 1, 1)
+		GameTooltip:AddLine("Linksklick: Weltkarten-Symbole ein-/ausschalten", 0.8, 0.8, 0.8)
+		GameTooltip:AddLine("Rechtsklick: Vorkommen-Bericht öffnen", 0.8, 0.8, 0.8)
+		GameTooltip:AddLine("Shift+Rechtsklick: Einstellungen öffnen", 0.8, 0.8, 0.8)
+		GameTooltip:Show()
+	end)
+
+	btn:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+
+	Gatherer.MapNotes.WorldMapButton = btn
+	Gatherer.MapNotes.UpdateWorldMapButton()
+
+	-- If MapWise AddonMenu is already initialized, mark it dirty so it picks up our button immediately
+	if _G.MapWiseAPI and MapWiseAPI.AddonMenu then
+		MapWiseAPI.AddonMenu.dirty = true
 	end
 end
 
@@ -76,16 +232,99 @@ elseif ( Menu and Menu.ModifyMenu ) then
 	end)
 end
 
+-- Hook MapWise, ElvUI, Leatrix_Maps, and native MapCanvas events
+local mapWiseHooked = false
+local function hookMapAddons()
+	if not mapWiseHooked and _G.MapWiseAPI and MapWiseAPI.Map then
+		mapWiseHooked = true
+		if type(MapWiseAPI.Map.Render) == "function" then
+			hooksecurefunc(MapWiseAPI.Map, "Render", function()
+				Gatherer.MapNotes.UpdateOverlayLayering()
+				Gatherer.MapNotes.MapDraw()
+			end)
+		end
+		if type(MapWiseAPI.Map.Pan) == "function" then
+			hooksecurefunc(MapWiseAPI.Map, "Pan", function()
+				Gatherer.MapNotes.UpdateOverlayLayering()
+				Gatherer.MapNotes.MapDraw()
+			end)
+		end
+		if type(MapWiseAPI.Map.Layers) == "function" then
+			hooksecurefunc(MapWiseAPI.Map, "Layers", function()
+				Gatherer.MapNotes.UpdateOverlayLayering()
+			end)
+		end
+	end
+	Gatherer.MapNotes.CreateWorldMapButton()
+end
+
 if ( WorldMapFrame ) then
 	if ( WorldMapFrame.OnMapChanged ) then
 		hooksecurefunc(WorldMapFrame, "OnMapChanged", function()
 			Gatherer.MapNotes.MapDraw()
 		end)
 	end
+	if ( WorldMapFrame.SetMapID ) then
+		hooksecurefunc(WorldMapFrame, "SetMapID", function()
+			Gatherer.MapNotes.MapDraw()
+		end)
+	end
+	if ( WorldMapFrame.Maximize ) then
+		hooksecurefunc(WorldMapFrame, "Maximize", function()
+			Gatherer.MapNotes.MapDraw()
+		end)
+	end
+	if ( WorldMapFrame.Minimize ) then
+		hooksecurefunc(WorldMapFrame, "Minimize", function()
+			Gatherer.MapNotes.MapDraw()
+		end)
+	end
 	WorldMapFrame:HookScript("OnShow", function()
+		hookMapAddons()
+		Gatherer.MapNotes.UpdateWorldMapButton()
 		Gatherer.MapNotes.MapDraw()
 	end)
+	WorldMapFrame:HookScript("OnSizeChanged", function()
+		Gatherer.MapNotes.MapDraw()
+	end)
+	if WorldMapFrame.ScrollContainer then
+		if WorldMapFrame.ScrollContainer.OnCanvasSizeChanged then
+			hooksecurefunc(WorldMapFrame.ScrollContainer, "OnCanvasSizeChanged", function()
+				Gatherer.MapNotes.MapDraw()
+			end)
+		end
+		if WorldMapFrame.ScrollContainer.OnCanvasScaleChanged then
+			hooksecurefunc(WorldMapFrame.ScrollContainer, "OnCanvasScaleChanged", function()
+				Gatherer.MapNotes.MapDraw()
+			end)
+		end
+		WorldMapFrame.ScrollContainer:HookScript("OnSizeChanged", function()
+			Gatherer.MapNotes.MapDraw()
+		end)
+	end
 end
+
+if EventRegistry and type(EventRegistry.RegisterCallback) == "function" then
+	EventRegistry:RegisterCallback("MapCanvas.MapSet", function()
+		Gatherer.MapNotes.MapDraw()
+	end, Gatherer.MapNotes)
+end
+
+local addonHookFrame = CreateFrame("Frame")
+addonHookFrame:RegisterEvent("PLAYER_LOGIN")
+addonHookFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+addonHookFrame:RegisterEvent("ADDON_LOADED")
+addonHookFrame:SetScript("OnEvent", function(_, event, arg1)
+	hookMapAddons()
+	if event == "PLAYER_ENTERING_WORLD" or arg1 == "MapWise" or arg1 == "ElvUI" or arg1 == "Leatrix_Maps" then
+		if Gatherer.ElvUI and Gatherer.ElvUI.SkinFrames then
+			Gatherer.ElvUI.SkinFrames()
+		end
+		if WorldMapFrame and WorldMapFrame:IsShown() then
+			Gatherer.MapNotes.MapDraw()
+		end
+	end
+end)
 
 
 function Gatherer.MapNotes.GetNoteObject( noteNumber )
@@ -95,21 +334,39 @@ function Gatherer.MapNotes.GetNoteObject( noteNumber )
 		local overlayFrame = GathererMapOverlayParent[overlayFrameNumber]
 		if not ( overlayFrame ) then
 			overlayFrame = CreateFrame("Frame", "GathererMapOverlayFrame"..overlayFrameNumber, GathererMapOverlayParent, "GathererMapOverlayTemplate")
+			overlayFrame:SetFrameLevel((GathererMapOverlayParent:GetFrameLevel() or 2100) + 1)
 			GathererMapOverlayParent[overlayFrameNumber] = overlayFrame
 		end
 		button = CreateFrame("Button" ,"GatherMain"..noteNumber, overlayFrame, "GatherMainTemplate")
 		button:SetID(noteNumber)
+		button:SetFrameLevel((overlayFrame:GetFrameLevel() or 2101) + 1)
 		overlayFrame[(noteNumber-1) % 100 + 1] = button
 		Gatherer.Util.Debug("create id "..noteNumber.." frame ".. overlayFrameNumber)
 	end
 	return button
 end
 
+local function isContinentOrWorldMap(uiMapID)
+	if not uiMapID then return false end
+	if uiMapID == 946 or uiMapID == 947 or uiMapID == 1414 or uiMapID == 1415 then
+		return true
+	end
+	if C_Map and C_Map.GetMapInfo and Enum and Enum.UIMapType then
+		local info = C_Map.GetMapInfo(uiMapID)
+		if info and (info.mapType == Enum.UIMapType.Continent or info.mapType == Enum.UIMapType.World or info.mapType == Enum.UIMapType.Cosmic) then
+			return true
+		end
+	end
+	return false
+end
+
 function Gatherer.MapNotes.MapDraw()
 	local GathererMapOverlayParent = GathererMapOverlayParent
-	if not ( GathererMapOverlayParent:IsVisible() ) then
+	if not ( GathererMapOverlayParent and GathererMapOverlayParent:IsVisible() ) then
 		return
 	end
+	Gatherer.MapNotes.UpdateOverlayLayering()
+
 	local setting = Gatherer.Config.GetSetting
 	local maxNotes = setting("mainmap.count", 600)
 	local noteCount = 0
@@ -120,57 +377,88 @@ function Gatherer.MapNotes.MapDraw()
 
 	local GetNodeInfo = Gatherer.Storage.GetNodeInfo
 	local GetNodeGatherNames = Gatherer.Storage.GetNodeGatherNames
-	
-	local showType, showObject
-	local mapID, mapFloor = Gatherer.ZoneTokens.GetZoneMapIDAndFloor(Gatherer.ZoneTokens.GetZoneToken(GetCurrentMapAreaID()))
-	if ( Gatherer.Storage.HasDataOnZone(mapID) ) then
+	local _, _, _, isMicroDungeon = GetMapInfo()
+	local opacity = setting("mainmap.opacity", 80) / 100
+	local iconsize = setting("mainmap.iconsize", 16)
+	local tooltip = setting("mainmap.tooltip.enable")
+
+	local function drawZoneNodes(zoneToken, nodeMapID, nodeMapFloor)
+		if not (zoneToken and nodeMapID and Gatherer.Storage.HasDataOnZone(zoneToken)) then
+			return
+		end
 		for _, gatherType in pairs(Gatherer.Constants.SupportedGatherTypes) do
-			for index, xPos, yPos in Gatherer.Storage.ZoneGatherNodes(mapID, gatherType) do
+			for index, xPos, yPos in Gatherer.Storage.ZoneGatherNodes(zoneToken, gatherType) do
 				local displayNode = false
-				for _, gatherID, count in GetNodeGatherNames(mapID, gatherType, index) do
+				for _, gatherID, count in GetNodeGatherNames(zoneToken, gatherType, index) do
 					if ( Gatherer.Config.DisplayFilter_MainMap(gatherID) ) then
 						displayNode = true
 						break
 					end
 				end
-				local _, _, _, isMicroDungeon = GetMapInfo();
 				if ( displayNode and isMicroDungeon ) then
-					local _, _, indoors = GetNodeInfo(mapID, gatherType, index)
+					local _, _, indoors = GetNodeInfo(zoneToken, gatherType, index)
 					displayNode = indoors
 				end
 				if ( displayNode ) then
 					if ( noteCount < maxNotes ) then
-						noteCount = noteCount + 1
-						local mainNote = Gatherer.MapNotes.GetNoteObject(noteCount)
-						
-						mainNote:SetAlpha(setting("mainmap.opacity", 80) / 100)
-						
-						local texture, trimTexture = Gatherer.Util.GetNodeTexture(mapID, gatherType, index)
-						local noteTexture = _G[mainNote:GetName().."Texture"]
-						noteTexture:SetTexture(texture)
-						if ( trimTexture ) then
-							noteTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+						local nextIdx = noteCount + 1
+						local mainNote = Gatherer.MapNotes.GetNoteObject(nextIdx)
+						local placed = Map:PlaceIconOnWorldMap(WorldMapButton, mainNote, nodeMapID, nodeMapFloor, xPos, yPos)
+						if placed == 0 then
+							noteCount = nextIdx
+							mainNote:SetAlpha(opacity)
+
+							local texture, trimTexture = Gatherer.Util.GetNodeTexture(zoneToken, gatherType, index)
+							local noteTexture = _G[mainNote:GetName().."Texture"]
+							noteTexture:SetTexture(texture)
+							if ( trimTexture ) then
+								noteTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							else
+								noteTexture:SetTexCoord(0, 1, 0, 1)
+							end
+
+							mainNote:SetWidth(iconsize)
+							mainNote:SetHeight(iconsize)
+
+							mainNote.mapID = nodeMapID
+							mainNote.zoneToken = zoneToken
+							mainNote.index = index
+							mainNote.gType = gatherType
+							mainNote.xPos = xPos
+							mainNote.yPos = yPos
+
+							if (tooltip and not mainNote:IsMouseEnabled()) then
+								mainNote:EnableMouse(true)
+							elseif (not tooltip and mainNote:IsMouseEnabled()) then
+								mainNote:EnableMouse(false)
+							end
 						else
-							noteTexture:SetTexCoord(0, 1, 0, 1)
+							mainNote:Hide()
 						end
-						
-						local iconsize = setting("mainmap.iconsize", 16)
-						mainNote:SetWidth(iconsize)
-						mainNote:SetHeight(iconsize)
-						
-						mainNote.mapID = mapID
-						mainNote.index = index
-						mainNote.gType = gatherType
-						
-						local tooltip = setting("mainmap.tooltip.enable")
-						if (tooltip and not mainNote:IsMouseEnabled()) then
-							mainNote:EnableMouse(true)
-						elseif (not tooltip and mainNote:IsMouseEnabled()) then
-							mainNote:EnableMouse(false)
-						end
-						
-						Map:PlaceIconOnWorldMap(WorldMapButton, mainNote, mapID, mapFloor, xPos, yPos)
 					else -- reached note limit
+						return
+					end
+				end
+			end
+		end
+	end
+
+	local curAreaID = GetCurrentMapAreaID()
+	local curZoneToken = Gatherer.ZoneTokens.GetZoneToken(curAreaID)
+	local mapID, mapFloor = Gatherer.ZoneTokens.GetZoneMapIDAndFloor(curZoneToken)
+	if mapID then
+		drawZoneNodes(curZoneToken, mapID, mapFloor)
+	end
+
+	-- When viewing a Continent or World map (in MapWise, Leatrix_Maps, ElvUI, or Blizzard WorldMap),
+	-- also project nodes from all gathered child zones onto the continent/world canvas!
+	if isContinentOrWorldMap(curAreaID) and noteCount < maxNotes then
+		for _, zoneToken in Gatherer.Storage.GetAreaIndices() do
+			if zoneToken ~= curZoneToken then
+				local zMapID, zMapFloor = Gatherer.ZoneTokens.GetZoneMapIDAndFloor(zoneToken)
+				if zMapID then
+					drawZoneNodes(zoneToken, zMapID, zMapFloor)
+					if noteCount >= maxNotes then
 						break
 					end
 				end
@@ -206,6 +494,47 @@ function Gatherer.MapNotes.MapOverlayFrame_OnHide( frame )
 	end
 end
 
+-- Click handler on WorldMap pins: Shift+RightClick or Alt+LeftClick sets a TomTom or Blizzard waypoint;
+-- normal clicks pass through to the WorldMap canvas
+function Gatherer.MapNotes.MapNoteOnClick(frame, button)
+	if frame and frame.mapID and frame.xPos and frame.yPos and (IsShiftKeyDown() or IsAltKeyDown()) and (button == "RightButton" or button == "LeftButton") then
+		local zone = frame.zoneToken or Gatherer.ZoneTokens.GetZoneToken(frame.mapID)
+		local title = "Gatherer Reborn"
+		for _, gatherID in Gatherer.Storage.GetNodeGatherNames(zone, frame.gType, frame.index) do
+			title = Gatherer.Util.GetNodeName(gatherID) or title
+			break
+		end
+		if _G.TomTom and type(_G.TomTom.AddWaypoint) == "function" then
+			pcall(_G.TomTom.AddWaypoint, _G.TomTom, frame.mapID, frame.xPos, frame.yPos, {
+				title = title,
+				persistent = false,
+				minimap = true,
+				world = true,
+			})
+			return
+		elseif C_Map and C_Map.CanSetUserWaypointOnMap and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates then
+			local ok, canSet = pcall(C_Map.CanSetUserWaypointOnMap, frame.mapID)
+			if ok and canSet then
+				pcall(function()
+					local pt = UiMapPoint.CreateFromCoordinates(frame.mapID, frame.xPos, frame.yPos)
+					C_Map.SetUserWaypoint(pt)
+					if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then
+						C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+					end
+				end)
+				return
+			end
+		end
+	end
+
+	if ( WorldMapButton and WorldMapButton.GetScript ) then
+		local func = WorldMapButton:GetScript("OnMouseUp")
+		if ( func ) then
+			func(WorldMapButton, button)
+		end
+	end
+end
+
 function Gatherer.MapNotes.MapNoteOnEnter(frame)
 	local setting = Gatherer.Config.GetSetting
 	
@@ -220,7 +549,7 @@ function Gatherer.MapNotes.MapNoteOnEnter(frame)
 	local showrate = setting("mainmap.tooltip.rate")
 	
 	local cont = frame.continent
-	local zone = Gatherer.ZoneTokens.GetZoneToken(frame.mapID)
+	local zone = frame.zoneToken or Gatherer.ZoneTokens.GetZoneToken(frame.mapID)
 	local index = frame.index
 	local gType = frame.gType
 	local inspected = Gatherer.Storage.GetNodeInspected(zone, gType, index)
@@ -229,8 +558,10 @@ function Gatherer.MapNotes.MapNoteOnEnter(frame)
 	for id, gatherID, count, harvested, who in Gatherer.Storage.GetNodeGatherNames(zone, gType, index) do
 		local tooltip = Gatherer.Tooltip.GetTooltip(id)
 		tooltip:ClearLines()
-		tooltip:SetParent(WorldMapFrame)
-		tooltip:SetFrameLevel(WorldMapFrame:GetFrameLevel() + 5)
+		tooltip:SetParent(UIParent)
+		tooltip:SetFrameStrata("TOOLTIP")
+		tooltip:SetToplevel(true)
+		tooltip:SetFrameLevel(math.max((frame:GetFrameLevel() or 2100) + 20, 3000))
 		if ( id == 1 ) then
 			tooltip:SetOwner(frame, "ANCHOR_BOTTOMLEFT")
 		else

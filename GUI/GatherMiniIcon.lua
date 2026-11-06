@@ -135,6 +135,12 @@ local function reposition(angle)
 	local iconX = width * sin(angle)
 	local iconY = height * cos(angle)
 
+	local shape = _G.GetMinimapShape and _G.GetMinimapShape()
+	if shape == "SQUARE" then
+		iconX = math.max(-width, math.min(width, iconX * 1.4142))
+		iconY = math.max(-height, math.min(height, iconY * 1.4142))
+	end
+
 	miniIcon:ClearAllPoints()
 	miniIcon:SetPoint("CENTER", Minimap, "CENTER", iconX, iconY)
 end

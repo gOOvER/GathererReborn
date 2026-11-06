@@ -326,9 +326,17 @@ function Gatherer.MiniNotes.UpdateMinimapNotes(timeDelta, force)
 				gatherNote:SetHeight(normSize)
 				
 				if ( tooltip ) then
-					gatherNote:EnableMouse(true)
+					if gatherNote.EnableMouseMotion then
+						gatherNote:EnableMouse(false)
+						gatherNote:EnableMouseMotion(true)
+					else
+						gatherNote:EnableMouse(true)
+					end
 				else
 					gatherNote:EnableMouse(false)
+					if gatherNote.EnableMouseMotion then
+						gatherNote:EnableMouseMotion(false)
+					end
 				end
 				
 				local gatherNoteTexture = gatherNote:GetNormalTexture()
@@ -378,9 +386,23 @@ function Gatherer.MiniNotes.UpdateMinimapNotes(timeDelta, force)
 	end
 end
 
--- Pass on any node clicks
-function Gatherer.MiniNotes.MiniNoteOnClick()
-	Minimap_OnClick(Minimap)
+-- Pass on any node clicks safely across all WoW versions and ElvUI / Minimap addons
+function Gatherer.MiniNotes.MiniNoteOnClick(frame, button)
+	if type(Minimap_OnClick) == "function" then
+		pcall(Minimap_OnClick, Minimap, button)
+	elseif Minimap and type(Minimap.OnClick) == "function" then
+		pcall(Minimap.OnClick, Minimap, button)
+	elseif Minimap then
+		local down = Minimap:GetScript("OnMouseDown")
+		if down and button and button ~= "LeftButton" then
+			pcall(down, Minimap, button)
+		elseif frame and Minimap.PingLocation then
+			local _, _, _, x, y = frame:GetPoint(1)
+			if x and y then
+				pcall(Minimap.PingLocation, Minimap, x, y)
+			end
+		end
+	end
 end
 
 function Gatherer.MiniNotes.MiniNoteOnEnter(frame)
@@ -406,7 +428,9 @@ function Gatherer.MiniNotes.MiniNoteOnEnter(frame)
 		local tooltip = Gatherer.Tooltip.GetTooltip(id)
 		tooltip:ClearLines()
 		tooltip:SetParent(UIParent)
-		tooltip:SetFrameLevel(Minimap:GetFrameLevel() + 5)
+		tooltip:SetFrameStrata("TOOLTIP")
+		tooltip:SetToplevel(true)
+		tooltip:SetFrameLevel(math.max((Minimap:GetFrameLevel() or 10) + 20, 3000))
 		if ( id == 1 ) then
 			tooltip:SetOwner(frame, "ANCHOR_BOTTOMLEFT")
 		else

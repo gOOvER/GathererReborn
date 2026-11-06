@@ -33,6 +33,11 @@
 			<OnLoad>
 				self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
 				self:SetFrameLevel(self:GetParent():GetFrameLevel() + 1)
+				local tex = _G[self:GetName().."Texture"]
+				if tex then
+					if tex.SetSnapToPixelGrid then pcall(tex.SetSnapToPixelGrid, tex, false) end
+					if tex.SetTexelSnappingBias then pcall(tex.SetTexelSnappingBias, tex, 0) end
+				end
 			</OnLoad>
 			<OnEnter>
 				Gatherer.MapNotes.MapNoteOnEnter(self)
@@ -41,7 +46,9 @@
 				Gatherer.Tooltip.HideTooltips()
 			</OnLeave>
 			<OnMouseUp>
-				if ( WorldMapButton and WorldMapButton.GetScript ) then
+				if Gatherer.MapNotes.MapNoteOnClick then
+					Gatherer.MapNotes.MapNoteOnClick(self, button)
+				elseif ( WorldMapButton and WorldMapButton.GetScript ) then
 					local func = WorldMapButton:GetScript("OnMouseUp")
 					if ( func ) then
 						func(WorldMapButton, button)

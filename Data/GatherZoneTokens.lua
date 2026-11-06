@@ -258,6 +258,8 @@ for i, id in pairs(GetContinentMaps()) do
 	continentWorldMapIDs[i] = GetContinentMapInfo(id)
 end
 
+local hasModernCMap = (C_Map and C_Map.GetMapInfo) and true or false
+
 for continent, zoneList in pairs(Map.ContinentList) do
 	local continentZoneNames = stripZoneIDs(GetMapZones(continent))	-- incomplete list, due to Blizzard bugs
 	ZoneNames[continent] = { CONTINENT = ZoneNames[continent] }
@@ -269,7 +271,7 @@ for continent, zoneList in pairs(Map.ContinentList) do
 				zoneName = Map.HarvestedMapData[mapID].mapName
 			end
 			zoneName = zoneName or ("Map_" .. tostring(mapID))
-			local zoneToken = MapIdToTokenMap[mapID]
+			local zoneToken = (not hasModernCMap) and MapIdToTokenMap[mapID] or nil
 			if (not zoneToken) then
 				-- Dynamically generate a stable token for all modern/future C_Map uiMapIDs ("Forever")
 				zoneToken = "MAP_" .. tostring(mapID)
@@ -298,12 +300,12 @@ for continent, zoneList in pairs(Map.ContinentList) do
 	TokensByContinent[continent] = tokenMap
 end
 
--- Also ensure legacy tokens from MapIdToTokenMap remain resolvable even if C_Map uses new uiMapIDs
+-- Also ensure legacy string tokens from MapIdToTokenMap remain resolvable without overwriting modern C_Map numeric uiMapIDs
 for legacyMapID, legacyToken in pairs(MapIdToTokenMap) do
 	if not Tokens[legacyToken] then
 		Tokens[legacyToken] = legacyToken
 	end
-	if not Tokens[legacyMapID] then
+	if not hasModernCMap and not Tokens[legacyMapID] then
 		Tokens[legacyMapID] = legacyToken
 	end
 	if not TokenToMapID[legacyToken] then
@@ -398,6 +400,16 @@ function GetZoneToken( mapID )
 		end
 		if not ZoneNames[token] then
 			ZoneNames[token] = "Map " .. tostring(mapID)
+		end
+		if TokensByContinent[1] and not TokensByContinent[1][token] then
+			local nextIdx = #TokensByContinent[1] + 1
+			TokensByContinent[1][nextIdx] = token
+			TokensByContinent[1][token] = nextIdx
+		end
+	elseif not token and type(mapID) == "string" and mapID:match("^MAP_%d+$") then
+		local numID = tonumber(mapID:match("^MAP_(%d+)$"))
+		if numID then
+			return GetZoneToken(numID)
 		end
 	end
 	return token

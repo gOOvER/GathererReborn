@@ -1364,10 +1364,67 @@ function Gatherer.Config.ToggleOptions()
 	end
 end
 
+-- Optional ElvUI Skinning for Gatherer Reborn standalone frames (Report & Node Search)
+Gatherer.ElvUI = Gatherer.ElvUI or {}
+local elvSkinned = false
+function Gatherer.ElvUI.SkinFrames()
+	if elvSkinned or not _G.ElvUI then return end
+	local ok, E = pcall(unpack, _G.ElvUI)
+	if not ok or not E or type(E.GetModule) ~= "function" then return end
+	local S = E:GetModule("Skins", true)
+	if not S then return end
+	elvSkinned = true
+
+	local function skinDialog(f)
+		if not f or f._elvSkinned then return end
+		f._elvSkinned = true
+		pcall(function()
+			if f.StripTextures then f:StripTextures() end
+			if f.SetTemplate then f:SetTemplate("Transparent") end
+			for _, child in ipairs({ f:GetChildren() }) do
+				local objType = child:GetObjectType()
+				if objType == "Button" then
+					if S.HandleButton and child:GetText() and child:GetText() ~= "" then
+						pcall(S.HandleButton, S, child)
+					end
+				elseif objType == "EditBox" then
+					if S.HandleEditBox then
+						pcall(S.HandleEditBox, S, child)
+					end
+				elseif objType == "CheckButton" then
+					if S.HandleCheckBox then
+						pcall(S.HandleCheckBox, S, child)
+					end
+				end
+			end
+		end)
+	end
+
+	if Gatherer.Report and Gatherer.Report.Frame then
+		local rf = Gatherer.Report.Frame
+		skinDialog(rf)
+		if rf.Actions then
+			for _, child in ipairs({ rf.Actions:GetChildren() }) do
+				if child:GetObjectType() == "Button" and S.HandleButton then
+					pcall(S.HandleButton, S, child)
+				end
+			end
+		end
+		if rf.Results and rf.Results.Scroll and rf.Results.Scroll.ScrollBar and S.HandleScrollBar then
+			pcall(S.HandleScrollBar, S, rf.Results.Scroll.ScrollBar)
+		end
+	end
+
+	if Gatherer.NodeSearch and Gatherer.NodeSearch.Frame then
+		skinDialog(Gatherer.NodeSearch.Frame)
+	end
+end
+
 -- Register in Blizzard Options on PLAYER_LOGIN
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:SetScript("OnEvent", function()
 	ensureRegistered()
+	Gatherer.ElvUI.SkinFrames()
 end)
 

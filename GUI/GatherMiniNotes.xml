@@ -35,7 +35,7 @@
 				Gatherer.Tooltip.HideTooltips()
 			</OnLeave>
 			<OnMouseUp>
-				Gatherer.MiniNotes.MiniNoteOnClick()
+				Gatherer.MiniNotes.MiniNoteOnClick(self, button)
 			</OnMouseUp>
 		</Scripts>
 		<NormalTexture file="Interface\Icons\INV_Misc_QuestionMark"/>
