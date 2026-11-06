@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Retail Addon Compartment button integration (`Gatherer_OnAddonCompartmentClick`, `Gatherer_OnAddonCompartmentEnter`, `Gatherer_OnAddonCompartmentLeave`) and modern World Map tracking menu integration (`Menu.ModifyMenu`).
 
 ### Changed
-- Renamed project and AddOn to **Gatherer Reforged** (`GathererReforged`) and updated `README.md` with the historical background of Norganna's classic *Gatherer* addon (2005–2017).
+- Renamed project and AddOn to **Gatherer Reforged** (`GathererReforged`) and rewrote `README.md` in English with embedded `logo.jpg` and the historical background of Norganna's classic *Gatherer* addon (2005–2017).
 - Upgraded project license to **GNU General Public License v3.0 (GPL-3.0)** (`LICENSE`, `Locales/GatherStrings.lua`, `.toc` metadata) and completely rewrote `README.md` without obsolete links.
 - Set `gOOvER` as the sole author (`## Author: gOOvER`) across `GathererReforged.toc` and all Lua/XML source files.
 - Flattened the repository root structure to match `GuildGreet-Extended` (`GathererReforged.toc`, `embeds.xml`, `Bindings.xml`, `Core/`, `Data/`, `Locales/`, `GUI/`, and `libs/`) and integrated the HUD directly into `GUI/` while preserving full backwards compatibility with `GatherItems` SavedVariables and `gatherer_hud` settings.

@@ -1,18 +1,49 @@
-# Gatherer Reforged
+<div align="center">
+  <img src="logo.jpg" alt="Gatherer Reforged Logo" width="280" />
 
-**Gatherer Reforged** is the long-awaited modernization and complete overhaul of **Norganna's legendary *Gatherer* addon**—one of World of Warcraft's oldest and most iconic gathering addons, originally born in **2005 (Vanilla WoW)** and last officially updated in **September 2017 (*Legion* Patch 7.3)**.
+  # Gatherer Reforged
 
-Every WoW veteran remembers the original *Gatherer* and its spinning **3D Gatherer HUD**. After nearly a decade without official updates (and over **20 years** after its original release), **Gatherer Reforged** brings this classic back to life—rebuilt from the ground up with a native **`C_Map` mapping engine**, a modern **Ace3 configuration UI**, the **3D Heads-Up Display (HUD)** integrated directly into the core addon, and full support for **Retail (*The War Within* / *Midnight*)**, **WoW Forever**, and all **Classic** flavors.
+  **The legendary 2005 *Gatherer* addon by Norganna (last updated in 2017) — finally reforged for modern World of Warcraft!**
 
-**Gatherer Reforged** ist die vollständig modernisierte Neuauflage von **Norgannas legendärem *Gatherer*-AddOn** (erstmals erschienen **2005** zu Vanilla-Zeiten, letztes offizielles Update **September 2017** zu *Legion* 7.3) inkl. direkt integriertem **3D Heads-Up Display (HUD)** für Kräuterkundige, Bergbauer, Schatzsucher und Archäologen.
-
-- **Autor / Author:** [gOOvER](https://github.com/gOOvER)
-- **Version:** `1.0.0`
-- **Lizenz / License:** [GNU General Public License v3.0 (GPL-3.0)](LICENSE)
+  [![Release](https://github.com/gOOvER/GathererReforged/actions/workflows/release.yml/badge.svg)](https://github.com/gOOvER/GathererReforged/actions/workflows/release.yml)
+  [![Code Quality](https://github.com/gOOvER/GathererReforged/actions/workflows/quality.yml/badge.svg)](https://github.com/gOOvER/GathererReforged/actions/workflows/quality.yml)
+  [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+</div>
 
 ---
 
-## Unterstützte WoW-Versionen
+Every long-time World of Warcraft veteran remembers **Norganna's legendary *Gatherer***—one of WoW's original and most iconic addons, first created back in **2005 (Vanilla WoW)** and maintained by *Norganna's AddOns* until its last official release in **September 2017 (*Legion* Patch 7.3)**.
+
+After **more than 20 years** since its birth in Vanilla and nearly a decade without an official update, **Gatherer Reforged** brings this classic back from the ashes! Completely modernized and rebuilt from the ground up with a native **`C_Map` mapping engine**, a modern **Ace3 configuration interface**, and the iconic **3D Heads-Up Display (HUD)** integrated directly into the core addon, it tracks your **Herbalism**, **Mining**, **Treasure**, and **Archaeology** nodes across **Retail (*The War Within* / *Midnight*)**, **WoW Forever**, and all **Classic** flavors.
+
+---
+
+## ✨ Key Features
+
+- 🏛️ **The Classic Legend, Rebuilt for Modern WoW**: Preserves everything old-school WoW players loved about Norganna's *Gatherer* (per-node harvest history, drop percentages, guild/party node sync, and the 3D HUD) while stripping out all broken legacy libraries (`Astrolabe`, `Babylonian`, `DongleStub`, `SlideBar`, `!Swatter`).
+- 🧭 **Integrated 3D Heads-Up Display (HUD)**: The famous *Gatherer HUD* plugin is now built right into the main addon—projecting a customizable 3D compass overlay in the center of your screen with distance, angle, pitch, heat-trail tracking, and automatic hide conditions (combat, flying, mounted, inside instances).
+- 🌿 **Comprehensive Node Tracking**: Automatically records exact coordinates, harvest counts, drop rates, inspection times, and sources for **Herbs**, **Mining Veins**, **Treasure Chests / Containers**, and **Archaeology** dig finds.
+- 🔮 **Dynamic "Forever" Node Discovery**: Automatically learns and persists brand-new or custom herbs, ores, and treasures in current and future expansions or custom realms (such as *WoW Forever*) without waiting for static database updates.
+- 🗺️ **Native `C_Map` Engine**: Built directly on Blizzard's modern `C_Map` and `C_Minimap` APIs with full support for zone, continent, and world-level node projection.
+- 🤝 **Real-Time Guild, Party & Raid Sync**: Automatically shares newly harvested nodes with guildmates and party/raid members in real time—plus a built-in mass-sharing tool and per-player filtering in the **Gatherables Report**.
+- 🔍 **Gatherables Report & Node Density Search**: Classic, fast overview windows to search, filter, mark, transmit, or delete nodes by zone, profession type, source, density percentage, or distance.
+
+---
+
+## 🧩 Full Map & UI Addon Compatibility
+
+Gatherer Reforged works seamlessly alongside modern UI and map addons:
+
+- **MapWise**: Full support for MapWise's custom **Terrain** and **Paper** rendering modes (`MapWiseAPI`), continent/Azeroth projections, and automatic integration into MapWise's **"Addons"** toolbar menu.
+- **ElvUI**: Native support for **Square** and **Round** minimaps (`GetMinimapShape()`), click-passthrough for ElvUI's right-click tracking & middle-click micro menus, scaled World Map support, and automatic ElvUI skinning for Gatherer's Report and Search windows.
+- **Leatrix Maps / SexyMap / BasicMinimap / Chinchilla**: Dynamic frame layering above map reveal overlays and full support for all custom minimap shapes (`SQUARE`, `ROUND`, `CORNER-*`, `SIDE-*`, `TRICORNER-*`).
+- **TomTom & Native Waypoints**: `Shift + Right-Click` or `Alt + Left-Click` any Gatherer pin on the World Map to create a **TomTom** waypoint (or native Blizzard map pin).
+- **LibDBIcon-1.0, LibDataBroker-1.1 & Addon Compartment**: Works with LDB bars (*Bazooka*, *Titan Panel*), *ElvUI WindTools* button bars, and Retail's Minimap Addon Compartment.
+
+---
+
+## 🎮 Supported WoW Versions
+
 - **WoW Forever** (`16001`)
 - **Retail / Midnight** (`12.x`)
 - **Mists of Pandaria Classic** (`5.5.x`)
@@ -20,24 +51,28 @@ Every WoW veteran remembers the original *Gatherer* and its spinning **3D Gather
 - **Burning Crusade Classic Anniversary** (`2.5.x`)
 - **Classic Era** (`1.15.x`)
 
-## Features
-- **Weltkarte & Minikarte:** Speichert automatisch alle gesammelten Kräuter, Erze, Schätze und Archäologie-Funde samt Dropraten und Zeitstempel.
-- **Dynamische „Forever“-Erkennung:** Lernt neue Vorkommen aus aktuellen und zukünftigen Erweiterungen automatisch beim Sammeln und speichert sie dauerhaft.
-- **3D Heads-Up Display (HUD):** Direkt integriertes, optional zuschaltbares 3D-Overlay im Sichtfeld inkl. Wegspur (*Heat-Tracking*).
-- **Gilden- & Gruppen-Synchronisation:** Automatisches Teilen neuer Fundorte mit Gilden- und Gruppenmitgliedern sowie gezielter Massenaustausch über den Vorkommen-Bericht.
+---
 
-## Installation
-Kopiere den Ordner in dein jeweiliges WoW-`AddOns`-Verzeichnis (z. B. `_forever_\Interface\AddOns\` oder `_retail_\Interface\AddOns\`):
-- `GathererReforged`
+## ⌨️ Slash Commands
 
-## Slash-Befehle
-- `/gather`, `/gatherer`, `/gathererreforged`, `/greforged` – Öffnet die Einstellungen
-- `/gather report` – Öffnet den Vorkommen-Bericht
-- `/gather search` – Öffnet die Suche nach Vorkommen-Dichte
-- `/gather minimap toggle` – Schaltet die Minikarten-Anzeige um
-- `/gather mainmap toggle` – Schaltet die Weltkarten-Anzeige um
-- `/gather plugin hud toggle` – Schaltet das HUD-Plugin ein/aus
+Use `/gather`, `/gatherer`, `/gathererreforged`, or `/greforged`:
 
-## Support
-- **Spenden & Support:** [https://donate.goover.dev](https://donate.goover.dev)
-- **GitHub Repository:** [https://github.com/gOOvER/GathererReforged](https://github.com/gOOvER/GathererReforged)
+| Command | Description |
+| :--- | :--- |
+| `/gather` or `/gather options` | Open the Ace3 configuration window |
+| `/gather report` | Open the Gatherables Report dialog |
+| `/gather search` | Open the Node Density Search dialog |
+| `/gather on` / `/gather off` / `/gather toggle` | Enable, disable, or toggle Minimap tracking |
+| `/gather dist <yards>` | Set maximum Minimap tracking distance |
+| `/gather num <count>` | Set maximum number of Minimap notes displayed |
+| `/gather herbs on\|off\|toggle` | Toggle Herbalism node display |
+| `/gather mining on\|off\|toggle` | Toggle Mining node display |
+| `/gather open on\|off\|toggle` | Toggle Treasure / Container node display |
+
+---
+
+## 📜 Credits & License
+
+- **Author (Reforged Modernization)**: [gOOvER](https://github.com/gOOvER)
+- **Original Gatherer Concept & Legacy**: Norganna's AddOns (Esamynn, MentalPower, jcarrothers)
+- **License**: [GNU General Public License v3.0 (GPL-3.0)](LICENSE)
