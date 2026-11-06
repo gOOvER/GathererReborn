@@ -1,306 +1,407 @@
 --[[
 	Gatherer Reforged Addon for World of Warcraft(tm).
+	Modernized Node Density & Zone Search UI (Gatherer.NodeSearch)
 	Version: 1.0.0
 	Author: gOOvER
-
-	License:
-		This program is free software: you can redistribute it and/or modify
-		it under the terms of the GNU General Public License as published by
-		the Free Software Foundation, either version 3 of the License, or
-		(at your option) any later version.
-
-		This program is distributed in the hope that it will be useful,
-		but WITHOUT ANY WARRANTY; without even the implied warranty of
-		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-		GNU General Public License for more details.
-
-		You should have received a copy of the GNU General Public License
-		along with this program (see gpl.txt); if not, see <https://www.gnu.org/licenses/>.
+	License: GNU General Public License v3.0 (GPL-3.0)
 ]]
 
 local _tr = Gatherer.Locale.Tr
-local _trC = Gatherer.Locale.TrClient
-local _trL = Gatherer.Locale.TrLocale
+local UIStyle = Gatherer.UIStyle
 
 Gatherer.NodeSearch = {}
 local public = Gatherer.NodeSearch
 local private = {}
 
+local SEARCH_LINES = 17
+local ROW_HEIGHT = 22
+
+private.frame = CreateFrame("Frame", "GathererNodeSearchFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+local frame = private.frame
+public.Frame = frame
+
 function public.Show()
-	private.frame:Show()
+	Gatherer.Config.HideOptions()
+	if Gatherer.Report and Gatherer.Report.Hide then
+		Gatherer.Report.Hide()
+	end
+	frame:Show()
+	private.RunSearch()
 end
 
 function public.Hide()
-	private.frame:Hide()
+	frame:Hide()
 end
 
 function public.Toggle()
-	if (private.frame:IsShown()) then
+	if frame:IsShown() then
 		public.Hide()
 	else
 		public.Show()
 	end
 end
 
-private.frame = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-local frame = private.frame
-
-frame:SetBackdrop({
-        bgFile = "Interface/Tooltips/ChatBubble-Background",
-        edgeFile = "Interface/Tooltips/ChatBubble-BackDrop",
-        tile = true, tileSize = 32, edgeSize = 32,
-        insets = { left = 32, right = 32, top = 32, bottom = 32 }
-})
-frame:SetBackdropColor(0,0,0, 1)
-
-frame:SetPoint("CENTER", UIParent, "CENTER")
-frame:SetWidth(450)
-frame:SetHeight(450)
-
-frame:SetMovable(true)
-frame:EnableMouse(true)
 frame:Hide()
+frame:SetSize(780, 540)
+frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+frame:SetFrameStrata("DIALOG")
+frame:SetToplevel(true)
+frame:SetMovable(true)
+frame:SetClampedToScreen(true)
+frame:EnableMouse(true)
+UIStyle.ApplyBox(frame, 0.07, 0.08, 0.11, 0.97, 0.26, 0.30, 0.38, 1)
+table.insert(UISpecialFrames, "GathererNodeSearchFrame")
 
-frame.Drag = CreateFrame("Button", nil, frame)
-frame.Drag:SetPoint("TOPLEFT", frame, "TOPLEFT", 10,-5)
-frame.Drag:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -10,-5)
-frame.Drag:SetHeight(6)
-frame.Drag:SetHighlightTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")
+-- 1. Header Bar
+frame.Header = UIStyle.CreateHeader(
+	frame,
+	"Gatherer Reforged  |cff667080—|r  |cffffffff" .. _tr("DENSITY_SEARCH_TITLE") .. "|r",
+	133939,
+	function() public.Hide() end
+)
 
-frame.Drag:SetScript("OnMouseDown", function() frame:StartMoving() end)
-frame.Drag:SetScript("OnMouseUp", function() frame:StopMovingOrSizing() end)
+-- 2. Toolbar (Live Search Input + Category Filter Tabs)
+frame.Toolbar = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
+frame.Toolbar:SetPoint("TOPLEFT", frame.Header, "BOTTOMLEFT", 10, -8)
+frame.Toolbar:SetPoint("TOPRIGHT", frame.Header, "BOTTOMRIGHT", -10, -8)
+frame.Toolbar:SetHeight(36)
+UIStyle.ApplyBox(frame.Toolbar, 0.10, 0.12, 0.15, 1, 0.20, 0.23, 0.29, 1)
 
-frame.DragBottom = CreateFrame("Button",nil, frame)
-frame.DragBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10,5)
-frame.DragBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10,5)
-frame.DragBottom:SetHeight(6)
-frame.DragBottom:SetHighlightTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")
+frame.SearchBox = UIStyle.CreateEditBox(frame.Toolbar, 280, 24, "Vorkommen oder Gebiet filtern...")
+frame.SearchBox:SetPoint("LEFT", frame.Toolbar, "LEFT", 8, 0)
+frame.SearchBox.OnValueChanged = function()
+	private.RunSearch()
+end
 
-frame.DragBottom:SetScript("OnMouseDown", function() frame:StartMoving() end)
-frame.DragBottom:SetScript("OnMouseUp", function() frame:StopMovingOrSizing() end)
+private.activeCategory = "ALL"
+private.categoryButtons = {}
+local CATEGORIES = {
+	{ key = "ALL",  label = "Alle" },
+	{ key = "HERB", label = "Kräuter" },
+	{ key = "MINE", label = "Bergbau" },
+	{ key = "OPEN", label = "Schätze" },
+	{ key = "ARCH", label = "Archäol." },
+}
 
---Hide frame
-frame.Done = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-frame.Done:SetWidth(90)
-frame.Done:SetHeight(22)
-frame.Done:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 10)
+local prevCatBtn
+for i = #CATEGORIES, 1, -1 do
+	local cat = CATEGORIES[i]
+	local cBtn = CreateFrame("Button", nil, frame.Toolbar, BackdropTemplateMixin and "BackdropTemplate" or nil)
+	cBtn:SetHeight(24)
+	local cLbl = cBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	cLbl:SetPoint("CENTER", 0, 0)
+	cLbl:SetText(cat.label)
+	cBtn:SetWidth(math.max((cLbl:GetStringWidth() or 40) + 16, 54))
+	if not prevCatBtn then
+		cBtn:SetPoint("RIGHT", frame.Toolbar, "RIGHT", -8, 0)
+	else
+		cBtn:SetPoint("RIGHT", prevCatBtn, "LEFT", -4, 0)
+	end
+	prevCatBtn = cBtn
+	cBtn.key = cat.key
+	cBtn.Label = cLbl
+	cBtn:SetScript("OnClick", function()
+		private.activeCategory = cat.key
+		private.UpdateCategoryButtons()
+		private.RunSearch()
+	end)
+	private.categoryButtons[cat.key] = cBtn
+end
+
+function private.UpdateCategoryButtons()
+	for key, btn in pairs(private.categoryButtons) do
+		if key == private.activeCategory then
+			UIStyle.ApplyBox(btn, 0.26, 0.21, 0.09, 1, 0.85, 0.68, 0.18, 1)
+			btn.Label:SetTextColor(1, 0.88, 0.30)
+		else
+			UIStyle.ApplyBox(btn, 0.13, 0.15, 0.19, 1, 0.22, 0.25, 0.32, 1)
+			btn.Label:SetTextColor(0.68, 0.72, 0.80)
+		end
+	end
+end
+private.UpdateCategoryButtons()
+
+-- 3. Footer Bar
+frame.Footer = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
+frame.Footer:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 10)
+frame.Footer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 10)
+frame.Footer:SetHeight(36)
+UIStyle.ApplyBox(frame.Footer, 0.10, 0.12, 0.15, 1, 0.20, 0.23, 0.29, 1)
+
+frame.GatherablesReport = UIStyle.CreateButton(frame.Footer, 165, 24, "📋 " .. _tr("LABEL_REPORT"), "default")
+frame.GatherablesReport:SetPoint("LEFT", frame.Footer, "LEFT", 8, 0)
+frame.GatherablesReport:SetScript("OnClick", function()
+	frame:Hide()
+	Gatherer.Report.Show()
+end)
+
+frame.Config = UIStyle.CreateButton(frame.Footer, 145, 24, "⚙ " .. _tr("LABEL_CONFIG"), "default")
+frame.Config:SetPoint("LEFT", frame.GatherablesReport, "RIGHT", 8, 0)
+frame.Config:SetScript("OnClick", function()
+	frame:Hide()
+	Gatherer.Config.ShowOptions()
+end)
+
+frame.FooterHint = frame.Footer:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+frame.FooterHint:SetPoint("LEFT", frame.Config, "RIGHT", 14, 0)
+frame.FooterHint:SetText("|cff778292Klick auf Zeile:|r Im Vorkommen-Bericht öffnen")
+
+frame.Done = UIStyle.CreateButton(frame.Footer, 100, 24, _tr("DONE"), "primary")
+frame.Done:SetPoint("RIGHT", frame.Footer, "RIGHT", -8, 0)
 frame.Done:SetScript("OnClick", function() public.Hide() end)
-frame.Done:SetText(_tr("DONE"))
 
---Display Gathereables Report
-frame.GatherablesReport = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-frame.GatherablesReport:SetHeight(22)
-frame.GatherablesReport:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 8, 10)
-frame.GatherablesReport:SetScript("OnClick", function() frame:Hide() Gatherer.Report.Show() end)
-frame.GatherablesReport:SetText(_tr("LABEL_REPORT"))
-local buttonWidth = frame.GatherablesReport:GetFontString():GetWidth() + 15
-if ( buttonWidth > 160 ) then buttonWidth = 160 end
-if ( buttonWidth < 90 ) then buttonWidth = 90 end
-frame.GatherablesReport:SetWidth(buttonWidth)
+-- 4. Results Table
+frame.Results = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
+frame.Results:SetPoint("TOPLEFT", frame.Toolbar, "BOTTOMLEFT", 0, -8)
+frame.Results:SetPoint("BOTTOMRIGHT", frame.Footer, "TOPRIGHT", 0, 8)
+UIStyle.ApplyBox(frame.Results, 0.08, 0.09, 0.12, 1, 0.22, 0.25, 0.32, 1)
 
---Display Configuration
-frame.Config = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-frame.Config:SetHeight(22)
-frame.Config:SetPoint("LEFT", frame.GatherablesReport, "RIGHT", 0, 0)
-frame.Config:SetScript("OnClick", function() frame:Hide() Gatherer.Config.ShowOptions() end)
-frame.Config:SetText(_tr("LABEL_CONFIG"))
-buttonWidth = frame.Config:GetFontString():GetWidth() + 15
-if ( buttonWidth > 160 ) then buttonWidth = 160 end
-if ( buttonWidth < 90 ) then buttonWidth = 90 end
-frame.Config:SetWidth(buttonWidth)
+frame.Results.Header = CreateFrame("Frame", nil, frame.Results, BackdropTemplateMixin and "BackdropTemplate" or nil)
+frame.Results.Header:SetPoint("TOPLEFT", frame.Results, "TOPLEFT", 1, -1)
+frame.Results.Header:SetPoint("TOPRIGHT", frame.Results, "TOPRIGHT", -1, -1)
+frame.Results.Header:SetHeight(26)
+UIStyle.ApplyBox(frame.Results.Header, 0.13, 0.15, 0.20, 1, 0.22, 0.25, 0.32, 1)
 
---Add Title to the Top
-frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-frame.title:SetPoint("CENTER", frame, "TOP", 0, -20)
-frame.title:SetText(_tr("DENSITY_SEARCH_TITLE"))
+local COLUMNS = {
+	{ key = "Node",    title = _tr("DENSITY_COLUMN_HEADER_TYPE"),     x = 10,  width = 235, align = "LEFT",  sortKey = "node" },
+	{ key = "Zone",    title = _tr("DENSITY_COLUMN_HEADER_LOCATION"), x = 250, width = 200, align = "LEFT",  sortKey = "zone" },
+	{ key = "Count",   title = _tr("DENSITY_COLUMN_HEADER_NUM_NODE"), x = 455, width = 75,  align = "RIGHT", sortKey = "count" },
+	{ key = "Percent", title = _tr("DENSITY_COLUMN_HEADER_PERCENT"),  x = 540, width = 115, align = "LEFT",  sortKey = "pct" },
+	{ key = "Value",   title = "Marktwert",                           x = 660, width = 70,  align = "RIGHT", sortKey = "value" },
+}
 
-local Dropdown = Gatherer.UI.Dropdown
-local DataGrid = Gatherer.UI.DataGrid
+private.sortBy = "count"
+private.sortAsc = false
 
---Search box
-frame.searchBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-frame.searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -60)
-frame.searchBox:SetAutoFocus(false)
-frame.searchBox:ClearFocus()
-frame.searchBox:SetHeight(15)
-frame.searchBox:SetWidth(150)
-frame.searchBox:SetScript("OnEnterPressed", function() private.startSearch(_, _, frame.searchBox:GetText() ) end)
-
---Search Button
-frame.searchButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-frame.searchButton:SetWidth(90)
-frame.searchButton:SetHeight(22)
-frame.searchButton:SetPoint("TOPLEFT", frame.searchBox, "BOTTOMLEFT", -6, -1)
-frame.searchButton:SetText(_tr("SEARCH"))
-frame.searchButton:SetScript("OnClick", function() private.startSearch(_, _, frame.searchBox:GetText() ) end)
-
---Dropdown, used to choose which Continent Stats come from
-frame.DropdownSetting = {"all", "all"}
-function private.ChangeControls(obj, arg1,arg2,...)
-	frame.DropdownSetting = {arg1, arg2}
-end
-
-
--- convert list of zoneID1, zoneName1, zoneID2, zoneName2, etc.
--- into just a list of zone names
-local function stripZoneIDs(...)
-	local n = select("#", ...)
-	--print("zoneList count = ", n );
-	local temp = {};
-	local index = 1;
-	for i = 2, n, 2 do
-		temp[index] = select(i, ...);
-		--print("  item = ", temp[index] );
-		index = index + 1;
+for _, col in ipairs(COLUMNS) do
+	local colBtn = CreateFrame("Button", nil, frame.Results.Header)
+	colBtn:SetPoint("TOPLEFT", frame.Results.Header, "TOPLEFT", col.x, 0)
+	colBtn:SetSize(col.width, 26)
+	local colTxt = colBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	if col.align == "RIGHT" then
+		colTxt:SetPoint("RIGHT", colBtn, "RIGHT", -4, 0)
+	else
+		colTxt:SetPoint("LEFT", colBtn, "LEFT", 2, 0)
 	end
-	return temp;
+	colTxt:SetJustifyH(col.align)
+	colTxt:SetText(col.title)
+	colTxt:SetTextColor(0.92, 0.78, 0.30)
+	colBtn:SetScript("OnEnter", function() colTxt:SetTextColor(1, 0.95, 0.65) end)
+	colBtn:SetScript("OnLeave", function() colTxt:SetTextColor(0.92, 0.78, 0.30) end)
+	colBtn:SetScript("OnClick", function()
+		if private.sortBy == col.sortKey then
+			private.sortAsc = not private.sortAsc
+		else
+			private.sortBy = col.sortKey
+			private.sortAsc = (col.sortKey == "node" or col.sortKey == "zone")
+		end
+		private.SortData()
+		private.UpdateRows()
+	end)
 end
 
+frame.Results.Scroll = CreateFrame("ScrollFrame", "GathererNodeSearchScroll", frame.Results, "FauxScrollFrameTemplate")
+frame.Results.Scroll:SetPoint("TOPLEFT", frame.Results.Header, "BOTTOMLEFT", 0, -2)
+frame.Results.Scroll:SetPoint("BOTTOMRIGHT", frame.Results, "BOTTOMRIGHT", -24, 4)
+frame.Results.Scroll:SetScript("OnVerticalScroll", function(self, offset)
+	FauxScrollFrame_OnVerticalScroll(self, offset, ROW_HEIGHT, function()
+		private.UpdateRows()
+	end)
+end)
 
--- Use a callback to generate the list of continents, so that the call
--- to GetMapContinents is deferred until it is defined. Also establish
--- the maximum continent index here
-local continents
-local maxCont
-local function vals()
-	if not continents then
-		continents = stripZoneIDs(GetMapContinents())
-		maxCont = table.maxn(continents)
+frame.Results.EmptyText = frame.Results:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+frame.Results.EmptyText:SetPoint("CENTER", frame.Results, "CENTER", 0, 0)
+frame.Results.EmptyText:SetText("|cff8892a4Keine passenden Vorkommen in der Datenbank gefunden.|r")
+frame.Results.EmptyText:Hide()
+
+frame.Rows = {}
+for i = 1, SEARCH_LINES do
+	local row = CreateFrame("Button", nil, frame.Results)
+	frame.Rows[i] = row
+	row:SetHeight(ROW_HEIGHT)
+	if i == 1 then
+		row:SetPoint("TOPLEFT", frame.Results.Header, "BOTTOMLEFT", 1, -2)
+	else
+		row:SetPoint("TOPLEFT", frame.Rows[i - 1], "BOTTOMLEFT", 0, 0)
 	end
-	local items = {
-		{"all", _tr("ALL")},
-	}
-	for n, text in ipairs(continents) do
-		table.insert(items, {n, text})
+	row:SetPoint("RIGHT", frame.Results, "RIGHT", -24, 0)
+
+	row.Bg = row:CreateTexture(nil, "BACKGROUND")
+	row.Bg:SetAllPoints()
+	if i % 2 == 0 then
+		row.Bg:SetColorTexture(0.09, 0.11, 0.14, 0.90)
+	else
+		row.Bg:SetColorTexture(0.07, 0.08, 0.11, 0.90)
 	end
-	return items
+
+	row.Icon = row:CreateTexture(nil, "ARTWORK")
+	row.Icon:SetSize(16, 16)
+	row.Icon:SetPoint("LEFT", row, "LEFT", 8, 0)
+	row.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+	local function makeCell(x, w, align)
+		local fs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		fs:SetPoint("LEFT", row, "LEFT", x, 0)
+		fs:SetWidth(w)
+		fs:SetHeight(ROW_HEIGHT - 2)
+		fs:SetJustifyH(align or "LEFT")
+		if fs.SetWordWrap then fs:SetWordWrap(false) end
+		return fs
+	end
+
+	row.Node  = makeCell(28,  215, "LEFT")
+	row.Zone  = makeCell(250, 200, "LEFT")
+	row.Count = makeCell(455, 75,  "RIGHT")
+
+	-- Density Progress Bar
+	row.BarBg = row:CreateTexture(nil, "ARTWORK")
+	row.BarBg:SetPoint("LEFT", row, "LEFT", 542, 0)
+	row.BarBg:SetSize(72, 10)
+	row.BarBg:SetColorTexture(0.14, 0.16, 0.21, 1)
+
+	row.BarFill = row:CreateTexture(nil, "OVERLAY")
+	row.BarFill:SetPoint("LEFT", row.BarBg, "LEFT", 0, 0)
+	row.BarFill:SetHeight(10)
+	row.BarFill:SetColorTexture(0.15, 0.82, 0.52, 0.9)
+
+	row.Percent = makeCell(618, 38, "RIGHT")
+	row.Value   = makeCell(660, 70, "RIGHT")
+
+	row:SetScript("OnEnter", function(self)
+		self.Bg:SetColorTexture(0.16, 0.20, 0.27, 0.95)
+	end)
+	row:SetScript("OnLeave", function(self)
+		if i % 2 == 0 then
+			self.Bg:SetColorTexture(0.09, 0.11, 0.14, 0.90)
+		else
+			self.Bg:SetColorTexture(0.07, 0.08, 0.11, 0.90)
+		end
+	end)
+	row:SetScript("OnClick", function(self)
+		if not self.entry then return end
+		local e = self.entry
+		public.Hide()
+		if Gatherer.Report and Gatherer.Report.Show then
+			Gatherer.Report.Show()
+			if Gatherer.Report.SetSearchFilter then
+				Gatherer.Report.SetSearchFilter('+"' .. e.nodeName .. '" +"' .. e.zoneName .. '"', e.gType)
+			end
+		end
+	end)
 end
 
-frame.dropdown = CreateFrame("Frame", "GathererNodeSearchBox", frame)
-frame.dropdown.box = Dropdown:Create("GathererNodeSearchBox", frame.dropdown, 120, private.ChangeControls, vals, "default")
-frame.dropdown.box:SetPoint("TOPLEFT", frame, "TOPLEFT", 180,-56)
-frame.dropdown.box.element = "dropdown"
-frame.dropdown.box:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-frame.dropdown.box:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0,-90)
-frame.dropdown.box:SetText(_tr("ALL"))
+private.results = {}
 
---Create Scrollframe
-frame.resultlist = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
-frame.resultlist:SetBackdrop({
-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        tile = true, tileSize = 32, edgeSize = 16,
-        insets = { left = 5, right = 5, top = 5, bottom = 5 }
-})
-
-frame.resultlist:SetBackdropColor(1, 0, 0, 0.5)
-frame.resultlist:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 5, 350)
-frame.resultlist:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", -5, 0)
-frame.resultlist:SetPoint("BOTTOM", frame, "BOTTOM",0, 38)
-
-function private.onEnter(...)
-end
-function private.onLeave(...)
-end
-function private.onMouseover(...)
-end
-function private.onClick(...)
-end
-function private.onResize(...)
-end
-function private.onSelect(...)
+function private.SortData()
+	local sortBy = private.sortBy
+	local asc = private.sortAsc
+	table.sort(private.results, function(a, b)
+		local va, vb
+		if sortBy == "node" then
+			va, vb = a.nodeName, b.nodeName
+		elseif sortBy == "zone" then
+			va, vb = a.zoneName, b.zoneName
+		elseif sortBy == "pct" then
+			va, vb = a.pct, b.pct
+		elseif sortBy == "value" then
+			va, vb = a.value, b.value
+		else
+			va, vb = a.nodes, b.nodes
+		end
+		if va == vb then
+			return a.nodeName < b.nodeName
+		end
+		if asc then
+			return va < vb
+		else
+			return va > vb
+		end
+	end)
 end
 
-frame.resultlist.sheet = DataGrid:Create(frame.resultlist, {
-		{ _tr("DENSITY_COLUMN_HEADER_LOCATION"), "TEXT",  123},
-		{ _tr("DENSITY_COLUMN_HEADER_TYPE"), "TEXT",  137},
-		{ _tr("DENSITY_COLUMN_HEADER_NUM_NODE"), "NUMBER",  67},
-		{ _tr("DENSITY_COLUMN_HEADER_PERCENT"), "NUMBER",  67},
+function private.RunSearch()
+	local query = (frame.SearchBox:GetText() or ""):lower():trim()
+	local activeCat = private.activeCategory or "ALL"
+	wipe(private.results)
 
+	local storage = Gatherer.Storage
+	for _, zone in storage.GetAreaIndices() do
+		local zoneName = Gatherer.ZoneTokens.ZoneNames[zone] or tostring(zone)
+		local archfinds, treasures, herbs, ores = storage.GetNodeCountsByGatherType(zone)
+		local totalsByType = {
+			HERB = herbs or 0,
+			MINE = ores or 0,
+			OPEN = treasures or 0,
+			ARCH = archfinds or 0,
+		}
 
-	},private.onEnter, private.onLeave, private.onClick, private.onResize, private.onSelect)
-
-local Data = {}
-function private.getZonesWithNodes(start, finish, gatherName)
-	--Scan zones and add zones matching the nodes to the table
-	local gType = Gatherer.Nodes.Objects[gatherName]
-	if ( gType ) then
-		for continent = start, finish do
-			local validTokens = Gatherer.ZoneTokens.TokensByContinent[continent]
-			for _, zone in Gatherer.Storage.GetAreaIndices() do
-				if ( validTokens[zone] ) then
-					if Gatherer.Storage.IsGatherInZone(zone, gatherName, gType) then
-						local nodes = Gatherer.Storage.GetGatherCountsForZone(zone, gatherName, gType)
-						local totalAll = Gatherer.Storage.GetNodeCounts(zone)
-						local archfinds, treasures, herbs, ores = Gatherer.Storage.GetNodeCountsByGatherType(zone)
-						local type = Gatherer.Nodes.Objects[gatherName]
-						table.insert(Data, {["continent"] = continent, ["zone"] = zone, ["gatherName"] = gatherName, ["nodes"] = nodes, ["totalAll"] = totalAll, ["HERB"] = herbs, ["MINE"] = ores, ["OPEN"] = treasures, ["ARCH"] = archfinds, ["type"] = type})
+		for _, gatherID, gType in storage.ZoneGatherNames(zone) do
+			if activeCat == "ALL" or activeCat == gType then
+				local nodeName = Gatherer.Util.GetNodeName(gatherID) or ("Node #" .. tostring(gatherID))
+				if query == "" or nodeName:lower():find(query, 1, true) or zoneName:lower():find(query, 1, true) then
+					local nodes = storage.GetGatherCountsForZone(zone, gatherID, gType) or 0
+					if nodes > 0 then
+						local totalCat = math.max(totalsByType[gType] or nodes, 1)
+						local pct = math.min(math.floor(nodes * 100 / totalCat + 0.5), 100)
+						local unitPrice = (Gatherer.Integrations and Gatherer.Integrations.GetNodeValue and select(1, Gatherer.Integrations.GetNodeValue(gatherID))) or 0
+						table.insert(private.results, {
+							zone = zone,
+							zoneName = zoneName,
+							gatherID = gatherID,
+							nodeName = nodeName,
+							gType = gType,
+							nodes = nodes,
+							pct = pct,
+							value = unitPrice,
+						})
 					end
 				end
 			end
 		end
 	end
+
+	private.SortData()
+	private.UpdateRows()
 end
 
-function private.startSearch(start, finish, name)
-	--allow user to filter continents searched
-	if frame.DropdownSetting[2] == "all" then
-		if not maxCont then vals() end --Since we do not define maxCont unless dropdown has been changed
-		start, finish = 1, maxCont
+function private.UpdateRows()
+	local size = #private.results
+	frame.Header.Badge:SetText(string.format("|cff00ff96%d|r Zonen-Einträge", size))
+
+	if size == 0 then
+		frame.Results.EmptyText:Show()
+		frame.Results.Scroll:Hide()
 	else
-		start, finish = frame.DropdownSetting[2], frame.DropdownSetting[2]
+		frame.Results.EmptyText:Hide()
 	end
-	--find matching node ID's for entered string, send all to be searched
-	for text, gatherName in pairs(Gatherer.Nodes.Names) do
-		if text:lower():match(name:lower()) then
-			private.getZonesWithNodes(start, finish, gatherName)
+
+	local offset = 0
+	if size <= SEARCH_LINES then
+		frame.Results.Scroll:Hide()
+	else
+		frame.Results.Scroll:Show()
+		FauxScrollFrame_Update(frame.Results.Scroll, size, SEARCH_LINES, ROW_HEIGHT)
+		offset = FauxScrollFrame_GetOffset(frame.Results.Scroll)
+	end
+
+	for i = 1, SEARCH_LINES do
+		local row = frame.Rows[i]
+		local idx = offset + i
+		local entry = private.results[idx]
+		if not entry then
+			row.entry = nil
+			row:Hide()
+		else
+			row.entry = entry
+			row.Icon:SetTexture(Gatherer.Util.GetGatherTexture(entry.gatherID))
+			row.Node:SetText(entry.nodeName)
+			row.Zone:SetText(entry.zoneName)
+			row.Count:SetText(string.format("|cffffffff%d|r", entry.nodes))
+			local fillW = math.max(math.floor(72 * (entry.pct / 100)), 2)
+			row.BarFill:SetWidth(fillW)
+			row.Percent:SetText(string.format("|cff00ff96%d%%|r", entry.pct))
+			row.Value:SetText(entry.value > 0 and Gatherer.Integrations and Gatherer.Integrations.FormatMoney(entry.value) or "|cff555c68—|r")
+			row:Show()
 		end
 	end
-	--What type of data did the user want returned
-	private.nodesByPercent()
 end
-function private.nodesByPercent()
-	--take results of search and prep for sending to scrollframe
-	local data = {}
-	for i,v in pairs( Data ) do
-		local nodes = v.nodes
-		local total = v[v.type] -- We store the type as HERB, MINE, OPEN, ARCH and can then use it here to refrence Data.HERB Data.OPEN etc..
-		local pct =  floor(nodes*100/total + 0.5)
-
-		table.insert(data, {Gatherer.ZoneTokens.ZoneNames[v.zone], Gatherer.Util.GetNodeName(v.gatherName), nodes, pct,} )
-	end
-	Data = {} --clear data for next round of searches
-	frame.resultlist.sheet:SetData(data, style)
-end
-
---[[NOT USED ATM tring to decide how we can group like types for results.
-local equivilents = {
-	-- Ores
-	[324] = 324, -- Small Thorium Vein
-	[123848] = 324, -- Ooze Covered Thorium Vein
-
-	[175404] = 175404, -- Rich Thorium Vein
-	[177388] = 175404, -- Ooze Covered Rich Thorium Vein
-
-	[1732] = 1732, -- Tin Vein
-	[1733] = 1732, -- Silver Vein
-	[73940] = 1732, -- Ooze Covered Silver Vein
-
-	[1735] = 1735, -- Iron Deposit
-	[1734] = 1735, -- Gold Vein
-	[73941] = 1735, -- Ooze Covered Gold Vein
-
-	[2040] = 2040, -- Mithril Deposit
-	[2047] = 2047, -- Truesilver Deposit
-	[123309] = 123309, -- Ooze Covered Truesilver Deposit
-	[123310] = 123310, -- Ooze Covered Mithril Deposit
-
-	[165658] = 165658, -- Dark Iron Deposit
-
-
-	[181556] = 181556, -- Adamantite Deposit
-	[181569] =  181556, -- Rich Adamantite Deposit
-
-	[181557] = 181557, -- Khorium Vein
-}
-]]

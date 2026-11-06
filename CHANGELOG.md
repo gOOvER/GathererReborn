@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Leatrix Maps & Custom Minimap Addons**: Dynamic frame layering above map reveal overlays and full quadrant support for custom minimap shapes (`SQUARE`, `ROUND`, `CORNER-*`, `SIDE-*`, `TRICORNER-*`).
   - **TomTom & Native Waypoints**: `Shift+Right-Click` or `Alt+Left-Click` any Gatherer pin on the World Map to create a **TomTom** waypoint or native Blizzard map pin (`GUI/GatherMapNotes.lua`).
 - **Modern Core & UI Architecture**:
+  - **Redesigned Gatherables Report & Node Density Search UI** (`GUI/GatherReport.lua`, `GUI/GathererNodeSearch.lua`, `Gatherer.UIStyle`): Complete visual overhaul featuring a sleek dark-gold 1px-bordered theme, modern filter pills, 1-click category tabs (*Alle, Kräuter, Bergbau, Schätze, Archäologie*), sortable columns, live AH market value column, density progress bars, right-click TomTom/Map waypoint creation, live session sidebar, and a 1-click empty-state `GatherMate2` importer.
   - Built-in **3D Heads-Up Display (HUD)** integrated directly into the main AddOn (`GUI/GatherHUD.lua`, `GUI/GatherHUD.xml`, `GUI/HudShape.blp`).
   - **Ace3 GUI & Options System** (`GUI/GatherAceGUI.lua`) built on `AceConfig-3.0` and `AceGUI-3.0`, registered directly in Blizzard Options (`ESC -> Options -> AddOns -> Gatherer Reforged`).
   - **`LibDBIcon-1.0`**, **`LibDataBroker-1.1`**, and **Blizzard Addon Compartment** integration (`GUI/GatherMiniIcon.lua`).
