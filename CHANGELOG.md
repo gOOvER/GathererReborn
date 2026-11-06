@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated profession skill detection (`GatherUtil.lua`) to support expansion-tiered profession skills where base rank can be `0`.
 
 ### Fixed
+- Fixed `AceConfigRegistry-3.0:ValidateOptionsTable(): unknown parameter` error when opening the Ace3 options dialog by removing unsupported `imageWidth` / `imageHeight` fields from `toggle` entries in `GUI/GatherAceGUI.lua`.
 - Fixed keyboard input and mouse click lock at startup caused by an unparented `CreateFrame("EditBox")` (with default `autoFocus = true`) and global Frame/EditBox metatable overrides in `Core/GatherPolyfills.lua`, as well as unfocused `EditBox` instances in `GUI/GatherReport.lua` and `GUI/GathererNodeSearch.lua` and mouse-enabled HUD frames in `GUI/GatherHUD.xml` / `GUI/GatherHUD.lua`.
 - Fixed `ADDON_LOADED` check in `Core/GatherEvent.lua` and `Core/GatherStorage.lua` so initialization and database loading trigger properly under the AddOn folder name `GathererReborn`.
 - Fixed `Gatherer.Util.GetSkills()` in `Core/GatherUtil.lua` checking `GetProfessions` feature availability instead of `tocVersion >= 40000` (which failed on WoW Forever where `tocVersion` is `16001`).

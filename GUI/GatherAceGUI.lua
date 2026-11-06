@@ -133,8 +133,6 @@ local function buildNodeFilterGroup(gTypeLower, titleKey, filterLabelKey)
 			type = "toggle",
 			name = label,
 			image = tex,
-			imageWidth = 18,
-			imageHeight = 18,
 			width = "normal",
 			order = 10 + idx,
 			get = function() return GetSetting(settingKey) end,
