@@ -62,6 +62,14 @@ local reqMINE1 = LOCKED_WITH_SPELL and LOCKED_WITH_SPELL:format(_trC("TRADE_MINI
 local reqMINE2 = LOCKED_WITH_SPELL_KNOWN and LOCKED_WITH_SPELL_KNOWN:format(_trC("TRADE_MINING")) or "LOCKED_WITH_SPELL_KNOWN"
 local GAME_OBJECT_REQUIRES_REWRITE = _trC("GAME_OBJECT_REQUIRES_REWRITE") or _trL("GAME_OBJECT_REQUIRES_REWRITE")
 
+local function isSafeString(val)
+	if type(val) ~= "string" then return false end
+	if issecretvalue and issecretvalue(val) then return false end
+	if canaccessvalue and not canaccessvalue(val) then return false end
+	local ok, nonEmpty = pcall(function() return val ~= "" end)
+	return ok and nonEmpty
+end
+
 function Gatherer.GameTooltip_OnShow()
 	pcall(function()
 		if UnitExists and UnitExists("mouseover") then return end
@@ -79,7 +87,7 @@ function Gatherer.GameTooltip_OnShow()
 		local profession, locked_format_string;
 		local requires = line[2]:GetText()
 		local nodeName = line[1]:GetText()
-		if not Gatherer.IsSafeString(requires) or not Gatherer.IsSafeString(nodeName) then return end
+		if not isSafeString(requires) or not isSafeString(nodeName) then return end
 
 		if ( requires == reqHERB1 ) then
 			profession = _trC("TRADE_HERBALISM")

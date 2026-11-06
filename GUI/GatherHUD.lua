@@ -209,23 +209,25 @@ end
 local Gatherer_GetNodeTexture = Gatherer.Util.GetNodeTexture
 
 function lib.PlaceIcon(nodeZoneToken, gType, nodeIndex, x, y)
+	if not frame then return end
 	local tex, trim = Gatherer_GetNodeTexture(nodeZoneToken, gType, nodeIndex) -- Gatherer.Util.GetNodeTexture
 	
 	local nodeId = private.curNode+1
-	private.curNode = nodeId
 	
 	local node = private.nodes[nodeId]
 	if (not node) then
 		node = {}
 		node.tex = frame:CreateTexture("GatherHudNode"..nodeId)
-		node.tex:SetNonBlocking(true)
+		if node.tex.SetNonBlocking then
+			node.tex:SetNonBlocking(true)
+		end
 		node.tex:SetWidth(get("plugin.gatherer_hud.iconsize"))
 		node.tex:SetHeight(get("plugin.gatherer_hud.iconsize"))
 		node.tex:Show();
 
 		private.nodes[nodeId] = node
 		if nodeId > private.maxNode then
-	 private.maxNode = nodeId
+			private.maxNode = nodeId
 		end
 	end
 	
@@ -233,6 +235,7 @@ function lib.PlaceIcon(nodeZoneToken, gType, nodeIndex, x, y)
 	node.z = nodeZoneToken
 	node.x = x
 	node.y = y
+	private.curNode = nodeId
 end
 
 
@@ -461,53 +464,40 @@ function lib.Render()
 	-- gatherer nodes
 	for i = 1, private.curNode do
 		node = private.nodes[i]
-		-- d/dx/dy = distance in yards in the radius/x/y dimensions
-		--d, dx, dy = Astrolabe:ComputeDistance(pc, pz, px, py, node.c, node.z, node.x, node.y);
-
-		--
-		--if d and dx and dy then
-		--angle = math.atan2(dx, -dy)
-		--newangle = angle + facing
-		
-		--dx = d * math.sin(newangle);
-
-		--dy = d * math.cos(newangle);
-
-
-
-		dx = (node.x - px) * xScale
-		dy = (node.y - py) * yScale
-		
-		d_squared = dx*dx + dy*dy
-		
-		if (d_squared < maxYardsSquare) then
-			if (d_squared > minFadeAtSquare) then
-				pct = 1 - ((math.sqrt(d_squared) - minFadeAt) / (maxYards - minFadeAt))
-			else
-				pct = 1
+		if node and node.tex and node.x and node.y then
+			dx = (node.x - px) * xScale
+			dy = (node.y - py) * yScale
+			
+			d_squared = dx*dx + dy*dy
+			
+			if (d_squared < maxYardsSquare) then
+				if (d_squared > minFadeAtSquare) then
+					pct = 1 - ((math.sqrt(d_squared) - minFadeAt) / (maxYards - minFadeAt))
+				else
+					pct = 1
+				end
+				
+				newalpha = pct
+				
+				-- So now, we need to work out the icon position
+				dx, dy, scale = matrix.multiply_2d(dx * ratio, dy * ratio, 0)
+				
+				node.tex:SetAlpha(newalpha)
+				node.tex:ClearAllPoints()
+				node.tex:SetPoint("CENTER", frame, "CENTER", dx, dy)
+				node.tex:SetWidth(size * scale)
+				node.tex:SetHeight(size * scale)
+				if not node.tex:IsVisible() then
+					node.tex:Show()
+				end
+			elseif node.tex:IsVisible() then
+				node.tex:Hide()
 			end
-			
-			newalpha = pct
-			
-			-- So now, we need to work out the icon position
-			dx, dy, scale = matrix.multiply_2d(dx * ratio, dy * ratio, 0)
-			
-			node.tex:SetAlpha(newalpha)
-			node.tex:ClearAllPoints()
-			node.tex:SetPoint("CENTER", frame, "CENTER", dx, dy)
-			node.tex:SetWidth(size * scale)
-			node.tex:SetHeight(size * scale)
-			if not node.tex:IsVisible() then
-				node.tex:Show()
-			end
-		elseif node.tex:IsVisible() then
-			node.tex:Hide()
 		end
-		--end
 	end
 	for i = private.curNode+1, private.maxNode do
 		node = private.nodes[i]
-		if node.tex:IsVisible() then
+		if node and node.tex and node.tex:IsVisible() then
 			node.tex:Hide()
 		end
 	end

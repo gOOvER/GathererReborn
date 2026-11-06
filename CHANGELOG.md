@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated profession skill detection (`GatherUtil.lua`) to support expansion-tiered profession skills where base rank can be `0`.
 
 ### Fixed
+- Fixed `GatherHUD.lua:221: attempt to call a nil value` (`Texture:SetNonBlocking` removed in modern WoW) and the resulting `GatherHUD.lua:478: attempt to index local 'node' (a nil value)` in `GUI/GatherHUD.lua`.
 - Fixed red question mark icons (`134400` / `INV_Misc_QuestionMark`) in the Herbalism, Mining, and Treasure filter lists by detecting question-mark returns from `C_Item.GetItemIconByID` (when expansion items do not exist in the current client flavor DB) and mapping all `Herb\*`, `Mine\*`, and `Open\*` icon categories to universal built-in FileDataIDs in `Core/GatherUtil.lua`.
 - Fixed WoW 12.x `<secret string>` taint comparison error in `Core/GatherScanner.lua` and `GUI/GatherTooltip.lua` (`attempt to compare local 'text' (a secret string value)`) by adding `Gatherer.IsSafeString` / `Gatherer.IsSafeValue` checks (`issecretvalue`, `canaccessvalue`, `pcall`) and ignoring non-world UI frame tooltips.
 - Fixed `AceConfigRegistry-3.0:ValidateOptionsTable(): unknown parameter` error when opening the Ace3 options dialog by removing unsupported `imageWidth` / `imageHeight` fields from `toggle` entries in `GUI/GatherAceGUI.lua`.
