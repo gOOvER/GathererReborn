@@ -89,11 +89,29 @@ jobs:
 
     - name: Package with BigWigs Packager (downloads externals from .pkgmeta)
       uses: BigWigsMods/packager@v2
-      with:
-        args: -S
       env:
         CF_API_KEY: ${{ needs.validate-release.outputs.is_prerelease == 'true' && '' || secrets.CF_API_KEY }}
         WAGO_API_TOKEN: ${{ needs.validate-release.outputs.is_prerelease == 'true' && '' || secrets.WAGO_API_TOKEN }}
         WOWI_API_TOKEN: ${{ needs.validate-release.outputs.is_prerelease == 'true' && '' || secrets.WOWI_API_TOKEN }}
         GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Multi-Version ZIPs to GitHub Release (Wago / CurseForge naming)
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION="${{ needs.validate-release.outputs.version }}"
+        TAG_NAME="v$VERSION"
+        BASE_ZIP=".release/GathererReforged-${TAG_NAME}.zip"
+        if [ ! -f "$BASE_ZIP" ]; then
+          BASE_ZIP=$(ls .release/GathererReforged-*.zip | grep -v "\-nolib" | head -n 1)
+        fi
+        if [ -n "$BASE_ZIP" ] && [ -f "$BASE_ZIP" ]; then
+          for SUFFIX in "-mists" "-cata" "-wrath" "-bcc" "-forever" "-classic"; do
+            TARGET_ZIP=".release/GathererReforged-${TAG_NAME}${SUFFIX}.zip"
+            if [ ! -f "$TARGET_ZIP" ]; then
+              cp "$BASE_ZIP" "$TARGET_ZIP"
+              gh release upload "$TAG_NAME" "$TARGET_ZIP" --clobber || true
+            fi
+          done
+        fi
 
