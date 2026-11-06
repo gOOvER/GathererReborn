@@ -1,5 +1,5 @@
 <div align="center">
-  <img src=".github/social-preview.png" alt="Gatherer Reforged Banner" width="800" />
+  <img src=".github/social-preview.jpg" alt="Gatherer Reforged Banner" width="800" />
 
   # Gatherer Reforged
 

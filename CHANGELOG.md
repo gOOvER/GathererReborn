@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Native **`C_Map` Mapping Engine** (`Core/GatherMap.lua`) built on `C_Map`, `C_Minimap`, and `UiMapPoint` with dynamic `MAP_<uiMapID>` zone token support (`Data/GatherZoneTokens.lua`).
   - **Dynamic "Forever" Node Discovery** (`Core/GatherScanner.lua`, `Core/GatherObjects.lua`) to automatically learn and persist new or custom herbs, ores, treasures, and archaeology finds across all expansions and custom servers.
   - Multi-client TOC support (`GathererReforged.toc`) for **WoW Forever** (`16001`), **Retail / Midnight** (`12.x`), **Mists of Pandaria Classic** (`5.5.x`), **Cataclysm** (`4.4.x`), **Wrath** (`3.4.x`/`3.8.x`), **TBC Classic** (`2.5.x`), and **Classic Era** (`1.15.x`).
-  - `.pkgmeta`, `embeds.xml`, `.luacheckrc`, GitHub Social Preview banner (`.github/social-preview.png`), GitHub Issue & PR templates (`.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`), and GitHub Actions CI/CD workflows (`.github/workflows/release.yml`, `.github/workflows/quality.yml`).
+  - `.pkgmeta`, `embeds.xml`, `.luacheckrc`, GitHub Social Preview banner (`.github/social-preview.jpg`), GitHub Issue & PR templates (`.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`), and GitHub Actions CI/CD workflows (`.github/workflows/release.yml`, `.github/workflows/quality.yml`).
 
 ### Changed
 - Rebranded and modernized Norganna's classic *Gatherer* addon (2005–2017) as **Gatherer Reforged** (`GathererReforged`) under **GNU General Public License v3.0 (GPL-3.0)** (`LICENSE`) with `gOOvER` as author.
