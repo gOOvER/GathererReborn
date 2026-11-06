@@ -345,10 +345,10 @@ function GetContinentAndZone( token )
 end
 
 function GetZoneIndex( continent, token )
-	if not ( Tokens[continent] ) then
+	if not ( TokensByContinent[continent] ) then
 		return nil
 	end
-	local val = Tokens[continent][token]
+	local val = TokensByContinent[continent][token]
 	if ( val ) then
 		if ( type(token) == "string" ) then
 			return val
@@ -360,11 +360,11 @@ end
 
 function GetZoneMapID( continent, token )
 	local zone = nil
-	if ( Tokens[continent] ) then
-		zone = Tokens[continent][token]
+	if ( TokensByContinent[continent] ) then
+		zone = TokensByContinent[continent][token]
 	end
 	if ( type(zone) ~= "number" and type(token) == "number" ) then
-		zone = Tokens[continent][Tokens[continent][token]]
+		zone = TokensByContinent[continent][TokensByContinent[continent][token]]
 	end
 	return Map:GetMapID(continent, zone)
 end

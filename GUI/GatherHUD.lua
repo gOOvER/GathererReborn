@@ -123,13 +123,15 @@ function lib.Load( self )
 
 	frame:RegisterEvent("PLAYER_ENTER_COMBAT")
 	frame:RegisterEvent("PLAYER_LEAVE_COMBAT")
+	frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+	frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
 function lib.ProcessGameEvent( event )
-	if event == "PLAYER_ENTER_COMBAT" then
+	if event == "PLAYER_ENTER_COMBAT" or event == "PLAYER_REGEN_DISABLED" then
 		private.inCombat = 1;
 
-	elseif event == "PLAYER_LEAVE_COMBAT" then
+	elseif event == "PLAYER_LEAVE_COMBAT" or event == "PLAYER_REGEN_ENABLED" then
 		private.inCombat = nil;
 
 	end
@@ -232,6 +234,11 @@ function lib.PlaceIcon(nodeZoneToken, gType, nodeIndex, x, y)
 	end
 	
 	node.tex:SetTexture(tex)
+	if trim then
+		node.tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	else
+		node.tex:SetTexCoord(0, 1, 0, 1)
+	end
 	node.z = nodeZoneToken
 	node.x = x
 	node.y = y
@@ -458,8 +465,6 @@ function lib.Render()
 						node:SetHeight(partysize * scale)
 						if not node:IsVisible() then
 							node:Show()
-						elseif node:IsVisible() then
-							node:Hide()
 						end
 					end
 				end

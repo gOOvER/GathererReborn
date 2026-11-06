@@ -271,21 +271,26 @@ function Integrations.Session.AddTooltipLines(tooltip)
 	if not tooltip or not tooltip.AddLine then return end
 	if not Gatherer.Config.GetSetting("session.enable", true) then return end
 
+	local _tr = Gatherer.Locale and Gatherer.Locale.Tr
 	local summary = Integrations.Session.GetSummary()
 	tooltip:AddLine(" ")
-	tooltip:AddLine("|cffffd200Session-Statistik (Gatherer Reforged)|r")
-	local mins = floor(summary.elapsed / 60)
-	local secs = summary.elapsed % 60
-	tooltip:AddDoubleLine("Session-Dauer:", string.format("|cffffffff%02d:%02d Min.|r", mins, secs), 0.8, 0.8, 0.8, 1, 1, 1)
-	tooltip:AddDoubleLine("Gesammelte Vorkommen:", string.format("|cff00ff96%d|r |cffaaaaaa(%d/Std.)|r", summary.nodes, summary.nodesPerHour), 0.8, 0.8, 0.8, 1, 1, 1)
-	if summary.totalValue > 0 then
-		tooltip:AddDoubleLine("Session-Marktwert:", Integrations.FormatMoney(summary.totalValue), 0.8, 0.8, 0.8, 1, 1, 1)
-		tooltip:AddDoubleLine("Gold pro Stunde (GPH):", Integrations.FormatMoney(summary.goldPerHour) .. "/Std.", 0.8, 0.8, 0.8, 1, 1, 1)
+	tooltip:AddLine("|cffffd200" .. (_tr and _tr("CONFIG_SESSION_GROUP") or "Session Tracker (GPH)") .. "|r")
+	if _tr then
+		local summaryText = string.format(_tr("UI_SESSION_SUMMARY_FMT"),
+			floor(summary.elapsed / 60),
+			summary.elapsed % 60,
+			summary.nodes,
+			summary.nodesPerHour,
+			Integrations.FormatMoney(summary.totalValue),
+			Integrations.FormatMoney(summary.goldPerHour))
+		for line in summaryText:gmatch("[^\n]+") do
+			tooltip:AddLine(line, 0.9, 0.9, 0.9)
+		end
 	end
 
-	local maxItems = min(#summary.items, 5)
+	local maxItems = math.min(#summary.items, 5)
 	if maxItems > 0 then
-		tooltip:AddLine("|cff1fb3ffTop gesammelte Beute:|r")
+		tooltip:AddLine(" ")
 		for i = 1, maxItems do
 			local it = summary.items[i]
 			local rightText = string.format("x%d", it.count)
@@ -858,7 +863,11 @@ function Integrations.ImportGatherMate2(includeDataAddon)
 	Gatherer.MapNotes.MapDraw()
 
 	if Gatherer.Util and Gatherer.Util.ChatPrint then
-		Gatherer.Util.ChatPrint(string.format("|cff00ff96Gatherer Reforged:|r GatherMate2 Datenbank-Import abgeschlossen (%d Vorkommen verarbeitet).", totalImported))
+		local _tr = Gatherer.Locale and Gatherer.Locale.Tr
+		Gatherer.Util.ChatPrint(string.format("|cff00ff96Gatherer Reforged:|r %s — %s (%d)",
+			_tr and _tr("CONFIG_GM2_GROUP") or "GatherMate2 Import",
+			_tr and _tr("DONE") or "Done",
+			totalImported))
 	end
 	return totalImported
 end
@@ -1185,7 +1194,8 @@ function Integrations.OnExternalAddonMessage(prefix, msg, how, who)
 			local objName = Gatherer.Util.GetNodeName(objectID)
 			local localizedZoneName = Gatherer.ZoneTokens.ZoneNames[zoneToken] or tostring(zoneToken)
 			local _tr = Gatherer.Locale.Tr
-			Gatherer.Util.ChatPrint(_tr("COMM_RECEIVE_NODE", objName, localizedZoneName, who .. " [" .. (EXTERNAL_PREFIXES[prefix] or prefix) .. "]", _tr(how)))
+			local howKey = (how == "INSTANCE_CHAT") and "GROUP" or how
+			Gatherer.Util.ChatPrint(_tr("COMM_RECEIVE_NODE", objName, localizedZoneName, who .. " [" .. (EXTERNAL_PREFIXES[prefix] or prefix) .. "]", _tr(howKey)))
 		end
 	end
 end

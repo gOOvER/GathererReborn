@@ -63,7 +63,7 @@ function AddDropRates( tooltip, nodeId, zone, maxDropsToShow )
 	if showPrice and not shownAnyPrice and Gatherer.Integrations and Gatherer.Integrations.GetNodeValue then
 		local price, _, source = Gatherer.Integrations.GetNodeValue(nodeId)
 		if price and price > 0 then
-			local label = source and string.format("Marktwert (%s):", source) or "Marktwert:"
+			local label = source and string.format(_tr("UI_TOOLTIP_MARKET_VALUE"), source) or (_tr("UI_COL_VALUE") .. ":")
 			tooltip:AddDoubleLine(label, Gatherer.Integrations.FormatMoney(price), 0.7, 0.85, 1.0, 1, 1, 1)
 		end
 	end

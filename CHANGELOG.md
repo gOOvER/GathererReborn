@@ -53,6 +53,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `StaticPopupDialogs["GATHERER_ADD_SHARING_IGNORE"]` compatibility with WoW 11.0+ `self:GetEditBox()` (`Core/GatherConfig.lua`).
 - Fixed group addon message channel selection (`PARTY`, `RAID`, `INSTANCE_CHAT`) and whisper feedback variable in `Core/GatherComm.lua`.
 - Fixed profile creation, copying, deletion, and switching in `Core/GatherConfig.lua` and `GUI/GatherAceGUI.lua`.
+- Fixed `argcheck` in `Core/GatherStorage.lua` (`assert(1, ...)` always passing and referencing an undefined `level` global on every call, eliminating thousands of unnecessary string allocations during database imports).
+- Fixed `GetZoneIndex` and `GetZoneMapID` in `Data/GatherZoneTokens.lua` referencing `Tokens[continent]` instead of `TokensByContinent[continent]`.
+- Fixed `Gatherer.Comm` self-sender detection (`Ambiguate`, `UnitName("player")`, and nil-safe `GetRealmName()`) and `INSTANCE_CHAT` channel localization key in `Core/GatherComm.lua` and `Core/GatherIntegrations.lua`.
+- Fixed 3D HUD combat state detection (`PLAYER_REGEN_DISABLED` / `PLAYER_REGEN_ENABLED`), icon border trimming (`SetTexCoord`), and party member blip visibility toggle in `GUI/GatherHUD.lua`.
+- Fixed slash command aliases (`/gather mining`, `/gather herb`, `/gather open`, `/gather arch`) and localized all remaining tooltip/chat strings in `Core/GatherCommand.lua`, `Core/GatherIntegrations.lua`, `GUI/GatherMapNotes.lua`, `GUI/GatherMiniIcon.lua`, and `GUI/GatherTooltip.lua`.
 
 ### Removed
 - Removed discontinued `Astrolabe`, `DongleStub`, and `Babylonian` libraries in favor of native `Gatherer.Map` (`C_Map`) and `AceLocale-3.0`.

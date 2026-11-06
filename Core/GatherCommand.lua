@@ -47,13 +47,13 @@ end
 Gatherer.Command.parseOnOff = parseOnOff
 
 local function parseGatherType( str )
-	if ( str == "treasure" ) then
+	if ( str == "treasure" or str == "open" ) then
 		return "open"
-	elseif ( str == "herbs" ) then
+	elseif ( str == "herbs" or str == "herb" ) then
 		return "herb"
-	elseif ( str == "ore" ) then
+	elseif ( str == "ore" or str == "mining" or str == "mine" ) then
 		return "mine"
-	elseif ( str == "archaeology" ) then
+	elseif ( str == "archaeology" or str == "arch" ) then
 		return "arch"
 	end
 end
@@ -157,21 +157,21 @@ function Gatherer.Command.Process( command )
 				Print("Displaying up to "..newCount.." notes at once")
 			end
 		
-		elseif ( (cmd == "herbs") or (cmd == "ore") or (cmd == "treasure") ) then
+		elseif ( parseGatherType(cmd) ) then
 			local gatherType = parseGatherType(cmd)
 			if ( gatherType ) then
 				local enabled = parseOnOff(p1)
 				if ( enabled == true ) then
-					local cmd = (cmd == "herbs") and "herb" or cmd
+					local cmdLabel = (cmd == "herbs") and "herb" or cmd
 					Config.SetSetting("show.minimap."..gatherType, true)
-					Print("Displaying "..cmd.." notes on minimap")
+					Print("Displaying "..cmdLabel.." notes on minimap")
 				
 				elseif ( enabled == false ) then
-					local cmd = (cmd == "herbs") and "herb" or cmd
+					local cmdLabel = (cmd == "herbs") and "herb" or cmd
 					Config.SetSetting("show.minimap."..gatherType, false)
-					Print("Not displaying "..cmd.." notes in minimap")
+					Print("Not displaying "..cmdLabel.." notes in minimap")
 				
-				elseif ( p1 == "toggle" ) then
+				elseif ( p1 == "toggle" or p1 == nil or p1 == "" ) then
 					if ( Config.GetSetting("show.minimap."..gatherType) ) then
 						Gatherer.Command.Process( cmd.." off" )
 					else
@@ -198,7 +198,8 @@ function Gatherer.Command.Process( command )
 		elseif ( cmd == "session" ) then
 			if Gatherer.Integrations and Gatherer.Integrations.Session then
 				local s = Gatherer.Integrations.Session.GetSummary()
-				Print(string.format("Session: %d Vorkommen (%d/Std.) | Wert: %s | GPH: %s/Std.",
+				Print(string.format(_tr("CONFIG_SESSION_STATS_FMT"),
+					math.floor(s.elapsed / 60), s.elapsed % 60,
 					s.nodes, s.nodesPerHour,
 					Gatherer.Integrations.FormatMoney(s.totalValue),
 					Gatherer.Integrations.FormatMoney(s.goldPerHour)))
@@ -207,7 +208,7 @@ function Gatherer.Command.Process( command )
 		elseif ( cmd == "reset" ) then
 			if Gatherer.Integrations and Gatherer.Integrations.Session then
 				Gatherer.Integrations.Session.Reset()
-				Print("Session-Statistik wurde zurückgesetzt.")
+				Print(_tr("CONFIG_SESSION_RESET"))
 			end
 
 		elseif ( cmd == "plugin" ) then

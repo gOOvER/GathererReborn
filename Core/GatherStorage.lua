@@ -83,7 +83,9 @@ for index, name in ipairs(continents) do
 end
 
 local function argcheck(value, num, ...)
-	assert(1, type(num) == "number", "Bad argument #2 to 'argcheck' (number expected, got " .. type(level) .. ")")
+	if type(num) ~= "number" then
+		error("Bad argument #2 to 'argcheck' (number expected, got " .. type(num) .. ")", 2)
+	end
 	
 	for i=1,select("#", ...) do
 		if type(value) == select(i, ...) then return end
@@ -91,7 +93,7 @@ local function argcheck(value, num, ...)
 	
 	local types = strjoin(", ", ...)
 	local name = string.match(debugstack(2,2,0), ": in function [`<](.-)['>]")
-	error(string.format("Bad argument #%d to 'Gatherer.Storage.%s' (%s expected, got %s)", num, name, types, type(value)), 3)
+	error(string.format("Bad argument #%d to 'Gatherer.Storage.%s' (%s expected, got %s)", num, name or "?", types, type(value)), 3)
 end
 
 -- references to localization functions

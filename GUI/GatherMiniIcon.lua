@@ -45,7 +45,7 @@ local function click(obj, button)
 		if IsAltKeyDown() and Gatherer.Integrations and Gatherer.Integrations.Session then
 			Gatherer.Integrations.Session.Reset()
 			if Gatherer.Util and Gatherer.Util.ChatPrint then
-				Gatherer.Util.ChatPrint("|cff00ff96Gatherer Reforged:|r Session-Statistik zurückgesetzt.")
+				Gatherer.Util.ChatPrint("|cff00ff96Gatherer Reforged:|r " .. _tr("CONFIG_SESSION_RESET"))
 			end
 			return
 		end
@@ -73,7 +73,7 @@ local function drawTooltip(self)
 	self:AddLine(_tr("MINIICON_ACTIONS_SHIFT_CLICK"), 1, 1, 0.5, 1)
 	self:AddLine(_tr("MINIICON_ACTIONS_RIGHT_CLICK"), 1, 1, 0.5, 1)
 	self:AddLine(_tr("MINIICON_ACTIONS_SHIFT_RIGHT_CLICK"), 1, 1, 0.5, 1)
-	self:AddLine("|cff1fb3ffAlt+Linksklick:|r Session-Statistik zurücksetzen", 1, 1, 0.5, 1)
+	self:AddLine("|cff1fb3ffAlt-Click:|r " .. _tr("CONFIG_SESSION_RESET"), 1, 1, 0.5, 1)
 	if Gatherer.Integrations and Gatherer.Integrations.Session and Gatherer.Integrations.Session.AddTooltipLines then
 		Gatherer.Integrations.Session.AddTooltipLines(self)
 	end

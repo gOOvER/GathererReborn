@@ -128,7 +128,17 @@ function Gatherer.Comm.SendMsg( sendType, target, objectId, gatherType, indoorNo
 end
 
 local lastMessage = ""
-local playerNameFull = UnitName("player").."-"..((GetRealmName()):gsub(" ", ""))
+local function isSelfSender(who)
+	if not who then return false end
+	local myName = UnitName("player")
+	if not myName then return false end
+	if who == myName then return true end
+	local realm = GetRealmName()
+	if realm and who == (myName .. "-" .. realm:gsub(" ", "")) then return true end
+	if Ambiguate and Ambiguate(who, "none") == myName then return true end
+	return false
+end
+
 function Gatherer.Comm.Receive( message, how, who )
 	local setting = Gatherer.Config.GetSetting
 	local msgtype = "raid"
@@ -139,7 +149,7 @@ function Gatherer.Comm.Receive( message, how, who )
 		return
 	end
 
-	if ( message ~= lastMessage and who ~= playerNameFull and who ~= UnitName("player") ) then
+	if ( message ~= lastMessage and not isSelfSender(who) ) then
 		if (how == "GUILD") then msgtype = "guild" end
 		if (how == "WHISPER") then
 			msgtype = "whisper"
@@ -187,7 +197,8 @@ function Gatherer.Comm.Receive( message, how, who )
 					end
 				end
 				localizedZoneName = localizedZoneName or tostring(zoneToken)
-				Gatherer.Util.ChatPrint(_tr("COMM_RECEIVE_NODE", objName, localizedZoneName, who, _tr(how)))
+				local howKey = (how == "INSTANCE_CHAT") and "GROUP" or how
+				Gatherer.Util.ChatPrint(_tr("COMM_RECEIVE_NODE", objName, localizedZoneName, who, _tr(howKey)))
 			end
 		end
 		
@@ -235,7 +246,7 @@ function Gatherer.Comm.SendFeedback(reply)
 end
 
 function Gatherer.Comm.General( msg, how, who )
-	if ( UnitName("player") == who ) then
+	if ( isSelfSender(who) ) then
 		return
 	end
 	local cmd, a,b,c,d = strsplit(":", msg)
