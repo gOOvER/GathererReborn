@@ -1,0 +1,58 @@
+name: 🌿 Missing Node / Icon Report
+description: Report a missing herb, ore, treasure, fishing school, or missing icon on a specific realm/expansion
+title: "[Node]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Found a node that isn't recognized automatically or shows a fallback icon? Provide the details below!
+
+  - type: input
+    id: node_name
+    attributes:
+      label: Exact In-Game Node Name (Tooltip)
+      description: The exact name shown in the game tooltip when hovering over the node (please include your client language, e.g., deDE or enUS).
+      placeholder: "e.g., Friedensblume / Peacebloom"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: node_type
+    attributes:
+      label: Node Category
+      options:
+        - "Herbalism (HERB)"
+        - "Mining (MINE)"
+        - "Treasure / Container (OPEN)"
+        - "Fishing School (OPEN)"
+        - "Engineering Gas Cloud (OPEN)"
+        - "Archaeology (ARCH)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: wow_flavor
+    attributes:
+      label: World of Warcraft Client / Flavor
+      options:
+        - "WoW Forever (16001)"
+        - "Retail / Midnight (12.x)"
+        - "Mists of Pandaria Classic (5.5.x)"
+        - "Cataclysm Classic (4.4.x)"
+        - "Wrath of the Lich King Classic (3.4.x / 3.8.x)"
+        - "Burning Crusade Classic Anniversary (2.5.x)"
+        - "Classic Era (1.15.x)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Zone, Coordinates & Looted Item ID / Link
+      description: In which zone did you find it, and what primary item was looted from it?
+      placeholder: |
+        Zone: Elwynn Forest (uiMapID 1429)
+        Looted Item: Peacebloom (Item ID 2447)
+    validations:
+      required: false
