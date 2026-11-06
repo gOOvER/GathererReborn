@@ -135,6 +135,8 @@ function Gatherer.Event.OnEvent( event, ... )
 			Gatherer.Comm.Receive( msg, how, who )
 		elseif ( prefix == "Gatherer" ) then
 			Gatherer.Comm.General(msg, how, who)
+		elseif ( Gatherer.Integrations and Gatherer.Integrations.IsExternalSharingPrefix and Gatherer.Integrations.IsExternalSharingPrefix(prefix) ) then
+			Gatherer.Integrations.OnExternalAddonMessage(prefix, msg, how, who)
 		end
 		
 	elseif ( event == "ZONE_CHANGED_NEW_AREA" ) then

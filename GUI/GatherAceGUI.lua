@@ -851,6 +851,23 @@ local function buildOptionsTable()
 							},
 						},
 					},
+					bridgeGroup = {
+						type = "group",
+						inline = true,
+						name = "Cross-Addon Sharing-Bridge (GatherMate2_Sharing / GatherLite / GatherMate2)",
+						order = 3.5,
+						args = {
+							enable = {
+								type = "toggle",
+								name = "Cross-Addon Sharing-Bridge aktivieren (GM2SD, GMSD, GatherLite & GatherMate2 Live-Sync)",
+								desc = "Empfängt und sendet geteilte Vorkommen kompatibel zu GatherMate2_Sharing (GM2SD), GatherMate_Sharing (GMSD) und GatherLite und synchronisiert live mit einer lokalen GatherMate2-Installation.",
+								width = "full",
+								order = 1,
+								get = function() return GetSetting("sharing.bridge.enable", true) end,
+								set = function(_, v) SetSetting("sharing.bridge.enable", v) end,
+							},
+						},
+					},
 					blacklistGroup = {
 						type = "group",
 						inline = true,
@@ -1322,6 +1339,15 @@ local function buildOptionsTable()
 										AceConfigRegistry:NotifyChange("GathererReforged")
 									end
 								end,
+							},
+							bridgeEnable = {
+								type = "toggle",
+								name = "Cross-Addon Live-Sharing-Bridge aktivieren (GatherMate2_Sharing / GatherLite / lokales GatherMate2)",
+								desc = "Ersetzt das eingestellte GatherMate2_Sharing-Addon: Teilt und empfängt Vorkommen über GM2SD/GMSD/GatherLite und synchronisiert gefundene/empfangene Knoten live mit GatherMate2.",
+								width = "full",
+								order = 4,
+								get = function() return GetSetting("sharing.bridge.enable", true) end,
+								set = function(_, v) SetSetting("sharing.bridge.enable", v) end,
 							},
 						},
 					},

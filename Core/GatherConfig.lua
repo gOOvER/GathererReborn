@@ -91,6 +91,7 @@ local function getDefault(setting)
 	if (setting == "cooldown.opacity")  then return 35      end
 	if (setting == "session.enable")    then return true    end
 	if (setting == "tooltip.marketprice") then return true  end
+	if (setting == "sharing.bridge.enable") then return true end
 
 	-- check for a plugin default
 	for _, data in pairs(Gatherer.Plugins.Registrations) do
