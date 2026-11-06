@@ -1,6 +1,6 @@
 --[[
-	Gatherer Reborn - Modern Ace3 GUI & Options System (AceConfig-3.0 / AceGUI-3.0)
-	Provides a modern, skinnable Ace3 interface and registers Gatherer Reborn
+	Gatherer Reforged - Modern Ace3 GUI & Options System (AceConfig-3.0 / AceGUI-3.0)
+	Provides a modern, skinnable Ace3 interface and registers Gatherer Reforged
 	directly in the Blizzard Options panel.
 
 	Author: gOOvER
@@ -25,7 +25,7 @@ end
 
 local SetSetting = function(key, value)
 	Gatherer.Config.SetSetting(key, value)
-	AceConfigRegistry:NotifyChange("GathererReborn")
+	AceConfigRegistry:NotifyChange("GathererReforged")
 end
 
 -- Helper for RGB / RGBA string settings ("r,g,b" or "r,g,b,a")
@@ -76,7 +76,7 @@ local function buildNodeFilterGroup(gTypeLower, titleKey, filterLabelKey)
 						Gatherer.Config.SetSetting("show." .. gTypeLower .. "." .. objid, true)
 					end
 				end
-				AceConfigRegistry:NotifyChange("GathererReborn")
+				AceConfigRegistry:NotifyChange("GathererReforged")
 			end,
 		},
 		disableAll = {
@@ -91,7 +91,7 @@ local function buildNodeFilterGroup(gTypeLower, titleKey, filterLabelKey)
 						Gatherer.Config.SetSetting("show." .. gTypeLower .. "." .. objid, false)
 					end
 				end
-				AceConfigRegistry:NotifyChange("GathererReborn")
+				AceConfigRegistry:NotifyChange("GathererReforged")
 			end,
 		},
 		spacer = {
@@ -150,7 +150,7 @@ local newBlacklistPlayer = ""
 local function buildOptionsTable()
 	local options = {
 		type = "group",
-		name = "Gatherer Reborn " .. tostring(Gatherer.Var.Version or "1.0.0"),
+		name = "Gatherer Reforged " .. tostring(Gatherer.Var.Version or "1.0.0"),
 		childGroups = "tab",
 		args = {
 			openReport = {
@@ -160,7 +160,7 @@ local function buildOptionsTable()
 				order = 1,
 				width = "normal",
 				func = function()
-					AceConfigDialog:Close("GathererReborn")
+					AceConfigDialog:Close("GathererReforged")
 					Gatherer.Report.Show()
 				end,
 			},
@@ -171,7 +171,7 @@ local function buildOptionsTable()
 				order = 2,
 				width = "normal",
 				func = function()
-					AceConfigDialog:Close("GathererReborn")
+					AceConfigDialog:Close("GathererReforged")
 					Gatherer.NodeSearch.Show()
 				end,
 			},
@@ -867,7 +867,7 @@ local function buildOptionsTable()
 									if newBlacklistPlayer ~= "" then
 										Gatherer.Config.SharingBlacklist_Add(newBlacklistPlayer)
 										newBlacklistPlayer = ""
-										AceConfigRegistry:NotifyChange("GathererReborn")
+										AceConfigRegistry:NotifyChange("GathererReforged")
 									end
 								end,
 							},
@@ -896,7 +896,7 @@ local function buildOptionsTable()
 									if selectedBlacklistPlayer then
 										Gatherer.Config.SharingBlacklist_Remove(selectedBlacklistPlayer)
 										selectedBlacklistPlayer = nil
-										AceConfigRegistry:NotifyChange("GathererReborn")
+										AceConfigRegistry:NotifyChange("GathererReforged")
 									end
 								end,
 							},
@@ -906,7 +906,7 @@ local function buildOptionsTable()
 			},
 
 			----------------------------------------------------------------------
-			-- 5. HUD Plugin (GathererReborn_HUD)
+			-- 5. HUD Plugin (GathererReforged_HUD)
 			----------------------------------------------------------------------
 			hud = {
 				type = "group",
@@ -915,7 +915,7 @@ local function buildOptionsTable()
 				args = {
 					enable = {
 						type = "toggle",
-						name = _trL("ENABLE") .. " (Gatherer Reborn HUD)",
+						name = _trL("ENABLE") .. " (Gatherer Reforged HUD)",
 						width = "full",
 						order = 1,
 						get = function() return GetSetting("plugin.gatherer_hud.enable") end,
@@ -1328,17 +1328,17 @@ local function ensureRegistered()
 	if registered then return end
 	registered = true
 
-	AceConfig:RegisterOptionsTable("GathererReborn", buildOptionsTable)
-	AceConfigDialog:SetDefaultSize("GathererReborn", 840, 620)
+	AceConfig:RegisterOptionsTable("GathererReforged", buildOptionsTable)
+	AceConfigDialog:SetDefaultSize("GathererReforged", 840, 620)
 	pcall(function()
-		AceConfigDialog:AddToBlizOptions("GathererReborn", "Gatherer Reborn")
+		AceConfigDialog:AddToBlizOptions("GathererReforged", "Gatherer Reforged")
 	end)
 end
 
 -- Override Gatherer.Config Show / Hide / ToggleOptions to use AceConfigDialog-3.0
 function Gatherer.Config.Show()
 	ensureRegistered()
-	AceConfigDialog:Open("GathererReborn")
+	AceConfigDialog:Open("GathererReforged")
 end
 
 function Gatherer.Config.ShowOptions()
@@ -1347,7 +1347,7 @@ end
 
 function Gatherer.Config.Hide()
 	if registered then
-		AceConfigDialog:Close("GathererReborn")
+		AceConfigDialog:Close("GathererReforged")
 	end
 end
 
@@ -1357,14 +1357,14 @@ end
 
 function Gatherer.Config.ToggleOptions()
 	ensureRegistered()
-	if AceConfigDialog.OpenFrames and AceConfigDialog.OpenFrames["GathererReborn"] then
-		AceConfigDialog:Close("GathererReborn")
+	if AceConfigDialog.OpenFrames and AceConfigDialog.OpenFrames["GathererReforged"] then
+		AceConfigDialog:Close("GathererReforged")
 	else
-		AceConfigDialog:Open("GathererReborn")
+		AceConfigDialog:Open("GathererReforged")
 	end
 end
 
--- Optional ElvUI Skinning for Gatherer Reborn standalone frames (Report & Node Search)
+-- Optional ElvUI Skinning for Gatherer Reforged standalone frames (Report & Node Search)
 Gatherer.ElvUI = Gatherer.ElvUI or {}
 local elvSkinned = false
 function Gatherer.ElvUI.SkinFrames()

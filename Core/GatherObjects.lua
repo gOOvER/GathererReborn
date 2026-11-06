@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 	Author: gOOvER
 
@@ -49,12 +49,12 @@ Gatherer = {
 
 -- Register with AceAddon-3.0 and embed Ace3 mixins
 local AceAddon = LibStub and LibStub("AceAddon-3.0", true)
-if AceAddon and not AceAddon:GetAddon("GathererReborn", true) then
+if AceAddon and not AceAddon:GetAddon("GathererReforged", true) then
 	local mixins = {}
 	for _, libName in ipairs({ "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "AceComm-3.0", "AceSerializer-3.0" }) do
 		if LibStub(libName, true) then
 			table.insert(mixins, libName)
 		end
 	end
-	AceAddon:NewAddon(Gatherer, "GathererReborn", unpack(mixins))
+	AceAddon:NewAddon(Gatherer, "GathererReforged", unpack(mixins))
 end

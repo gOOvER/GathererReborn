@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 	Author: gOOvER
 
@@ -20,8 +20,8 @@
 
 SLASH_GATHERER1 = "/gather"
 SLASH_GATHERER2 = "/gatherer"
-SLASH_GATHERER3 = "/gathererreborn"
-SLASH_GATHERER4 = "/greborn"
+SLASH_GATHERER3 = "/gathererreforged"
+SLASH_GATHERER4 = "/greforged"
 SlashCmdList["GATHERER"] = function( msg )
 	Gatherer.Command.Process(msg)
 end

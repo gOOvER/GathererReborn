@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 	Author: gOOvER
 
@@ -284,7 +284,7 @@ GathererLocalizations = {
 		["CONFIG_SECTION_OPEN"]	= "Schätze";
 		["CONFIG_SECTION_PROFILES"]	= "Profile";
 		["CONFIG_SECTION_SHARING"]	= "Teilen";
-		["CONFIG_SECTION_TITLE_ABOUT"]	= "Über Gatherer Reborn";
+		["CONFIG_SECTION_TITLE_ABOUT"]	= "Über Gatherer Reforged";
 		["CONFIG_SECTION_TITLE_ARCH"]	= "Archäologie-Optionen";
 		["CONFIG_SECTION_TITLE_GENERAL"]	= "Allgemeine Einstellungen";
 		["CONFIG_SECTION_TITLE_HERB"]	= "Kräuterkunde-Filter";
@@ -320,8 +320,8 @@ GathererLocalizations = {
 
 		-- Section: Database Version Messages
 		["STORAGE_DB_CATACLYSMIC"]	= "Durch Todesschwinges Rückkehr wurden alte Vorkommen in der Welt neu verteilt.\n(Alte Weltdaten wurden aufgrund der geänderten Gebiete zurückgesetzt.)";
-		["STORAGE_DB_VERSION_INVALID"]	= "WARNUNG!\nGatherer Reborn hat eine ungültige Datenbankversion festgestellt.\nKlicke auf „Akzeptieren“, um die Datenbank zurückzusetzen, oder auf „Ignorieren“, falls du sie manuell sichern möchtest.";
-		["STORAGE_DB_VERSION_NEWER"]	= "Deine gespeicherte Datenbank stammt aus einer neueren Version von Gatherer Reborn.\nSie bleibt unangetastet, bis du das AddOn aktualisierst.";
+		["STORAGE_DB_VERSION_INVALID"]	= "WARNUNG!\nGatherer Reforged hat eine ungültige Datenbankversion festgestellt.\nKlicke auf „Akzeptieren“, um die Datenbank zurückzusetzen, oder auf „Ignorieren“, falls du sie manuell sichern möchtest.";
+		["STORAGE_DB_VERSION_NEWER"]	= "Deine gespeicherte Datenbank stammt aus einer neueren Version von Gatherer Reforged.\nSie bleibt unangetastet, bis du das AddOn aktualisierst.";
 
 		-- Section: Game Object Tooltip
 		["GAME_OBJECT_REQUIRES_REWRITE"]	= "%1$s %2$d";
@@ -342,17 +342,17 @@ GathererLocalizations = {
 		["REPORT_SEARCH_BY_SOURCE"]	= "Nach Quelle";
 		["REPORT_SEARCH_BY_TYPE"]	= "Nach Art";
 		["REPORT_SEND_MARKED"]	= "Markierte senden";
-		["REPORT_TITLE"]	= "Gatherer Reborn – Vorkommen-Bericht";
+		["REPORT_TITLE"]	= "Gatherer Reforged – Vorkommen-Bericht";
 		["REPORT_UNMARK_ALL"]	= "Alle abwählen";
 		["REPORT_UNMARK_THESE"]	= "Angezeigte abwählen";
 
 		-- Section: Generic Messages
-		["DESCRIPTION"]	= "Gatherer Reborn speichert deine Fundorte von Kräutern, Erzen, Schätzen sowie Archäologie-Funden und zeigt sie auf der Weltkarte, der Minikarte oder im HUD an. Fundorte lassen sich zudem automatisch mit deiner Gilde, Gruppe oder deinem Schlachtzug teilen.";
-		["DESCRIPTION_LICENSE"]	= "Gatherer Reborn ist freie Open-Source-Software unter der GNU General Public License v3 (siehe gpl.txt im AddOn-Verzeichnis).";
-		["LOADED_NOTIFICATION"]	= "Gatherer Reborn v%1 geladen!";
-		["MANIFEST_INVALID_VERSIONS_WARNING"]	= "{{Warnung:}} Deine Installation von Gatherer Reborn enthält nicht zusammenpassende Dateiversionen.\n\nBitte lösche das Verzeichnis:\n  %1\nund installiere eine frische Version von:\n  %2\nStarte World of Warcraft danach komplett neu.";
-		["VERSION_MESSAGE"]	= "Gatherer Reborn v%1";
-		["ZONETOKENS_UNIDENTIFIED_ZONES_WARNING"]	= "Gatherer Reborn konnte folgende Zonen nicht zuordnen: {{%1}}\nDeine vorhandenen Daten für diese Gebiete sind {{nicht verloren}} und bleiben vollständig erhalten.";
+		["DESCRIPTION"]	= "Gatherer Reforged speichert deine Fundorte von Kräutern, Erzen, Schätzen sowie Archäologie-Funden und zeigt sie auf der Weltkarte, der Minikarte oder im HUD an. Fundorte lassen sich zudem automatisch mit deiner Gilde, Gruppe oder deinem Schlachtzug teilen.";
+		["DESCRIPTION_LICENSE"]	= "Gatherer Reforged ist freie Open-Source-Software unter der GNU General Public License v3 (siehe gpl.txt im AddOn-Verzeichnis).";
+		["LOADED_NOTIFICATION"]	= "Gatherer Reforged v%1 geladen!";
+		["MANIFEST_INVALID_VERSIONS_WARNING"]	= "{{Warnung:}} Deine Installation von Gatherer Reforged enthält nicht zusammenpassende Dateiversionen.\n\nBitte lösche das Verzeichnis:\n  %1\nund installiere eine frische Version von:\n  %2\nStarte World of Warcraft danach komplett neu.";
+		["VERSION_MESSAGE"]	= "Gatherer Reforged v%1";
+		["ZONETOKENS_UNIDENTIFIED_ZONES_WARNING"]	= "Gatherer Reforged konnte folgende Zonen nicht zuordnen: {{%1}}\nDeine vorhandenen Daten für diese Gebiete sind {{nicht verloren}} und bleiben vollständig erhalten.";
 
 		-- Section: Generic Strings
 		["ACCEPT"]	= "Akzeptieren";
@@ -419,14 +419,14 @@ GathererLocalizations = {
 		["HUD_CONFIG_USAGE_NOTE"]	= "Hinweis: Das HUD berechnet Positionen in Echtzeit. Wenn die Wegspur (Heat-Tracking) aktiviert ist, steigt die CPU-Last bei vielen gespeicherten Wegpunkten leicht an.";
 		["HUD_CONFIG_VISIBILITY_LABEL"]	= "HUD-Darstellungsoptionen";
 		["HUD_DESCRIPTION"]	= "Das HUD blendet umliegende Kräuter-, Erz- und Schatzvorkommen als dreidimensionale Navigationshilfe direkt auf deinem Bildschirm ein.";
-		["HUD_TITLE"]	= "Gatherer Reborn: HUD-Plugin";
+		["HUD_TITLE"]	= "Gatherer Reforged: HUD-Plugin";
 
 		-- Section: Import Modules
 		["IMPORT_CTMOD_DONE"]	= "Deine CT_MapMod-Daten wurden erfolgreich importiert.";
 		["IMPORT_CTMOD_NODATA"]	= "Keine CT_MapMod-Daten zum Importieren gefunden.";
 
 		-- Section: Keybinding Text
-		["BINDING_HEADER_GATHERER"]	= "Gatherer Reborn";
+		["BINDING_HEADER_GATHERER"]	= "Gatherer Reforged";
 		["BINDING_NAME_GATHERER_TOGGLE_OPTIONS_DIALOG"]	= "Einstellungen ein-/ausblenden";
 
 		-- Section: Labels
@@ -437,8 +437,8 @@ GathererLocalizations = {
 		["LABEL_REPORT"]	= "Vorkommen-Bericht";
 		["MAP_NOTES_HIDE"]	= "Vorkommen ausblenden";
 		["MAP_NOTES_SHOW"]	= "Vorkommen anzeigen";
-		["NOTIFICATIONS_TITLE"]	= "Gatherer Reborn: Hinweise";
-		["WORLDMAP_NOTES_SHOW_MENUITEM"]	= "Gatherer Reborn: Vorkommen anzeigen";
+		["NOTIFICATIONS_TITLE"]	= "Gatherer Reforged: Hinweise";
+		["WORLDMAP_NOTES_SHOW_MENUITEM"]	= "Gatherer Reforged: Vorkommen anzeigen";
 
 		-- Section: Mass Sharing Messages
 		["MASS_SHARING_ABORT"]	= "Übertragung abgebrochen.";
@@ -758,7 +758,7 @@ GathererLocalizations = {
 
 		-- Section: Generic Messages
 		["DESCRIPTION"]	= "Gatherer is an addon that allows you to remember your gathering locations and view them on either or all of your main map, your minimap, or in an onscreen display HUD. It also allows you to share your finds with your guild, raid or your friends.";
-		["DESCRIPTION_LICENSE"]	= "Gatherer Reborn is open source software and is licensed under the GNU General Public License v3. Please see gpl.txt, included with this AddOn, for the full license.";
+		["DESCRIPTION_LICENSE"]	= "Gatherer Reforged is open source software and is licensed under the GNU General Public License v3. Please see gpl.txt, included with this AddOn, for the full license.";
 		["LOADED_NOTIFICATION"]	= "Gatherer v%1 -- Loaded!";
 		["MANIFEST_INVALID_VERSIONS_WARNING"]	= "{{Warning:}} Your Gatherer installation appears to have mismatching file versions.\n\nPlease make sure you delete the old:\n  %1\ndirectory, reinstall a fresh copy from:\n  %2\nand restart WoW completely before reporting any bugs.\n\nThanks,\n  The Gatherer Dev Team";
 		["VERSION_MESSAGE"]	= "This is Gatherer v%1";
@@ -1414,7 +1414,7 @@ GathererLocalizations = {
 
 		-- Section: Generic Messages
 		["DESCRIPTION"]	= "Este es un accesorio que te permite rastrear los nodos de las profesiones de herboristeria y mineria.  'Lordnica'";
-		["DESCRIPTION_LICENSE"]	= "Gatherer Reborn is open source software and is licensed under the GNU General Public License v3. Please see gpl.txt, included with this AddOn, for the full license.";
+		["DESCRIPTION_LICENSE"]	= "Gatherer Reforged is open source software and is licensed under the GNU General Public License v3. Please see gpl.txt, included with this AddOn, for the full license.";
 		["LOADED_NOTIFICATION"]	= "Gatherer v%1 -- Loaded!";
 		["MANIFEST_INVALID_VERSIONS_WARNING"]	= "{{Warning:}} Your Gatherer installation appears to have mismatching file versions.\n\nPlease make sure you delete the old:\n  %1\ndirectory, reinstall a fresh copy from:\n  %2\nand restart WoW completely before reporting any bugs.\n\nThanks,\n  The Gatherer Dev Team";
 		["VERSION_MESSAGE"]	= "This is Gatherer v%1";

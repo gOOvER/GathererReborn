@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 
 	Minimap Icon & LibDBIcon-1.0 / LibDataBroker-1.1 / Addon Compartment Integration
@@ -60,7 +60,7 @@ end
 local function drawTooltip(self)
 	if not self or not self.AddLine then return end
 	Gatherer.Locale.SECTION_HIGHLIGHT_CODE = "|cff1fb3ff"
-	self:AddLine("Gatherer Reborn", 1, 1, 0.5, 1)
+	self:AddLine("Gatherer Reforged", 1, 1, 0.5, 1)
 	self:AddLine(_tr("DESCRIPTION"), 1, 1, 0.5, 1)
 	self:AddLine(_tr("MINIICON_ACTIONS_CLICK"), 1, 1, 0.5, 1)
 	self:AddLine(_tr("MINIICON_ACTIONS_SHIFT_CLICK"), 1, 1, 0.5, 1)
@@ -108,9 +108,9 @@ local function reposition(angle)
 			Gatherer.Config.SetSetting("miniicon.angle", angle)
 		end
 		if enabled then
-			LDBIcon:Show("GathererReborn")
+			LDBIcon:Show("GathererReforged")
 		else
-			LDBIcon:Hide("GathererReborn")
+			LDBIcon:Hide("GathererReforged")
 		end
 		miniIcon:Hide()
 		return
@@ -176,9 +176,9 @@ function miniIcon.CreateLDB()
 	if not LibStub then return end
 	local LibDataBroker = LibStub:GetLibrary("LibDataBroker-1.1", true)
 	if LibDataBroker and not ldbObject then
-		ldbObject = LibDataBroker:NewDataObject("GathererReborn", {
+		ldbObject = LibDataBroker:NewDataObject("GathererReforged", {
 			type = "launcher",
-			label = "Gatherer Reborn",
+			label = "Gatherer Reforged",
 			icon = 133939,
 			OnClick = function(self, button)
 				click(self, button)
@@ -188,14 +188,14 @@ function miniIcon.CreateLDB()
 	end
 
 	LDBIcon = LibStub("LibDBIcon-1.0", true)
-	if LDBIcon and ldbObject and not LDBIcon:IsRegistered("GathererReborn") then
+	if LDBIcon and ldbObject and not LDBIcon:IsRegistered("GathererReforged") then
 		Gatherer_SavedSettings_AccountWide = Gatherer_SavedSettings_AccountWide or {}
 		local iconDB = Gatherer_SavedSettings_AccountWide.minimapIcon or {
 			hide = not Gatherer.Config.GetSetting("miniicon.enable"),
 			minimapPos = Gatherer.Config.GetSetting("miniicon.angle") or 220,
 		}
 		Gatherer_SavedSettings_AccountWide.minimapIcon = iconDB
-		LDBIcon:Register("GathererReborn", ldbObject, iconDB)
+		LDBIcon:Register("GathererReforged", ldbObject, iconDB)
 		usingLDBIcon = true
 		miniIcon:Hide()
 	end
@@ -205,7 +205,7 @@ function miniIcon.Update()
 	local enabled = Gatherer.Config.GetSetting("minimap.enable")
 	miniIcon.icon:SetDesaturated(not enabled)
 	if usingLDBIcon and LDBIcon then
-		local btn = LDBIcon:GetMinimapButton("GathererReborn")
+		local btn = LDBIcon:GetMinimapButton("GathererReforged")
 		if btn and btn.icon and btn.icon.SetDesaturated then
 			btn.icon:SetDesaturated(not enabled)
 		end

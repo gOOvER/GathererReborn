@@ -1,4 +1,4 @@
--- Luacheck configuration for Gatherer Reborn
+-- Luacheck configuration for Gatherer Reforged
 std = "lua51"
 unused_args = false
 max_line_length = 160

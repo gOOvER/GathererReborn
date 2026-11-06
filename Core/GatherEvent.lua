@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 	Author: gOOvER
 
@@ -101,7 +101,7 @@ function Gatherer.Event.OnEvent( event, ... )
 
 	elseif( event == "ADDON_LOADED" ) then
 		local addon = select(1, ...)
-		if (addon and (string.lower(addon) == "gathererreborn" or string.lower(addon) == "gatherer")) then
+		if (addon and (string.lower(addon) == "gathererreforged" or string.lower(addon) == "gatherer")) then
 			Gatherer.Event.OnLoad()
 			Gatherer.Comm.OnLoad()
 		end

@@ -36,7 +36,7 @@ jobs:
 
     - name: Validate TOC files
       run: |
-        for toc in GathererReborn.toc; do
+        for toc in GathererReforged.toc; do
           if [ -f "$toc" ]; then
             echo "✅ TOC file found: $toc"
           else

@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 
 	Localization routines (AceLocale-3.0 & native GathererLocalizations lookup)
@@ -19,7 +19,7 @@ local aceL
 if AceLocale and GathererLocalizations then
 	local enStrings = GathererLocalizations["enUS"]
 	if enStrings then
-		local L = AceLocale:NewLocale("GathererReborn", "enUS", true, true)
+		local L = AceLocale:NewLocale("GathererReforged", "enUS", true, true)
 		if L then
 			for k, v in pairs(enStrings) do
 				L[k] = v
@@ -27,14 +27,14 @@ if AceLocale and GathererLocalizations then
 		end
 	end
 	if clientLocale ~= "enUS" and GathererLocalizations[clientLocale] then
-		local L = AceLocale:NewLocale("GathererReborn", clientLocale, false, true)
+		local L = AceLocale:NewLocale("GathererReforged", clientLocale, false, true)
 		if L then
 			for k, v in pairs(GathererLocalizations[clientLocale]) do
 				L[k] = v
 			end
 		end
 	end
-	aceL = AceLocale:GetLocale("GathererReborn", true)
+	aceL = AceLocale:GetLocale("GathererReforged", true)
 end
 
 local function lookupLocaleString(locale, key)

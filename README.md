@@ -1,6 +1,6 @@
-# Gatherer Reborn
+# Gatherer Reforged
 
-**Gatherer Reborn** ist die vollständig modernisierte Neuauflage des klassischen World of Warcraft Sammel-AddOns (inkl. direkt integriertem **3D Heads-Up Display / HUD**) für Kräuterkundige, Bergbauer, Schatzsucher und Archäologen.
+**Gatherer Reforged** ist die vollständig modernisierte Neuauflage des klassischen World of Warcraft Sammel-AddOns (inkl. direkt integriertem **3D Heads-Up Display / HUD**) für Kräuterkundige, Bergbauer, Schatzsucher und Archäologen.
 
 - **Autor:** [gOOvER](https://github.com/gOOvER)
 - **Version:** `1.0.0`
@@ -24,10 +24,10 @@
 
 ## Installation
 Kopiere den Ordner in dein jeweiliges WoW-`AddOns`-Verzeichnis (z. B. `_forever_\Interface\AddOns\` oder `_retail_\Interface\AddOns\`):
-- `GathererReborn`
+- `GathererReforged`
 
 ## Slash-Befehle
-- `/gather`, `/gatherer`, `/gathererreborn`, `/greborn` – Öffnet die Einstellungen
+- `/gather`, `/gatherer`, `/gathererreforged`, `/greforged` – Öffnet die Einstellungen
 - `/gather report` – Öffnet den Vorkommen-Bericht
 - `/gather search` – Öffnet die Suche nach Vorkommen-Dichte
 - `/gather minimap toggle` – Schaltet die Minikarten-Anzeige um
@@ -36,4 +36,4 @@ Kopiere den Ordner in dein jeweiliges WoW-`AddOns`-Verzeichnis (z. B. `_forever_
 
 ## Support
 - **Spenden & Support:** [https://donate.goover.dev](https://donate.goover.dev)
-- **GitHub Repository:** [https://github.com/gOOvER/GathererReborn](https://github.com/gOOvER/GathererReborn)
+- **GitHub Repository:** [https://github.com/gOOvER/GathererReforged](https://github.com/gOOvER/GathererReforged)

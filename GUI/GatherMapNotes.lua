@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 	Author: gOOvER
 
@@ -135,7 +135,7 @@ end
 function Gatherer.MapNotes.CreateWorldMapButton()
 	if Gatherer.MapNotes.WorldMapButton or not WorldMapFrame then return end
 	local parent = WorldMapFrame.ScrollContainer or WorldMapFrame
-	local btn = CreateFrame("Button", "GathererRebornWorldMapButton", parent)
+	local btn = CreateFrame("Button", "GathererReforgedWorldMapButton", parent)
 	btn:SetSize(28, 28)
 	btn:SetToplevel(true)
 	btn:SetFrameStrata("HIGH")
@@ -152,8 +152,8 @@ function Gatherer.MapNotes.CreateWorldMapButton()
 	local icon = btn:CreateTexture(nil, "ARTWORK")
 	icon:SetSize(18, 18)
 	icon:SetPoint("CENTER", 0, 0)
-	-- Use addon path so MapWise AddonMenu:Owner() recognizes "GathererReborn" via texture folder path
-	local ok = pcall(icon.SetTexture, icon, "Interface\\AddOns\\GathererReborn\\Skin\\GatherOrb")
+	-- Use addon path so MapWise AddonMenu:Owner() recognizes "GathererReforged" via texture folder path
+	local ok = pcall(icon.SetTexture, icon, "Interface\\AddOns\\GathererReforged\\Skin\\GatherOrb")
 	if not ok or not icon:GetTexture() then
 		icon:SetTexture(133939)
 	end
@@ -185,7 +185,7 @@ function Gatherer.MapNotes.CreateWorldMapButton()
 		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
 		GameTooltip:SetFrameStrata("TOOLTIP")
 		GameTooltip:ClearLines()
-		GameTooltip:AddLine("Gatherer Reborn", 1, 0.82, 0)
+		GameTooltip:AddLine("Gatherer Reforged", 1, 0.82, 0)
 		local enabled = Gatherer.Config.GetSetting("mainmap.enable")
 		GameTooltip:AddLine(_tr("MAP_NOTES_SHOW") .. ": " .. (enabled and "|cff00ff00Ein|r" or "|cffff4040Aus|r"), 1, 1, 1)
 		GameTooltip:AddLine("Linksklick: Weltkarten-Symbole ein-/ausschalten", 0.8, 0.8, 0.8)
@@ -499,7 +499,7 @@ end
 function Gatherer.MapNotes.MapNoteOnClick(frame, button)
 	if frame and frame.mapID and frame.xPos and frame.yPos and (IsShiftKeyDown() or IsAltKeyDown()) and (button == "RightButton" or button == "LeftButton") then
 		local zone = frame.zoneToken or Gatherer.ZoneTokens.GetZoneToken(frame.mapID)
-		local title = "Gatherer Reborn"
+		local title = "Gatherer Reforged"
 		for _, gatherID in Gatherer.Storage.GetNodeGatherNames(zone, frame.gType, frame.index) do
 			title = Gatherer.Util.GetNodeName(gatherID) or title
 			break

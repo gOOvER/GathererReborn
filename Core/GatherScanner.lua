@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn - Modern Loot & World Object Gathering Scanner (Gatherer.Scanner)
+	Gatherer Reforged - Modern Loot & World Object Gathering Scanner (Gatherer.Scanner)
 	Supports Classic Era, Classic Progression, Retail (11.x / 12.x), and dynamic future expansion nodes ("Forever").
 	Author: gOOvER
 	License: GNU General Public License v3.0 (GPL-3.0)

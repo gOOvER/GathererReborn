@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn - Native C_Map Mapping Engine (Gatherer.Map)
+	Gatherer Reforged - Native C_Map Mapping Engine (Gatherer.Map)
 	Replaces the discontinued Astrolabe library with direct C_Map API support
 	for Retail (11.x / 12.x), Classic (Era / Progression), and WoW Forever (16001+).
 

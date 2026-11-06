@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 	Author: gOOvER
 
@@ -559,7 +559,7 @@ function lib.Render()
 						node = private.heat[pos]
 						if not node then
 							node = frame.heat:CreateTexture("GatherHudHeat"..pos)
-							node:SetTexture("Interface\\AddOns\\GathererReborn\\GUI\\HudShape")
+							node:SetTexture("Interface\\AddOns\\GathererReforged\\GUI\\HudShape")
 							private.heat[pos] = node
 						end
 						node:SetVertexColor(r, g, b)
@@ -682,7 +682,7 @@ function Gatherer_HUD.Register()
 	Gatherer.Plugins.Data["gatherer_hud"] = Gatherer.Plugins.Data["gatherer_hud"] or {
 		tabName = "HUD",
 		name = "gatherer_hud",
-		title = "Gatherer Reborn: HUD",
+		title = "Gatherer Reforged: HUD",
 	}
 	Gatherer.Plugins.Commands["hud"] = { name = "gatherer_hud" }
 	Gatherer.Plugins.RegisterPlugin("gatherer_hud", getDefault, nil, onConfigChange)

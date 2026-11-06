@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 	Author: gOOvER
 
@@ -1043,7 +1043,7 @@ eventFrame:RegisterEvent("PLAYER_LOGOUT")
 eventFrame.UnregisterEvent = function() end
 
 eventFrame:SetScript("OnEvent", function( frame, event, arg1 )
-	if ( event == "ADDON_LOADED" and arg1 and (strlower(arg1) == "gathererreborn" or strlower(arg1) == "gatherer") ) then
+	if ( event == "ADDON_LOADED" and arg1 and (strlower(arg1) == "gathererreforged" or strlower(arg1) == "gatherer") ) then
 		local savedData = _G[globalName]
 		if ( savedData ) then
 			-- set the corruptData flag to true, just in case we encounter a Lua error

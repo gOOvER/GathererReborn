@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
 <!--
-	Gatherer Reborn Addon for World of Warcraft(tm).
+	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 	Author: gOOvER
 	License: GNU General Public License v3.0 (GPL-3.0)
@@ -8,7 +8,7 @@
 	<Frame name="Gatherer_Hud" parent="UIParent" hidden="true" enableMouse="false">
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="Gatherer_Hud_Base" file="Interface\AddOns\GathererReborn\GUI\HudShape" alphaMode="DISABLE">
+				<Texture name="Gatherer_Hud_Base" file="Interface\AddOns\GathererReforged\GUI\HudShape" alphaMode="DISABLE">
 					<Color r="0" g="0" b="0" a="1"/>
 					<Anchors>
 						<Anchor point="CENTER">
@@ -20,7 +20,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="BORDER">
-				<Texture name="Gatherer_Hud_Center" file="Interface\AddOns\GathererReborn\GUI\HudShape" alphaMode="DISABLE">
+				<Texture name="Gatherer_Hud_Center" file="Interface\AddOns\GathererReforged\GUI\HudShape" alphaMode="DISABLE">
 					<Color r="0" g="0" b="0" a="1"/>
 					<Anchors>
 						<Anchor point="CENTER">

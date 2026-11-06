@@ -1,5 +1,5 @@
 --[[
-	Gatherer Reborn - Cross-Expansion WoW API Polyfills & UI Helpers
+	Gatherer Reforged - Cross-Expansion WoW API Polyfills & UI Helpers
 	Author: gOOvER
 	License: GNU General Public License v3.0 (GPL-3.0)
 ]]
