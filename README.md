@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="logo.jpg" alt="Gatherer Reforged Logo" width="280" />
+  <img src=".github/social-preview.png" alt="Gatherer Reforged Banner" width="800" />
 
   # Gatherer Reforged
 
