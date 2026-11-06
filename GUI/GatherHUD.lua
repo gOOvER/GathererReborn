@@ -235,6 +235,13 @@ function lib.PlaceIcon(nodeZoneToken, gType, nodeIndex, x, y)
 	node.z = nodeZoneToken
 	node.x = x
 	node.y = y
+	node.cooldownAlpha = nil
+	if Gatherer.Integrations and Gatherer.Integrations.GetNodeCooldownInfo then
+		local cdAlpha = Gatherer.Integrations.GetNodeCooldownInfo(nodeZoneToken, gType, nodeIndex)
+		if cdAlpha then
+			node.cooldownAlpha = cdAlpha
+		end
+	end
 	private.curNode = nodeId
 end
 
@@ -478,6 +485,9 @@ function lib.Render()
 				end
 				
 				newalpha = pct
+				if node.cooldownAlpha then
+					newalpha = newalpha * node.cooldownAlpha
+				end
 				
 				-- So now, we need to work out the icon position
 				dx, dy, scale = matrix.multiply_2d(dx * ratio, dy * ratio, 0)

@@ -62,8 +62,9 @@ function Gatherer.Command.Process( command )
 	local Config = Gatherer.Config
 	command = command:trim():gsub("%s+", " ")
 	if ( command == "" or command == "options" or command == "config" ) then
-		Config.MakeGuiConfig()
-		Config.Gui:Show()
+		if Config.ToggleOptions then
+			Config.ToggleOptions()
+		end
 	else
 		local cmd, p1, p2, p3, p4 = string.split(" ", command:lower())
 		local GetSetting = Config.GetSetting
@@ -91,6 +92,9 @@ function Gatherer.Command.Process( command )
 			PrintUsageLine("options", nil, "show/hide UI Options dialog.")
 			PrintUsageLine("report", nil, "show/hide report dialog.")
 			PrintUsageLine("search", nil, "show/hide search dialog.")
+			PrintUsageLine("import", nil, "import GatherMate2 & GatherMate2_Data nodes into Gatherer Reforged.")
+			PrintUsageLine("session", nil, "print current session statistics and Gold/Hour.")
+			PrintUsageLine("reset", nil, "reset current session statistics.")
 			PrintUsageLine("plugin help", nil, "help for Gatherer plugin slash commands")
 		
 		elseif ( cmd == "minimap" ) then
@@ -186,6 +190,26 @@ function Gatherer.Command.Process( command )
 		elseif ( cmd == "search" ) then
 			Gatherer.NodeSearch.Toggle()
 		
+		elseif ( cmd == "import" ) then
+			if Gatherer.Integrations and Gatherer.Integrations.ImportGatherMate2 then
+				Gatherer.Integrations.ImportGatherMate2(true)
+			end
+
+		elseif ( cmd == "session" ) then
+			if Gatherer.Integrations and Gatherer.Integrations.Session then
+				local s = Gatherer.Integrations.Session.GetSummary()
+				Print(string.format("Session: %d Vorkommen (%d/Std.) | Wert: %s | GPH: %s/Std.",
+					s.nodes, s.nodesPerHour,
+					Gatherer.Integrations.FormatMoney(s.totalValue),
+					Gatherer.Integrations.FormatMoney(s.goldPerHour)))
+			end
+
+		elseif ( cmd == "reset" ) then
+			if Gatherer.Integrations and Gatherer.Integrations.Session then
+				Gatherer.Integrations.Session.Reset()
+				Print("Session-Statistik wurde zurückgesetzt.")
+			end
+
 		elseif ( cmd == "plugin" ) then
 			Gatherer.Plugins.ProcessCommands(p1, p2, p3, p4)
 		

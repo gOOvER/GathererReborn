@@ -22,7 +22,9 @@ After **more than 20 years** since its birth in Vanilla and nearly a decade with
 
 - 🏛️ **The Classic Legend, Rebuilt for Modern WoW**: Preserves everything old-school WoW players loved about Norganna's *Gatherer* (per-node harvest history, drop percentages, guild/party node sync, and the 3D HUD) while stripping out all broken legacy libraries (`Astrolabe`, `Babylonian`, `DongleStub`, `SlideBar`, `!Swatter`).
 - 🧭 **Integrated 3D Heads-Up Display (HUD)**: The famous *Gatherer HUD* plugin is now built right into the main addon—projecting a customizable 3D compass overlay in the center of your screen with distance, angle, pitch, heat-trail tracking, and automatic hide conditions (combat, flying, mounted, inside instances).
-- 🌿 **Comprehensive Node Tracking**: Automatically records exact coordinates, harvest counts, drop rates, inspection times, and sources for **Herbs**, **Mining Veins**, **Treasure Chests / Containers**, and **Archaeology** dig finds.
+- 🌿 **Comprehensive Node Tracking**: Automatically records exact coordinates, harvest counts, drop rates, inspection times, and sources for **Herbs**, **Mining Veins**, **Treasure Chests / Containers**, **Fishing Schools**, **Gas Clouds**, and **Archaeology** dig finds.
+- 💰 **Live Session & Gold-per-Hour (GPH) Tracker**: Tracks nodes gathered, nodes/hour, total session loot value, and **Gold per Hour (GPH)** in real time—displayed in your **LDB DataSource bar** (*Titan Panel*, *Bazooka*, *ElvUI DataTexts*), the Minimap button tooltip, and Ace3 Options.
+- ⏱️ **Respawn Cooldown Dimming**: Recently harvested nodes are automatically dimmed on the Minimap and 3D HUD for a configurable respawn duration (default 5 minutes) so you always know which nodes on your farming route are still on cooldown.
 - 🔮 **Dynamic "Forever" Node Discovery**: Automatically learns and persists brand-new or custom herbs, ores, and treasures in current and future expansions or custom realms (such as *WoW Forever*) without waiting for static database updates.
 - 🗺️ **Native `C_Map` Engine**: Built directly on Blizzard's modern `C_Map` and `C_Minimap` APIs with full support for zone, continent, and world-level node projection.
 - 🤝 **Real-Time Guild, Party & Raid Sync**: Automatically shares newly harvested nodes with guildmates and party/raid members in real time—plus a built-in mass-sharing tool and per-player filtering in the **Gatherables Report**.
@@ -32,8 +34,11 @@ After **more than 20 years** since its birth in Vanilla and nearly a decade with
 
 ## 🧩 Full Map & UI Addon Compatibility
 
-Gatherer Reforged works seamlessly alongside modern UI and map addons:
+Gatherer Reforged works seamlessly alongside modern UI, map, and farming addons:
 
+- **GatherMate2 & GatherMate2_Data Importer**: Built-in **1-click importer** (`/gather import` or via the *Integrations & DB* options tab) to import your existing `GatherMate2` SavedVariables and pre-populated Wowhead databases from `GatherMate2_Data` (including *Classic*, *TBC*, *Wrath*, *Retail*, and *WoW Forever*).
+- **Auctionator, TradeSkillMaster (TSM) & OribosExchange**: Displays live Auction House market values per herb/ore directly inside World Map and Minimap node tooltips.
+- **Routes & FarmHud**: Registers `GathererReforged` as a native data source in **Routes** (for automated TSP farming circuits) and automatically hooks **FarmHud** when toggled.
 - **MapWise**: Full support for MapWise's custom **Terrain** and **Paper** rendering modes (`MapWiseAPI`), continent/Azeroth projections, and automatic integration into MapWise's **"Addons"** toolbar menu.
 - **ElvUI**: Native support for **Square** and **Round** minimaps (`GetMinimapShape()`), click-passthrough for ElvUI's right-click tracking & middle-click micro menus, scaled World Map support, and automatic ElvUI skinning for Gatherer's Report and Search windows.
 - **Leatrix Maps / SexyMap / BasicMinimap / Chinchilla**: Dynamic frame layering above map reveal overlays and full support for all custom minimap shapes (`SQUARE`, `ROUND`, `CORNER-*`, `SIDE-*`, `TRICORNER-*`).
@@ -62,6 +67,9 @@ Use `/gather`, `/gatherer`, `/gathererreforged`, or `/greforged`:
 | `/gather` or `/gather options` | Open the Ace3 configuration window |
 | `/gather report` | Open the Gatherables Report dialog |
 | `/gather search` | Open the Node Density Search dialog |
+| `/gather import` | Import `GatherMate2` & `GatherMate2_Data` databases |
+| `/gather session` | Print current session statistics and Gold/Hour (GPH) |
+| `/gather reset` | Reset current session statistics |
 | `/gather on` / `/gather off` / `/gather toggle` | Enable, disable, or toggle Minimap tracking |
 | `/gather dist <yards>` | Set maximum Minimap tracking distance |
 | `/gather num <count>` | Set maximum number of Minimap notes displayed |

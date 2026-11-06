@@ -51,6 +51,9 @@ function Gatherer.Api.AddGather(objectId, gatherType, indoorNode, gatherSource, 
 	
 	if (not gatherSource) then
 		Gatherer.DropRates.ProcessDrops(objectId, gatherZoneToken, gatherSource, gatherCoins, gatherLoot)
+		if wasGathered and Gatherer.Integrations and Gatherer.Integrations.Session and Gatherer.Integrations.Session.RecordGather then
+			Gatherer.Integrations.Session.RecordGather(objectId, gatherType, gatherCoins, gatherLoot)
+		end
 	end
 	
 	-- if not specified, use the current player indoor/outdoor status

@@ -37,6 +37,10 @@ local ARCH_SPELLS = {
 
 local OPEN_SPELLS = {
 	[3365] = true, [6247] = true, [6477] = true, [6478] = true, [22810] = true,
+	-- Fishing (schools / wreckage) & Engineering Gas Cloud extraction & Logging
+	[7620] = true, [7731] = true, [7732] = true, [18248] = true, [33095] = true,
+	[51294] = true, [88868] = true, [110410] = true, [131474] = true, [131476] = true,
+	[131490] = true, [158743] = true, [30427] = true, [167895] = true, [167898] = true,
 }
 
 local function isSafeString(val)

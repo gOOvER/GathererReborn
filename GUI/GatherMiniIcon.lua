@@ -42,6 +42,13 @@ local usingLDBIcon = false
 
 local function click(obj, button)
 	if (button == "LeftButton") then
+		if IsAltKeyDown() and Gatherer.Integrations and Gatherer.Integrations.Session then
+			Gatherer.Integrations.Session.Reset()
+			if Gatherer.Util and Gatherer.Util.ChatPrint then
+				Gatherer.Util.ChatPrint("|cff00ff96Gatherer Reforged:|r Session-Statistik zurückgesetzt.")
+			end
+			return
+		end
 		local dtype = "minimap.enable"
 		if (IsModifierKeyDown()) then
 			dtype = "plugin.gatherer_hud.enable"
@@ -66,6 +73,10 @@ local function drawTooltip(self)
 	self:AddLine(_tr("MINIICON_ACTIONS_SHIFT_CLICK"), 1, 1, 0.5, 1)
 	self:AddLine(_tr("MINIICON_ACTIONS_RIGHT_CLICK"), 1, 1, 0.5, 1)
 	self:AddLine(_tr("MINIICON_ACTIONS_SHIFT_RIGHT_CLICK"), 1, 1, 0.5, 1)
+	self:AddLine("|cff1fb3ffAlt+Linksklick:|r Session-Statistik zurücksetzen", 1, 1, 0.5, 1)
+	if Gatherer.Integrations and Gatherer.Integrations.Session and Gatherer.Integrations.Session.AddTooltipLines then
+		Gatherer.Integrations.Session.AddTooltipLines(self)
+	end
 end
 
 local function onEnter(self)
@@ -172,13 +183,30 @@ miniIcon:SetScript("OnUpdate", update)
 miniIcon:SetScript("OnEnter", onEnter)
 miniIcon:SetScript("OnLeave", onLeave)
 
+function miniIcon.UpdateLDBText()
+	if not ldbObject then return end
+	if Gatherer.Integrations and Gatherer.Integrations.Session and Gatherer.Config.GetSetting("session.enable", true) then
+		local s = Gatherer.Integrations.Session.GetSummary()
+		if s.nodes > 0 then
+			if s.goldPerHour > 0 then
+				ldbObject.text = string.format("%d Nodes | %s/h", s.nodes, Gatherer.Integrations.FormatMoney(s.goldPerHour))
+			else
+				ldbObject.text = string.format("%d Nodes (%d/h)", s.nodes, s.nodesPerHour)
+			end
+			return
+		end
+	end
+	ldbObject.text = "Gatherer Reforged"
+end
+
 function miniIcon.CreateLDB()
 	if not LibStub then return end
 	local LibDataBroker = LibStub:GetLibrary("LibDataBroker-1.1", true)
 	if LibDataBroker and not ldbObject then
 		ldbObject = LibDataBroker:NewDataObject("GathererReforged", {
-			type = "launcher",
+			type = "data source",
 			label = "Gatherer Reforged",
+			text = "Gatherer Reforged",
 			icon = 133939,
 			OnClick = function(self, button)
 				click(self, button)

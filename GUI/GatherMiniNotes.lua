@@ -320,6 +320,15 @@ function Gatherer.MiniNotes.UpdateMinimapNotes(timeDelta, force)
 					end
 				end
 				
+				-- If Harvest Cooldown ("Respawn Timer") dimming is active for recently harvested nodes
+				if Gatherer.Integrations and Gatherer.Integrations.GetNodeCooldownInfo then
+					local cdAlpha = Gatherer.Integrations.GetNodeCooldownInfo(nodeZone, gType, nodeIndex)
+					if cdAlpha then
+						opacity = math.min(opacity, cdAlpha)
+						iconColor = "cooldown"
+					end
+				end
+
 				-- Set the texture
 				gatherNote:SetNormalTexture(selectedTexture)
 				gatherNote:SetWidth(normSize)
@@ -353,6 +362,8 @@ function Gatherer.MiniNotes.UpdateMinimapNotes(timeDelta, force)
 					gatherNoteTexture:SetVertexColor(0.9,0.4,0.4)
 				elseif ( iconColor == "green" ) then
 					gatherNoteTexture:SetVertexColor(0.4,0.9,0.4)
+				elseif ( iconColor == "cooldown" ) then
+					gatherNoteTexture:SetVertexColor(0.55,0.65,0.75)
 				else
 					local r, g, b = 1, 1, 1;
 					if ( selectedTexture == SHADED_TEXTURE ) then
@@ -456,6 +467,12 @@ function Gatherer.MiniNotes.MiniNoteOnEnter(frame)
 		end
 		if (last and last > 0 and showseen) then
 			tooltip:AddLine(_tr("NOTE_LASTVISITED", Gatherer.Util.SecondsToTime(time()-last)))
+		end
+		if Gatherer.Integrations and Gatherer.Integrations.GetNodeCooldownInfo then
+			local _, remSecs = Gatherer.Integrations.GetNodeCooldownInfo(frame.zone, gType, frame.index)
+			if remSecs and remSecs > 0 then
+				tooltip:AddLine("|cff00ccffAbklingzeit (kürzlich abgebaut): " .. Gatherer.Util.SecondsToTime(remSecs) .. "|r")
+			end
 		end
 		if (dist and showdist) then
 			tooltip:AddLine(_tr("NOTE_DISTANCE", format("%0.2f", dist)))

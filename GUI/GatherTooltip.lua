@@ -27,7 +27,9 @@ setfenv(1, Gatherer.Tooltip)
 
 function AddDropRates( tooltip, nodeId, zone, maxDropsToShow )
 	if not ( maxDropsToShow ) then maxDropsToShow = 5 end
+	local showPrice = Gatherer.Config and Gatherer.Config.GetSetting and Gatherer.Config.GetSetting("tooltip.marketprice", true)
 	local total = Gatherer.DropRates.GetDropsTotal(nodeId)
+	local shownAnyPrice = false
 	if ( total and (total > 0) ) then
 		tooltip:AddLine(_tr("NOTE_OVERALLDROPS"))
 		local numLeft = 0
@@ -40,7 +42,15 @@ function AddDropRates( tooltip, nodeId, zone, maxDropsToShow )
 				itemName, itemLink, _, _, _, _, _, _, _, invTexture = GetItemInfo(item)
 			end
 			if ( itemName and (i <= maxDropsToShow) ) then
-				tooltip:AddDoubleLine(itemLink, string.format("x%0.2f", count/total))
+				local rightText = string.format("x%0.2f", count/total)
+				if showPrice and item > 0 and Gatherer.Integrations and Gatherer.Integrations.GetItemValue then
+					local unitPrice = Gatherer.Integrations.GetItemValue(itemLink or item)
+					if unitPrice and unitPrice > 0 then
+						shownAnyPrice = true
+						rightText = string.format("x%0.2f (%s)", count/total, Gatherer.Integrations.FormatMoney(unitPrice))
+					end
+				end
+				tooltip:AddDoubleLine(itemLink, rightText)
 				tooltip:AddTexture(invTexture)
 			else
 				numLeft = numLeft + 1
@@ -48,6 +58,13 @@ function AddDropRates( tooltip, nodeId, zone, maxDropsToShow )
 		end
 		if ( numLeft > 0 ) then
 			tooltip:AddLine(_tr("NOTE_ADDITIONAL", numLeft))
+		end
+	end
+	if showPrice and not shownAnyPrice and Gatherer.Integrations and Gatherer.Integrations.GetNodeValue then
+		local price, _, source = Gatherer.Integrations.GetNodeValue(nodeId)
+		if price and price > 0 then
+			local label = source and string.format("Marktwert (%s):", source) or "Marktwert:"
+			tooltip:AddDoubleLine(label, Gatherer.Integrations.FormatMoney(price), 0.7, 0.85, 1.0, 1, 1, 1)
 		end
 	end
 end

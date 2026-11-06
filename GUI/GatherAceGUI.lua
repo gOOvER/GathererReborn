@@ -1279,6 +1279,147 @@ local function buildOptionsTable()
 			},
 
 			----------------------------------------------------------------------
+			-- 6.5 Database & Integrations (GatherMate2, Session Tracker, AH, Cooldowns)
+			----------------------------------------------------------------------
+			integrations = {
+				type = "group",
+				name = "Integrationen & DB",
+				order = 85,
+				args = {
+					importGroup = {
+						type = "group",
+						inline = true,
+						name = "GatherMate2 & GatherMate2_Data Datenbank-Import",
+						order = 1,
+						args = {
+							desc = {
+								type = "description",
+								name = "Importiert vorhandene Vorkommen aus |cffffd200GatherMate2|r sowie die vorgefertigten Wowhead-Datenbanken aus |cffffd200GatherMate2_Data|r (inkl. Classic, TBC, Wrath, Retail & WoW Forever) direkt in Gatherer Reforged.",
+								order = 1,
+							},
+							importSaved = {
+								type = "execute",
+								name = "GatherMate2 Daten importieren",
+								desc = "Importiert deine gespeicherten GatherMate2-Vorkommen.",
+								width = "normal",
+								order = 2,
+								func = function()
+									if Gatherer.Integrations and Gatherer.Integrations.ImportGatherMate2 then
+										Gatherer.Integrations.ImportGatherMate2(false)
+										AceConfigRegistry:NotifyChange("GathererReforged")
+									end
+								end,
+							},
+							importFullData = {
+								type = "execute",
+								name = "GatherMate2 + GatherMate2_Data importieren",
+								desc = "Lädt GatherMate2_Data (falls installiert) und importiert alle Weltkarten-Vorkommen.",
+								width = "double",
+								order = 3,
+								func = function()
+									if Gatherer.Integrations and Gatherer.Integrations.ImportGatherMate2 then
+										Gatherer.Integrations.ImportGatherMate2(true)
+										AceConfigRegistry:NotifyChange("GathererReforged")
+									end
+								end,
+							},
+						},
+					},
+					sessionGroup = {
+						type = "group",
+						inline = true,
+						name = "Session- & Gold-pro-Stunde-Tracker (GPH)",
+						order = 2,
+						args = {
+							enable = {
+								type = "toggle",
+								name = "Session-Tracker & LDB-Anzeige aktivieren",
+								width = "full",
+								order = 1,
+								get = function() return GetSetting("session.enable", true) end,
+								set = function(_, v)
+									SetSetting("session.enable", v)
+									if Gatherer.MiniIcon and Gatherer.MiniIcon.UpdateLDBText then
+										Gatherer.MiniIcon.UpdateLDBText()
+									end
+								end,
+							},
+							marketPrice = {
+								type = "toggle",
+								name = "Live-Auktionshaus-Preise in Tooltips anzeigen (Auctionator / TSM / OE)",
+								width = "full",
+								order = 2,
+								get = function() return GetSetting("tooltip.marketprice", true) end,
+								set = function(_, v) SetSetting("tooltip.marketprice", v) end,
+							},
+							statsText = {
+								type = "description",
+								fontSize = "medium",
+								order = 3,
+								name = function()
+									if not (Gatherer.Integrations and Gatherer.Integrations.Session) then
+										return ""
+									end
+									local s = Gatherer.Integrations.Session.GetSummary()
+									local mins = math.floor(s.elapsed / 60)
+									local secs = s.elapsed % 60
+									return string.format(
+										"|cffffd200Aktuelle Sitzung (%02d:%02d Min.):|r  |cff00ff96%d Vorkommen|r (%d/Std.)   |   Marktwert: %s   |   GPH: %s/Std.",
+										mins, secs, s.nodes, s.nodesPerHour,
+										Gatherer.Integrations.FormatMoney(s.totalValue),
+										Gatherer.Integrations.FormatMoney(s.goldPerHour)
+									)
+								end,
+							},
+							resetBtn = {
+								type = "execute",
+								name = "Session zurücksetzen",
+								order = 4,
+								func = function()
+									if Gatherer.Integrations and Gatherer.Integrations.Session then
+										Gatherer.Integrations.Session.Reset()
+										AceConfigRegistry:NotifyChange("GathererReforged")
+									end
+								end,
+							},
+						},
+					},
+					cooldownGroup = {
+						type = "group",
+						inline = true,
+						name = "Respawn-Timer: Kürzlich abgebaute Vorkommen dimmen",
+						order = 3,
+						args = {
+							enable = {
+								type = "toggle",
+								name = "Kürzlich abgebaute Knoten auf Minimap & 3D-HUD abblenden",
+								width = "full",
+								order = 1,
+								get = function() return GetSetting("cooldown.enable", true) end,
+								set = function(_, v) SetSetting("cooldown.enable", v) end,
+							},
+							time = {
+								type = "range",
+								name = "Abklingzeit / Respawn-Dauer (Sekunden)",
+								min = 30, max = 1200, step = 15,
+								order = 2,
+								get = function() return tonumber(GetSetting("cooldown.time", 300)) or 300 end,
+								set = function(_, v) SetSetting("cooldown.time", v) end,
+							},
+							opacity = {
+								type = "range",
+								name = "Sichtbarkeit während Abklingzeit (%)",
+								min = 10, max = 90, step = 5,
+								order = 3,
+								get = function() return tonumber(GetSetting("cooldown.opacity", 35)) or 35 end,
+								set = function(_, v) SetSetting("cooldown.opacity", v) end,
+							},
+						},
+					},
+				},
+			},
+
+			----------------------------------------------------------------------
 			-- 7. About
 			----------------------------------------------------------------------
 			about = {

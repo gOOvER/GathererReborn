@@ -29,6 +29,7 @@ Gatherer = {
 	DropRates = {},
 	Event = {},
 	HUD = {},
+	Integrations = {},
 	Interface = {},
 	Locale = {},
 	Map = {},

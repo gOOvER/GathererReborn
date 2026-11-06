@@ -86,6 +86,11 @@ local function getDefault(setting)
 	if (setting == "arch.enable")       then return true    end
 	if (setting == "arch.minimap.count")then return 20      end
 	if (setting == "arch.duration")     then return 60     end
+	if (setting == "cooldown.enable")   then return true    end
+	if (setting == "cooldown.time")     then return 300     end
+	if (setting == "cooldown.opacity")  then return 35      end
+	if (setting == "session.enable")    then return true    end
+	if (setting == "tooltip.marketprice") then return true  end
 
 	-- check for a plugin default
 	for _, data in pairs(Gatherer.Plugins.Registrations) do

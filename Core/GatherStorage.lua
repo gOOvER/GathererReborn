@@ -174,7 +174,14 @@ function lib.AddNode(nodeName, gatherType, inMapID, gatherX, gatherY, source, in
 	
 	for i, nodeData in ipairs(gtypeTable) do
 		if ( nodeData[FLOOR] == indoorFloor ) then
-			local dist = Map:ComputeDistance(mapID, mapFloor, gatherX, gatherY, mapID, mapFloor, nodeData[POS_X], nodeData[POS_Y])
+			local dist
+			if ( lib.MassImportMode ) then
+				local dx = (gatherX - nodeData[POS_X]) * 1000
+				local dy = (gatherY - nodeData[POS_Y]) * 1000
+				dist = math.sqrt(dx * dx + dy * dy)
+			else
+				dist = Map:ComputeDistance(mapID, mapFloor, gatherX, gatherY, mapID, mapFloor, nodeData[POS_X], nodeData[POS_Y])
+			end
 			if ( dist and dist < matchDist ) then
 				
 				-- don't combine Treasure or Archaeology gathers into a common node unless they share a category
@@ -291,7 +298,9 @@ function lib.AddNode(nodeName, gatherType, inMapID, gatherX, gatherY, source, in
 	end
 
 	-- Notify the reporting subsystem that something has changed
-	Gatherer.Report.NeedsUpdate()
+	if not ( lib.MassImportMode ) then
+		Gatherer.Report.NeedsUpdate()
+	end
 
 	-- Return the indexed position
 	return index, previousInspected, previousHarvested
