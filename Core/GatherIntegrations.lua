@@ -834,6 +834,11 @@ function Integrations.ImportGatherMate2(includeDataAddon)
 				totalImported = totalImported + importGM2Table(globalTable, dbType, "IMPORTED")
 			end
 		end
+		-- Also import Gatherer_Reborn SavedVariables if present
+		local grbTable = _G["GathererReborn" .. prefix .. "DB"]
+		if type(grbTable) == "table" then
+			totalImported = totalImported + importGM2Table(grbTable, dbType, "IMPORTED")
+		end
 	end
 
 	-- 2. Import GatherMate2_Data pre-populated tables (Forever, Classic, TBC, Wrath, Mainline)
@@ -941,18 +946,20 @@ end
 --------------------------------------------------------------------------------
 -- 6. Cross-Addon Live Node Sharing Bridge
 --    Supports:
+--    - Gatherer Reborn ("GRBNode" tab-delimited protocol: "1\tzone\tnodeType\tcoords\tnodeID")
 --    - GatherMate2_Sharing / GatherMate_Sharing ("GM2SD" & "GMSD")
---    - GatherLite ("GATHERLITE", "GatherLite", "GatherLiteSync")
---    - Two-way live sync with local GatherMate2 installation (modern replacement
---      for the discontinued GatherMate2_Sharing addon)
+--    - GatherLite ("GATHERLITE", "GatherLite", "GatherLiteSync", "G2G")
+--    - Two-way live sync with local GatherMate2 & Gatherer Reborn installations
 --------------------------------------------------------------------------------
 
 local EXTERNAL_PREFIXES = {
+	["GRBNode"] = "Gatherer Reborn",
 	["GM2SD"] = "GatherMate2_Sharing",
 	["GMSD"] = "GatherMate_Sharing",
 	["GATHERLITE"] = "GatherLite",
 	["GatherLite"] = "GatherLite",
 	["GatherLiteSync"] = "GatherLite",
+	["G2G"] = "GatherLite",
 }
 
 local function safeRegisterAddonPrefix(prefix)
@@ -987,8 +994,7 @@ function Integrations.MirrorNodeToGatherMate2(objectId, gatherType, zoneToken, x
 	if isMirroringGM2 then return end
 	if not Gatherer.Config.GetSetting("sharing.bridge.enable", true) then return end
 	local AceAddon = LibStub and LibStub("AceAddon-3.0", true)
-	local gmAddon = AceAddon and AceAddon:GetAddon("GatherMate2", true)
-	if not gmAddon or type(gmAddon.InjectNode2) ~= "function" then return end
+	if not AceAddon then return end
 
 	local uiMapID = tonumber(zoneToken)
 	if not uiMapID and Gatherer.ZoneTokens and Gatherer.ZoneTokens.GetZoneToken then
@@ -1001,9 +1007,17 @@ function Integrations.MirrorNodeToGatherMate2(objectId, gatherType, zoneToken, x
 
 	local coord = floor(x * 10000 + 0.5) * 1000000 + floor(y * 10000 + 0.5) * 100
 	isMirroringGM2 = true
-	pcall(gmAddon.InjectNode2, gmAddon, uiMapID, coord, dbType, gmNodeID)
-	if type(gmAddon.SendMessage) == "function" then
-		pcall(gmAddon.SendMessage, gmAddon, "GatherMate2ConfigChanged")
+	for _, addonInfo in ipairs({
+		{ name = "GatherMate2", msg = "GatherMate2ConfigChanged" },
+		{ name = "GathererReborn", msg = "GathererRebornConfigChanged" },
+	}) do
+		local extAddon = AceAddon:GetAddon(addonInfo.name, true)
+		if extAddon and type(extAddon.InjectNode2) == "function" then
+			pcall(extAddon.InjectNode2, extAddon, uiMapID, coord, dbType, gmNodeID)
+			if type(extAddon.SendMessage) == "function" then
+				pcall(extAddon.SendMessage, extAddon, addonInfo.msg)
+			end
+		end
 	end
 	isMirroringGM2 = false
 end
@@ -1019,8 +1033,13 @@ function Integrations.BroadcastToExternalAddons(chatType, target, objectId, gath
 	local gmNodeID, dbType = Integrations.GetGatherMateNodeForObject(objectId, gatherType)
 	if gmNodeID and dbType then
 		local coord = floor(x * 10000 + 0.5) * 1000000 + floor(y * 10000 + 0.5) * 100
-		local payload = strjoin(":", "A", tostring(uiMapID), tostring(dbType), tostring(coord), tostring(gmNodeID))
-		safeSendAddonMessage("GM2SD", payload, chatType, target)
+		-- 1. Gatherer Reborn ("GRBNode") tab-delimited format: "1\t<zone>\t<nodeType>\t<coords>\t<nodeID>"
+		local grbPayload = table.concat({ "1", tostring(uiMapID), tostring(dbType), tostring(coord), tostring(gmNodeID) }, "\t")
+		safeSendAddonMessage("GRBNode", grbPayload, chatType, target)
+
+		-- 2. GatherMate2_Sharing ("GM2SD") colon-delimited format: "A:<zone>:<nodeType>:<coords>:<nodeID>"
+		local gm2Payload = strjoin(":", "A", tostring(uiMapID), tostring(dbType), tostring(coord), tostring(gmNodeID))
+		safeSendAddonMessage("GM2SD", gm2Payload, chatType, target)
 	end
 end
 
@@ -1055,7 +1074,22 @@ function Integrations.OnExternalAddonMessage(prefix, msg, how, who)
 	local objectID, gatherType, zoneToken, gatherX, gatherY
 	local gmMapID, gmDbType, gmCoord, gmNodeID
 
-	if prefix == "GM2SD" or prefix == "GMSD" then
+	if prefix == "GRBNode" then
+		-- Gatherer Reborn format: "1\t<zone>\t<nodeType>\t<coords>\t<nodeID>"
+		local version, zoneStr, nodeTypeStr, coordsStr, nodeIDStr = msg:match("^(%d+)\t(%d+)\t([^\t]+)\t(%d+)\t(%d+)$")
+		if version == "1" then
+			gmMapID = tonumber(zoneStr)
+			gmDbType = nodeTypeStr
+			gmCoord = tonumber(coordsStr)
+			gmNodeID = tonumber(nodeIDStr)
+			if gmMapID and gmDbType and gmCoord and gmNodeID then
+				zoneToken = Gatherer.ZoneTokens.GetZoneToken(gmMapID)
+				gatherX = floor(gmCoord / 1000000) / 10000
+				gatherY = floor((gmCoord % 1000000) / 100) / 10000
+				objectID, gatherType = resolveGatherMateNode(gmNodeID, gmDbType)
+			end
+		end
+	elseif prefix == "GM2SD" or prefix == "GMSD" then
 		-- GatherMate2_Sharing format: "A:zone:nodeType:coord:nodeID" or legacy "zone:nodeType:coord:nodeID"
 		local p1, p2, p3, p4, p5 = strsplit(":", msg)
 		if p1 == "D" then
@@ -1104,7 +1138,7 @@ function Integrations.OnExternalAddonMessage(prefix, msg, how, who)
 			end
 		end
 		if not objectID then
-			local p1, p2, p3, p4, p5 = strsplit(":;", msg)
+			local p1, p2, p3, p4, p5 = strsplit(":;\t", msg)
 			local nodeID = tonumber(p2) or tonumber(p1)
 			local mapID = tonumber(p3) or tonumber(p2)
 			local nx = tonumber(p4) or tonumber(p3)
@@ -1120,7 +1154,7 @@ function Integrations.OnExternalAddonMessage(prefix, msg, how, who)
 
 	if objectID and gatherType and zoneToken and gatherX and gatherY and gatherX > 0 and gatherX < 1 and gatherY > 0 and gatherY < 1 then
 		Gatherer.Api.AddGather(objectID, gatherType, false, who, nil, nil, false, nil, zoneToken, gatherX, gatherY)
-		-- Also mirror into local GatherMate2 if installed
+		-- Also mirror into local GatherMate2 / Gatherer Reborn if installed
 		Integrations.MirrorNodeToGatherMate2(objectID, gatherType, zoneToken, gatherX, gatherY)
 
 		if Gatherer.Config.GetSetting(msgtype .. ".print.recv") then
@@ -1132,44 +1166,49 @@ function Integrations.OnExternalAddonMessage(prefix, msg, how, who)
 	end
 end
 
-local gm2LiveHooked = false
+local hookedLiveAddons = {}
 function Integrations.SetupGatherMate2LiveSync()
-	if gm2LiveHooked then return end
 	local AceAddon = LibStub and LibStub("AceAddon-3.0", true)
-	local gmAddon = AceAddon and AceAddon:GetAddon("GatherMate2", true)
-	if not gmAddon or type(gmAddon.AddNode) ~= "function" then return end
-	gm2LiveHooked = true
+	if not AceAddon then return end
 
-	hooksecurefunc(gmAddon, "AddNode", function(self, zone, x, y, nodeType, name)
-		if isMirroringGM2 then return end
-		if not Gatherer.Config.GetSetting("sharing.bridge.enable", true) then return end
-		local uiMapID = tonumber(zone)
-		local zoneToken = uiMapID and Gatherer.ZoneTokens and Gatherer.ZoneTokens.GetZoneToken(uiMapID)
-		if not zoneToken or not x or not y then return end
+	for _, addonName in ipairs({ "GatherMate2", "GathererReborn" }) do
+		if not hookedLiveAddons[addonName] then
+			local extAddon = AceAddon:GetAddon(addonName, true)
+			if extAddon and type(extAddon.AddNode) == "function" then
+				hookedLiveAddons[addonName] = true
+				hooksecurefunc(extAddon, "AddNode", function(self, zone, x, y, nodeType, name)
+					if isMirroringGM2 then return end
+					if not Gatherer.Config.GetSetting("sharing.bridge.enable", true) then return end
+					local uiMapID = tonumber(zone)
+					local zoneToken = uiMapID and Gatherer.ZoneTokens and Gatherer.ZoneTokens.GetZoneToken(uiMapID)
+					if not zoneToken or not x or not y then return end
 
-		local gmNodeID = self.nodeIDs and self.nodeIDs[nodeType] and self.nodeIDs[nodeType][name]
-		local objID, gType = resolveGatherMateNode(gmNodeID, nodeType)
-		if not objID and name and Gatherer.Nodes then
-			objID = Gatherer.Nodes.Names[name]
-			gType = (objID and Gatherer.Nodes.Objects[objID]) or DB_TYPE_TO_GTYPE[nodeType] or "OPEN"
-			if not objID and Gatherer.Nodes.RegisterDynamicNode then
-				objID = Gatherer.Nodes.RegisterDynamicNode(name, gType)
+					local gmNodeID = self.nodeIDs and self.nodeIDs[nodeType] and self.nodeIDs[nodeType][name]
+					local objID, gType = resolveGatherMateNode(gmNodeID, nodeType)
+					if not objID and name and Gatherer.Nodes then
+						objID = Gatherer.Nodes.Names[name]
+						gType = (objID and Gatherer.Nodes.Objects[objID]) or DB_TYPE_TO_GTYPE[nodeType] or "OPEN"
+						if not objID and Gatherer.Nodes.RegisterDynamicNode then
+							objID = Gatherer.Nodes.RegisterDynamicNode(name, gType)
+						end
+					end
+
+					if objID and gType then
+						isMirroringGM2 = true
+						Gatherer.Api.AddGather(objID, gType, false, nil, nil, nil, false, nil, zoneToken, x, y)
+						isMirroringGM2 = false
+					end
+				end)
 			end
 		end
-
-		if objID and gType then
-			isMirroringGM2 = true
-			Gatherer.Api.AddGather(objID, gType, false, nil, nil, nil, false, nil, zoneToken, x, y)
-			isMirroringGM2 = false
-		end
-	end)
+	end
 end
 
 local bridgeFrame = CreateFrame("Frame")
 bridgeFrame:RegisterEvent("PLAYER_LOGIN")
 bridgeFrame:RegisterEvent("ADDON_LOADED")
 bridgeFrame:SetScript("OnEvent", function(_, event, arg1)
-	if event == "PLAYER_LOGIN" or arg1 == "FarmHud" or arg1 == "Routes" or arg1 == "GatherMate2" then
+	if event == "PLAYER_LOGIN" or arg1 == "FarmHud" or arg1 == "Routes" or arg1 == "GatherMate2" or arg1 == "Gatherer_Reborn" then
 		Integrations.SetupFarmHud()
 		Integrations.SetupRoutes()
 		Integrations.SetupGatherMate2LiveSync()

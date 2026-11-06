@@ -854,13 +854,13 @@ local function buildOptionsTable()
 					bridgeGroup = {
 						type = "group",
 						inline = true,
-						name = "Cross-Addon Sharing-Bridge (GatherMate2_Sharing / GatherLite / GatherMate2)",
+						name = "Cross-Addon Sharing-Bridge (Gatherer Reborn / GatherMate2 / GatherLite)",
 						order = 3.5,
 						args = {
 							enable = {
 								type = "toggle",
-								name = "Cross-Addon Sharing-Bridge aktivieren (GM2SD, GMSD, GatherLite & GatherMate2 Live-Sync)",
-								desc = "Empfängt und sendet geteilte Vorkommen kompatibel zu GatherMate2_Sharing (GM2SD), GatherMate_Sharing (GMSD) und GatherLite und synchronisiert live mit einer lokalen GatherMate2-Installation.",
+								name = "Cross-Addon Sharing-Bridge aktivieren (GRBNode, GM2SD, GMSD, GatherLite & Live-Sync)",
+								desc = "Empfängt und sendet geteilte Vorkommen kompatibel zu Gatherer Reborn (GRBNode), GatherMate2_Sharing (GM2SD/GMSD) und GatherLite (G2G) und synchronisiert live mit einer lokalen GatherMate2- oder Gatherer-Reborn-Installation.",
 								width = "full",
 								order = 1,
 								get = function() return GetSetting("sharing.bridge.enable", true) end,
@@ -1342,8 +1342,8 @@ local function buildOptionsTable()
 							},
 							bridgeEnable = {
 								type = "toggle",
-								name = "Cross-Addon Live-Sharing-Bridge aktivieren (GatherMate2_Sharing / GatherLite / lokales GatherMate2)",
-								desc = "Ersetzt das eingestellte GatherMate2_Sharing-Addon: Teilt und empfängt Vorkommen über GM2SD/GMSD/GatherLite und synchronisiert gefundene/empfangene Knoten live mit GatherMate2.",
+								name = "Cross-Addon Live-Sharing-Bridge aktivieren (Gatherer Reborn / GatherMate2 / GatherLite)",
+								desc = "Teilt und empfängt Vorkommen über Gatherer Reborn (GRBNode), GatherMate2_Sharing (GM2SD/GMSD) und GatherLite (G2G) und synchronisiert gefundene/empfangene Knoten live mit GatherMate2 & Gatherer Reborn.",
 								width = "full",
 								order = 4,
 								get = function() return GetSetting("sharing.bridge.enable", true) end,
