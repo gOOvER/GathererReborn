@@ -2,7 +2,7 @@
 	Gatherer Reforged Addon for World of Warcraft(tm).
 	Version: 1.0.0
 
-	Localization routines (AceLocale-3.0 & native GathererLocalizations lookup)
+	Localization routines (Native AceLocale-3.0 + Gatherer.Locale bridge)
 
 	License:
 		This program is free software: you can redistribute it and/or modify
@@ -15,36 +15,18 @@ local clientLocale = GetLocale() or "enUS"
 if clientLocale == "enGB" then clientLocale = "enUS" end
 
 local AceLocale = LibStub and LibStub("AceLocale-3.0", true)
-local aceL
-if AceLocale and GathererLocalizations then
-	local enStrings = GathererLocalizations["enUS"]
-	if enStrings then
-		local L = AceLocale:NewLocale("GathererReforged", "enUS", true, true)
-		if L then
-			for k, v in pairs(enStrings) do
-				L[k] = v
-			end
-		end
-	end
-	if clientLocale ~= "enUS" and GathererLocalizations[clientLocale] then
-		local L = AceLocale:NewLocale("GathererReforged", clientLocale, false, true)
-		if L then
-			for k, v in pairs(GathererLocalizations[clientLocale]) do
-				L[k] = v
-			end
-		end
-	end
-	aceL = AceLocale:GetLocale("GathererReforged", true)
-end
+local aceL = AceLocale and AceLocale:GetLocale("GathererReforged", true)
+Gatherer.L = aceL
 
 local function lookupLocaleString(locale, key)
 	if not key then return nil end
+	if aceL then
+		local val = rawget(aceL, key)
+		if val then return val end
+	end
 	local locTable = GathererLocalizations and GathererLocalizations[locale or clientLocale]
 	if locTable and locTable[key] then
 		return locTable[key]
-	end
-	if aceL and rawget(aceL, key) then
-		return rawget(aceL, key)
 	end
 	local enTable = GathererLocalizations and GathererLocalizations["enUS"]
 	if enTable and enTable[key] then

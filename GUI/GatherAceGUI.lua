@@ -854,13 +854,13 @@ local function buildOptionsTable()
 					bridgeGroup = {
 						type = "group",
 						inline = true,
-						name = "Cross-Addon Sharing-Bridge (Gatherer Reborn / GatherMate2 / GatherLite)",
+						name = _trL("CONFIG_BRIDGE_GROUP"),
 						order = 3.5,
 						args = {
 							enable = {
 								type = "toggle",
-								name = "Cross-Addon Sharing-Bridge aktivieren (GRBNode, GM2SD, GMSD, GatherLite & Live-Sync)",
-								desc = "Empfängt und sendet geteilte Vorkommen kompatibel zu Gatherer Reborn (GRBNode), GatherMate2_Sharing (GM2SD/GMSD) und GatherLite (G2G) und synchronisiert live mit einer lokalen GatherMate2- oder Gatherer-Reborn-Installation.",
+								name = _trL("CONFIG_BRIDGE_ENABLE"),
+								desc = _trL("CONFIG_BRIDGE_ENABLE_DESC"),
 								width = "full",
 								order = 1,
 								get = function() return GetSetting("sharing.bridge.enable", true) end,
@@ -1300,24 +1300,24 @@ local function buildOptionsTable()
 			----------------------------------------------------------------------
 			integrations = {
 				type = "group",
-				name = "Integrationen & DB",
+				name = _trL("CONFIG_SECTION_INTEGRATIONS"),
 				order = 85,
 				args = {
 					importGroup = {
 						type = "group",
 						inline = true,
-						name = "GatherMate2 & GatherMate2_Data Datenbank-Import",
+						name = _trL("CONFIG_GM2_GROUP"),
 						order = 1,
 						args = {
 							desc = {
 								type = "description",
-								name = "Importiert vorhandene Vorkommen aus |cffffd200GatherMate2|r sowie die vorgefertigten Wowhead-Datenbanken aus |cffffd200GatherMate2_Data|r (inkl. Classic, TBC, Wrath, Retail & WoW Forever) direkt in Gatherer Reforged.",
+								name = _trL("CONFIG_GM2_DESC"),
 								order = 1,
 							},
 							importSaved = {
 								type = "execute",
-								name = "GatherMate2 Daten importieren",
-								desc = "Importiert deine gespeicherten GatherMate2-Vorkommen.",
+								name = _trL("CONFIG_GM2_IMPORT_SAVED"),
+								desc = _trL("CONFIG_GM2_IMPORT_SAVED_DESC"),
 								width = "normal",
 								order = 2,
 								func = function()
@@ -1329,8 +1329,8 @@ local function buildOptionsTable()
 							},
 							importFullData = {
 								type = "execute",
-								name = "GatherMate2 + GatherMate2_Data importieren",
-								desc = "Lädt GatherMate2_Data (falls installiert) und importiert alle Weltkarten-Vorkommen.",
+								name = _trL("CONFIG_GM2_IMPORT_FULL"),
+								desc = _trL("CONFIG_GM2_IMPORT_FULL_DESC"),
 								width = "double",
 								order = 3,
 								func = function()
@@ -1342,8 +1342,8 @@ local function buildOptionsTable()
 							},
 							bridgeEnable = {
 								type = "toggle",
-								name = "Cross-Addon Live-Sharing-Bridge aktivieren (Gatherer Reborn / GatherMate2 / GatherLite)",
-								desc = "Teilt und empfängt Vorkommen über Gatherer Reborn (GRBNode), GatherMate2_Sharing (GM2SD/GMSD) und GatherLite (G2G) und synchronisiert gefundene/empfangene Knoten live mit GatherMate2 & Gatherer Reborn.",
+								name = _trL("CONFIG_BRIDGE_ENABLE"),
+								desc = _trL("CONFIG_BRIDGE_ENABLE_DESC"),
 								width = "full",
 								order = 4,
 								get = function() return GetSetting("sharing.bridge.enable", true) end,
@@ -1354,12 +1354,12 @@ local function buildOptionsTable()
 					sessionGroup = {
 						type = "group",
 						inline = true,
-						name = "Session- & Gold-pro-Stunde-Tracker (GPH)",
+						name = _trL("CONFIG_SESSION_GROUP"),
 						order = 2,
 						args = {
 							enable = {
 								type = "toggle",
-								name = "Session-Tracker & LDB-Anzeige aktivieren",
+								name = _trL("CONFIG_SESSION_ENABLE"),
 								width = "full",
 								order = 1,
 								get = function() return GetSetting("session.enable", true) end,
@@ -1372,7 +1372,7 @@ local function buildOptionsTable()
 							},
 							marketPrice = {
 								type = "toggle",
-								name = "Live-Auktionshaus-Preise in Tooltips anzeigen (Auctionator / TSM / OE)",
+								name = _trL("CONFIG_MARKET_PRICE_ENABLE"),
 								width = "full",
 								order = 2,
 								get = function() return GetSetting("tooltip.marketprice", true) end,
@@ -1390,7 +1390,7 @@ local function buildOptionsTable()
 									local mins = math.floor(s.elapsed / 60)
 									local secs = s.elapsed % 60
 									return string.format(
-										"|cffffd200Aktuelle Sitzung (%02d:%02d Min.):|r  |cff00ff96%d Vorkommen|r (%d/Std.)   |   Marktwert: %s   |   GPH: %s/Std.",
+										_trL("CONFIG_SESSION_STATS_FMT"),
 										mins, secs, s.nodes, s.nodesPerHour,
 										Gatherer.Integrations.FormatMoney(s.totalValue),
 										Gatherer.Integrations.FormatMoney(s.goldPerHour)
@@ -1399,7 +1399,7 @@ local function buildOptionsTable()
 							},
 							resetBtn = {
 								type = "execute",
-								name = "Session zurücksetzen",
+								name = _trL("CONFIG_SESSION_RESET"),
 								order = 4,
 								func = function()
 									if Gatherer.Integrations and Gatherer.Integrations.Session then
@@ -1413,12 +1413,12 @@ local function buildOptionsTable()
 					cooldownGroup = {
 						type = "group",
 						inline = true,
-						name = "Respawn-Timer: Kürzlich abgebaute Vorkommen dimmen",
+						name = _trL("CONFIG_COOLDOWN_GROUP"),
 						order = 3,
 						args = {
 							enable = {
 								type = "toggle",
-								name = "Kürzlich abgebaute Knoten auf Minimap & 3D-HUD abblenden",
+								name = _trL("CONFIG_COOLDOWN_ENABLE"),
 								width = "full",
 								order = 1,
 								get = function() return GetSetting("cooldown.enable", true) end,
@@ -1426,7 +1426,7 @@ local function buildOptionsTable()
 							},
 							time = {
 								type = "range",
-								name = "Abklingzeit / Respawn-Dauer (Sekunden)",
+								name = _trL("CONFIG_COOLDOWN_TIME"),
 								min = 30, max = 1200, step = 15,
 								order = 2,
 								get = function() return tonumber(GetSetting("cooldown.time", 300)) or 300 end,
@@ -1434,7 +1434,7 @@ local function buildOptionsTable()
 							},
 							opacity = {
 								type = "range",
-								name = "Sichtbarkeit während Abklingzeit (%)",
+								name = _trL("CONFIG_COOLDOWN_OPACITY"),
 								min = 10, max = 90, step = 5,
 								order = 3,
 								get = function() return tonumber(GetSetting("cooldown.opacity", 35)) or 35 end,

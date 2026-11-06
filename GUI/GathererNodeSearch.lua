@@ -67,7 +67,7 @@ frame.Toolbar:SetPoint("TOPRIGHT", frame.Header, "BOTTOMRIGHT", -10, -8)
 frame.Toolbar:SetHeight(36)
 UIStyle.ApplyBox(frame.Toolbar, 0.10, 0.12, 0.15, 1, 0.20, 0.23, 0.29, 1)
 
-frame.SearchBox = UIStyle.CreateEditBox(frame.Toolbar, 280, 24, "Vorkommen oder Gebiet filtern...")
+frame.SearchBox = UIStyle.CreateEditBox(frame.Toolbar, 280, 24, _tr("UI_DENSITY_SEARCH_PLACEHOLDER"))
 frame.SearchBox:SetPoint("LEFT", frame.Toolbar, "LEFT", 8, 0)
 frame.SearchBox.OnValueChanged = function()
 	private.RunSearch()
@@ -76,11 +76,11 @@ end
 private.activeCategory = "ALL"
 private.categoryButtons = {}
 local CATEGORIES = {
-	{ key = "ALL",  label = "Alle" },
-	{ key = "HERB", label = "Kräuter" },
-	{ key = "MINE", label = "Bergbau" },
-	{ key = "OPEN", label = "Schätze" },
-	{ key = "ARCH", label = "Archäol." },
+	{ key = "ALL",  label = _tr("UI_CAT_ALL") },
+	{ key = "HERB", label = _tr("UI_CAT_HERB") },
+	{ key = "MINE", label = _tr("UI_CAT_MINE") },
+	{ key = "OPEN", label = _tr("UI_CAT_OPEN") },
+	{ key = "ARCH", label = _tr("UI_CAT_ARCH") },
 }
 
 local prevCatBtn
@@ -144,7 +144,7 @@ end)
 
 frame.FooterHint = frame.Footer:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 frame.FooterHint:SetPoint("LEFT", frame.Config, "RIGHT", 14, 0)
-frame.FooterHint:SetText("|cff778292Klick auf Zeile:|r Im Vorkommen-Bericht öffnen")
+frame.FooterHint:SetText(_tr("UI_FOOTER_HINT_SEARCH"))
 
 frame.Done = UIStyle.CreateButton(frame.Footer, 100, 24, _tr("DONE"), "primary")
 frame.Done:SetPoint("RIGHT", frame.Footer, "RIGHT", -8, 0)
@@ -167,7 +167,7 @@ local COLUMNS = {
 	{ key = "Zone",    title = _tr("DENSITY_COLUMN_HEADER_LOCATION"), x = 250, width = 200, align = "LEFT",  sortKey = "zone" },
 	{ key = "Count",   title = _tr("DENSITY_COLUMN_HEADER_NUM_NODE"), x = 455, width = 75,  align = "RIGHT", sortKey = "count" },
 	{ key = "Percent", title = _tr("DENSITY_COLUMN_HEADER_PERCENT"),  x = 540, width = 115, align = "LEFT",  sortKey = "pct" },
-	{ key = "Value",   title = "Marktwert",                           x = 660, width = 70,  align = "RIGHT", sortKey = "value" },
+	{ key = "Value",   title = _tr("UI_COL_VALUE"),                   x = 660, width = 70,  align = "RIGHT", sortKey = "value" },
 }
 
 private.sortBy = "count"
@@ -211,7 +211,7 @@ end)
 
 frame.Results.EmptyText = frame.Results:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 frame.Results.EmptyText:SetPoint("CENTER", frame.Results, "CENTER", 0, 0)
-frame.Results.EmptyText:SetText("|cff8892a4Keine passenden Vorkommen in der Datenbank gefunden.|r")
+frame.Results.EmptyText:SetText(_tr("UI_EMPTY_SEARCH"))
 frame.Results.EmptyText:Hide()
 
 frame.Rows = {}
@@ -366,7 +366,7 @@ end
 
 function private.UpdateRows()
 	local size = #private.results
-	frame.Header.Badge:SetText(string.format("|cff00ff96%d|r Zonen-Einträge", size))
+	frame.Header.Badge:SetText(string.format(_tr("UI_BADGE_ZONE_ENTRIES"), size))
 
 	if size == 0 then
 		frame.Results.EmptyText:Show()

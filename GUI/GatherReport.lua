@@ -378,7 +378,7 @@ frame.Toolbar:SetPoint("TOPRIGHT", frame.Header, "BOTTOMRIGHT", -10, -8)
 frame.Toolbar:SetHeight(36)
 UIStyle.ApplyBox(frame.Toolbar, 0.10, 0.12, 0.15, 1, 0.20, 0.23, 0.29, 1)
 
-frame.SearchBox = UIStyle.CreateEditBox(frame.Toolbar, 240, 24, "Suchen (Vorkommen, Gebiet, Quelle)...")
+frame.SearchBox = UIStyle.CreateEditBox(frame.Toolbar, 240, 24, _tr("UI_SEARCH_PLACEHOLDER"))
 frame.SearchBox:SetPoint("LEFT", frame.Toolbar, "LEFT", 8, 0)
 frame.SearchBox.OnValueChanged = function()
 	public.NeedsUpdate(0.15)
@@ -410,11 +410,11 @@ end
 private.activeCategory = "ALL"
 private.categoryButtons = {}
 local CATEGORIES = {
-	{ key = "ALL",  label = "Alle" },
-	{ key = "HERB", label = "Kräuter" },
-	{ key = "MINE", label = "Bergbau" },
-	{ key = "OPEN", label = "Schätze" },
-	{ key = "ARCH", label = "Archäol." },
+	{ key = "ALL",  label = _tr("UI_CAT_ALL") },
+	{ key = "HERB", label = _tr("UI_CAT_HERB") },
+	{ key = "MINE", label = _tr("UI_CAT_MINE") },
+	{ key = "OPEN", label = _tr("UI_CAT_OPEN") },
+	{ key = "ARCH", label = _tr("UI_CAT_ARCH") },
 }
 
 local prevCatBtn
@@ -478,7 +478,7 @@ end)
 
 frame.FooterHint = frame.Footer:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 frame.FooterHint:SetPoint("LEFT", frame.Config, "RIGHT", 16, 0)
-frame.FooterHint:SetText("|cff778292Linksklick:|r Markieren   |cff778292•   Rechtsklick:|r Wegpunkt setzen   |cff778292•   Spaltenkopf:|r Sortieren")
+frame.FooterHint:SetText(_tr("UI_FOOTER_HINT_REPORT"))
 
 frame.Done = UIStyle.CreateButton(frame.Footer, 100, 24, _tr("DONE"), "primary")
 frame.Done:SetPoint("RIGHT", frame.Footer, "RIGHT", -8, 0)
@@ -501,9 +501,9 @@ UIStyle.ApplyBox(frame.Results.Header, 0.13, 0.15, 0.20, 1, 0.22, 0.25, 0.32, 1)
 local COLUMNS = {
 	{ key = "Type",   title = _tr("REPORT_COLUMN_HEADER_TYPE"),   x = 10,  width = 215, align = "LEFT",  sortKey = "name" },
 	{ key = "Region", title = _tr("REPORT_COLUMN_HEADER_REGION"), x = 230, width = 165, align = "LEFT",  sortKey = "zone" },
-	{ key = "Coords", title = "Koord.",                           x = 400, width = 72,  align = "LEFT",  sortKey = "coords" },
+	{ key = "Coords", title = _tr("UI_COL_COORDS"),               x = 400, width = 72,  align = "LEFT",  sortKey = "coords" },
 	{ key = "Dist",   title = _tr("REPORT_COLUMN_HEADER_DIST"),   x = 476, width = 56,  align = "RIGHT", sortKey = "dist" },
-	{ key = "Value",  title = "Marktwert",                        x = 538, width = 78,  align = "RIGHT", sortKey = "value" },
+	{ key = "Value",  title = _tr("UI_COL_VALUE"),                x = 538, width = 78,  align = "RIGHT", sortKey = "value" },
 	{ key = "Source", title = _tr("REPORT_COLUMN_HEADER_SOURCE"), x = 622, width = 60,  align = "LEFT",  sortKey = "source" },
 }
 
@@ -557,13 +557,13 @@ frame.Results.EmptyState:Hide()
 
 local emptyTitle = frame.Results.EmptyState:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 emptyTitle:SetPoint("CENTER", frame.Results.EmptyState, "CENTER", 0, 26)
-emptyTitle:SetText("|cff8892a4Keine Vorkommen in dieser Ansicht gefunden|r")
+emptyTitle:SetText(_tr("UI_EMPTY_TITLE"))
 
 local emptySub = frame.Results.EmptyState:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 emptySub:SetPoint("TOP", emptyTitle, "BOTTOM", 0, -8)
-emptySub:SetText("|cff667080Sammle Kräuter, Erze oder Schätze in der Welt oder importiere eine bestehende Datenbank.|r")
+emptySub:SetText(_tr("UI_EMPTY_SUB"))
 
-local emptyImportBtn = UIStyle.CreateButton(frame.Results.EmptyState, 280, 28, "📥 GatherMate2 / Wowhead-Daten importieren", "primary")
+local emptyImportBtn = UIStyle.CreateButton(frame.Results.EmptyState, 280, 28, _tr("UI_IMPORT_GM2_BTN"), "primary")
 emptyImportBtn:SetPoint("TOP", emptySub, "BOTTOM", 0, -16)
 emptyImportBtn:SetScript("OnClick", function()
 	if Gatherer.Integrations and Gatherer.Integrations.ImportGatherMate2 then
@@ -648,18 +648,18 @@ for i = 1, REPORT_LINES do
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 			GameTooltip:ClearLines()
 			GameTooltip:AddLine(Gatherer.Util.GetNodeName(n), 1, 0.85, 0.25)
-			GameTooltip:AddDoubleLine("Gebiet:", tostring(Gatherer.ZoneTokens.ZoneNames[z] or z), 0.75, 0.80, 0.88, 1, 1, 1)
-			GameTooltip:AddDoubleLine("Koordinaten:", string.format("%.1f, %.1f", x * 100, y * 100), 0.75, 0.80, 0.88, 1, 1, 1)
-			GameTooltip:AddDoubleLine("Abgebaut:", tostring(count or 1) .. "x", 0.75, 0.80, 0.88, 0, 1, 0.6)
+			GameTooltip:AddDoubleLine(_tr("UI_TOOLTIP_ZONE"), tostring(Gatherer.ZoneTokens.ZoneNames[z] or z), 0.75, 0.80, 0.88, 1, 1, 1)
+			GameTooltip:AddDoubleLine(_tr("UI_TOOLTIP_COORDS"), string.format("%.1f, %.1f", x * 100, y * 100), 0.75, 0.80, 0.88, 1, 1, 1)
+			GameTooltip:AddDoubleLine(_tr("UI_TOOLTIP_HARVESTED"), tostring(count or 1) .. "x", 0.75, 0.80, 0.88, 0, 1, 0.6)
 			if Gatherer.Integrations and Gatherer.Integrations.GetNodeValue then
 				local unitPrice, _, priceSource = Gatherer.Integrations.GetNodeValue(n)
 				if unitPrice and unitPrice > 0 then
-					GameTooltip:AddDoubleLine("Marktwert (" .. tostring(priceSource or "AH") .. "):", Gatherer.Integrations.FormatMoney(unitPrice), 0.75, 0.80, 0.88, 1, 1, 1)
+					GameTooltip:AddDoubleLine(string.format(_tr("UI_TOOLTIP_MARKET_VALUE"), tostring(priceSource or "AH")), Gatherer.Integrations.FormatMoney(unitPrice), 0.75, 0.80, 0.88, 1, 1, 1)
 				end
 			end
 			GameTooltip:AddLine(" ")
-			GameTooltip:AddLine("|cff00ff96Linksklick:|r Auswahl umschalten", 0.7, 0.7, 0.7)
-			GameTooltip:AddLine("|cff1fb3ffRechtsklick:|r Karten-Wegpunkt setzen", 0.7, 0.7, 0.7)
+			GameTooltip:AddLine(_tr("UI_TOOLTIP_LEFT_CLICK_MARK"), 0.7, 0.7, 0.7)
+			GameTooltip:AddLine(_tr("UI_TOOLTIP_RIGHT_CLICK_WAYPOINT"), 0.7, 0.7, 0.7)
 			GameTooltip:Show()
 		end
 	end)
@@ -683,7 +683,7 @@ for i = 1, REPORT_LINES do
 			if mapID and x and y then
 				if _G.TomTom and type(_G.TomTom.AddWaypoint) == "function" then
 					pcall(_G.TomTom.AddWaypoint, _G.TomTom, mapID, x, y, { title = nodeName, from = "GathererReforged" })
-					Gatherer.Util.ChatPrint(string.format("|cff00ff96Gatherer Reforged:|r TomTom-Wegpunkt gesetzt: |cffffd200%s|r (%.1f, %.1f)", nodeName, x * 100, y * 100))
+					Gatherer.Util.ChatPrint(string.format(_tr("UI_WAYPOINT_TOMTOM_SET"), nodeName, x * 100, y * 100))
 				elseif C_Map and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates then
 					pcall(function()
 						C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
@@ -691,7 +691,7 @@ for i = 1, REPORT_LINES do
 							C_SuperTrack.SetSuperTrackedUserWaypoint(true)
 						end
 					end)
-					Gatherer.Util.ChatPrint(string.format("|cff00ff96Gatherer Reforged:|r Karten-Wegpunkt gesetzt: |cffffd200%s|r (%.1f, %.1f)", nodeName, x * 100, y * 100))
+					Gatherer.Util.ChatPrint(string.format(_tr("UI_WAYPOINT_MAP_SET"), nodeName, x * 100, y * 100))
 				end
 			end
 			return
@@ -727,7 +727,7 @@ local function createSectionTitle(parent, yOffset, text)
 end
 
 -- Section A: Selection Controls
-createSectionTitle(frame.Actions, -12, "AUSWAHL & MARKIERUNG")
+createSectionTitle(frame.Actions, -12, _tr("UI_SIDEBAR_SELECTION"))
 
 frame.Actions.SelectCount = frame.Actions:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 frame.Actions.SelectCount:SetPoint("TOPLEFT", frame.Actions, "TOPLEFT", 12, -34)
@@ -772,9 +772,9 @@ frame.Actions.SelectClear:SetScript("OnClick", function()
 end)
 
 -- Section B: Whisper Mass-Sharing & Deletion
-createSectionTitle(frame.Actions, -152, "DIREKT-TRANSFER & LÖSCHEN")
+createSectionTitle(frame.Actions, -152, _tr("UI_SIDEBAR_TRANSFER"))
 
-frame.Actions.SendEdit = UIStyle.CreateEditBox(frame.Actions, nil, 26, _tr("PLAYER") .. " (z. B. Name-Realm)...")
+frame.Actions.SendEdit = UIStyle.CreateEditBox(frame.Actions, nil, 26, _tr("UI_SEND_PLAYER_PLACEHOLDER"))
 frame.Actions.SendEdit:SetPoint("TOPLEFT", frame.Actions, "TOPLEFT", 12, -176)
 frame.Actions.SendEdit:SetPoint("RIGHT", frame.Actions, "RIGHT", -12, 0)
 
@@ -869,7 +869,7 @@ frame.Actions.SendStatus:SetTextColor(0.35, 0.75, 1.0)
 frame.Actions.SendStatus:SetText("")
 
 -- Section C: Live Session & Quick Import Card
-createSectionTitle(frame.Actions, -315, "LIVE-SESSION & IMPORT")
+createSectionTitle(frame.Actions, -315, _tr("UI_SIDEBAR_SESSION"))
 
 frame.Actions.SessionSummary = frame.Actions:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 frame.Actions.SessionSummary:SetPoint("TOPLEFT", frame.Actions, "TOPLEFT", 12, -340)
@@ -877,7 +877,7 @@ frame.Actions.SessionSummary:SetPoint("RIGHT", frame.Actions, "RIGHT", -12, 0)
 frame.Actions.SessionSummary:SetJustifyH("LEFT")
 frame.Actions.SessionSummary:SetSpacing(3)
 
-frame.Actions.ImportGM2Btn = UIStyle.CreateButton(frame.Actions, nil, 25, "📥 GatherMate2 Import", "default")
+frame.Actions.ImportGM2Btn = UIStyle.CreateButton(frame.Actions, nil, 25, _tr("UI_IMPORT_GM2_SHORT"), "default")
 frame.Actions.ImportGM2Btn:SetPoint("TOPLEFT", frame.Actions, "TOPLEFT", 12, -412)
 frame.Actions.ImportGM2Btn:SetPoint("RIGHT", frame.Actions, "RIGHT", -12, 0)
 frame.Actions.ImportGM2Btn:SetScript("OnClick", function()
@@ -960,7 +960,7 @@ end
 
 function private.UpdateResults()
 	local size = private.results.size
-	frame.Header.Badge:SetText(string.format("|cff00ff96%d|r Vorkommen", size))
+	frame.Header.Badge:SetText(string.format(_tr("UI_BADGE_NODES"), size))
 
 	if size == 0 then
 		frame.Results.EmptyState:Show()
@@ -1005,7 +1005,7 @@ function private.UpdateResults()
 			row.Coords:SetText(string.format("|cffb0b8c4%.1f, %.1f|r", (x or 0) * 100, (y or 0) * 100))
 			row.Dist:SetText(d and d < 999990 and string.format("%d", d) or "|cff555c68—|r")
 			row.Value:SetText(val > 0 and Gatherer.Integrations and Gatherer.Integrations.FormatMoney(val) or "|cff555c68—|r")
-			row.Source:SetText(s ~= "" and s or "|cff667080Eigen|r")
+			row.Source:SetText(s ~= "" and s or _tr("UI_SOURCE_OWN"))
 			row:UpdateRowBg(false)
 			row:Show()
 		end
@@ -1041,7 +1041,7 @@ function private.UpdateResults()
 		local mins = math.floor(sum.elapsed / 60)
 		local secs = sum.elapsed % 60
 		frame.Actions.SessionSummary:SetText(string.format(
-			"|cff8892a4Dauer:|r %02d:%02d Min.   |cff8892a4Fundorte:|r |cff00ff96%d|r (%d/Std.)\n|cff8892a4Beutewert:|r %s\n|cff8892a4Gold/Std.:|r %s",
+			_tr("UI_SESSION_SUMMARY_FMT"),
 			mins, secs, sum.nodes, sum.nodesPerHour,
 			Gatherer.Integrations.FormatMoney(sum.totalValue),
 			Gatherer.Integrations.FormatMoney(sum.goldPerHour)
