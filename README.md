@@ -100,3 +100,4 @@ Use `/gather`, `/gatherer`, `/gathererreforged`, or `/greforged`:
 - **Author (Reforged Modernization)**: [gOOvER](https://github.com/gOOvER)
 - **Original Gatherer Concept & Legacy**: Norganna's AddOns (Esamynn, MentalPower, jcarrothers)
 - **License**: [GNU General Public License v3.0 (GPL-3.0)](LICENSE)
+  - *Note on Licensing*: Norganna's original *Gatherer* (2005–2017) was released under the **GNU General Public License v2.0 ("either version 2 of the License, or (at your option) any later version")**. In accordance with the `GPL-2.0-or-later` re-licensing clause, **Gatherer Reforged** has been upgraded to **GNU General Public License v3.0 (GPL-3.0)**. The full GPLv3 license text is provided in [`LICENSE`](LICENSE), while the original GPLv2 license file ([`gpl.txt`](gpl.txt)) is preserved in the repository for historical reference.

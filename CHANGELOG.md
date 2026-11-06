@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `.pkgmeta`, `embeds.xml`, `.luacheckrc`, GitHub Social Preview banner (`.github/social-preview.jpg`), GitHub Issue & PR templates (`.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`), and GitHub Actions CI/CD workflows (`.github/workflows/release.yml`, `.github/workflows/quality.yml`).
 
 ### Changed
-- Rebranded and modernized Norganna's classic *Gatherer* addon (2005–2017) as **Gatherer Reforged** (`GathererReforged`) under **GNU General Public License v3.0 (GPL-3.0)** (`LICENSE`) with `gOOvER` as author.
+- Rebranded and modernized Norganna's classic *Gatherer* addon (2005–2017) as **Gatherer Reforged** (`GathererReforged`) under **GNU General Public License v3.0 (GPL-3.0)** (`LICENSE`, upgraded from the original `GPL-2.0-or-later` while preserving `gpl.txt`) with `gOOvER` as author.
 - Reorganized repository into a clean flat root hierarchy (`Core/`, `Data/`, `GUI/`, `Locales/`, `libs/`) while preserving backwards compatibility with `GatherItems` SavedVariables and `gatherer_hud` settings.
 - Replaced removed legacy UI templates (`OptionsButtonTemplate` -> `UIPanelButtonTemplate`, `OptionsCheckButtonTemplate` -> `UICheckButtonTemplate`) across all UI dialogs (`GUI/GatherReport.lua`, `GUI/GathererNodeSearch.lua`).
 - Completely revised and corrected the German (`deDE`) localization (`Locales/GatherStrings.lua`, `GathererReforged.toc`).
