@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Cross-Addon Live Node Sharing Bridge** (`Core/GatherIntegrations.lua`, `Core/GatherComm.lua`, `Core/GatherEvent.lua`):
-  - Receives and broadcasts shared nodes across **`GathX`** (Gatherer Reforged / Classic Gatherer), **`GRBNode`** (*Gatherer Reborn* tab-delimited protocol `"1\t<zone>\t<nodeType>\t<coords>\t<nodeID>"`), **`GM2SD` / `GMSD`** (*GatherMate2_Sharing* / *GatherMate_Sharing*), and **`GATHERLITE` / `G2G`** (*GatherLite*) in Guild, Party, Raid, and Instance channels.
-  - Performs two-way live sync (`InjectNode2` and `AddNode` hook) when `GatherMate2` or `Gatherer_Reborn` is installed locally, and imports `GathererReborn*DB` SavedVariables alongside `GatherMate2*DB` / `GatherMate2_Data`.
+  - Receives and broadcasts shared nodes across **`GathX`** (Gatherer Reforged / Classic Gatherer), **`GRBNode`** (*Gatherer Reborn* tab-delimited protocol `"1\t<zone>\t<nodeType>\t<coords>\t<nodeID>"`), **`GM2SD` / `GMSD`** (*GatherMate_Sharing* protocol `"A:<zone>:<dbIndex 1..7>:<coord>:<nodeID>"`), and **`GATHERLITE` / `G2G`** (*GatherLite*) in Guild, Party, Raid, and Instance channels.
+  - Performs two-way live sync (`AddNodeChecked` / `InjectNode2` and `AddNode` hook) when `GatherMate2` or `Gatherer_Reborn` is installed locally, and imports `GathererReborn*DB` SavedVariables alongside `GatherMate2*DB` / `GatherMate2_Data`.
 - **1-Click `GatherMate2` & `GatherMate2_Data` Importer** (`Core/GatherIntegrations.lua`, `GUI/GatherAceGUI.lua`):
   - Imports existing `GatherMate2` SavedVariables and pre-populated Wowhead databases (`GatherMate2_Data` / `GatherMate2Storage_*` for Classic, TBC, Wrath, Retail, Dragonflight, The War Within, Midnight, and WoW Forever) via the Ace3 *"Integrationen & DB"* tab or `/gatherer import`.
 - **Live Auction House & Market Value Integration** (`Core/GatherIntegrations.lua`, `GUI/GatherTooltip.lua`):

@@ -954,12 +954,30 @@ end
 
 local EXTERNAL_PREFIXES = {
 	["GRBNode"] = "Gatherer Reborn",
-	["GM2SD"] = "GatherMate2_Sharing",
+	["GM2SD"] = "GatherMate_Sharing",
 	["GMSD"] = "GatherMate_Sharing",
 	["GATHERLITE"] = "GatherLite",
 	["GatherLite"] = "GatherLite",
 	["GatherLiteSync"] = "GatherLite",
 	["G2G"] = "GatherLite",
+}
+
+-- Exact dbIndexes table from GatherMate_Sharing.lua (lines 21-36)
+local GM2_DB_INDEXES = {
+	["Herb Gathering"] = 1,
+	["Mining"] = 2,
+	["Fishing"] = 3,
+	["Extract Gas"] = 4,
+	["Treasure"] = 5,
+	["Archaeology"] = 6,
+	["Logging"] = 7,
+	[1] = "Herb Gathering",
+	[2] = "Mining",
+	[3] = "Fishing",
+	[4] = "Extract Gas",
+	[5] = "Treasure",
+	[6] = "Archaeology",
+	[7] = "Logging",
 }
 
 local function safeRegisterAddonPrefix(prefix)
@@ -1012,10 +1030,15 @@ function Integrations.MirrorNodeToGatherMate2(objectId, gatherType, zoneToken, x
 		{ name = "GathererReborn", msg = "GathererRebornConfigChanged" },
 	}) do
 		local extAddon = AceAddon:GetAddon(addonInfo.name, true)
-		if extAddon and type(extAddon.InjectNode2) == "function" then
-			pcall(extAddon.InjectNode2, extAddon, uiMapID, coord, dbType, gmNodeID)
-			if type(extAddon.SendMessage) == "function" then
-				pcall(extAddon.SendMessage, extAddon, addonInfo.msg)
+		if extAddon then
+			local nodeName = extAddon.reverseNodeIDs and extAddon.reverseNodeIDs[dbType] and extAddon.reverseNodeIDs[dbType][gmNodeID]
+			if nodeName and type(extAddon.AddNodeChecked) == "function" then
+				pcall(extAddon.AddNodeChecked, extAddon, uiMapID, x, y, dbType, nodeName)
+			elseif type(extAddon.InjectNode2) == "function" then
+				pcall(extAddon.InjectNode2, extAddon, uiMapID, coord, dbType, gmNodeID)
+				if type(extAddon.SendMessage) == "function" then
+					pcall(extAddon.SendMessage, extAddon, addonInfo.msg)
+				end
 			end
 		end
 	end
@@ -1037,8 +1060,9 @@ function Integrations.BroadcastToExternalAddons(chatType, target, objectId, gath
 		local grbPayload = table.concat({ "1", tostring(uiMapID), tostring(dbType), tostring(coord), tostring(gmNodeID) }, "\t")
 		safeSendAddonMessage("GRBNode", grbPayload, chatType, target)
 
-		-- 2. GatherMate2_Sharing ("GM2SD") colon-delimited format: "A:<zone>:<nodeType>:<coords>:<nodeID>"
-		local gm2Payload = strjoin(":", "A", tostring(uiMapID), tostring(dbType), tostring(coord), tostring(gmNodeID))
+		-- 2. GatherMate_Sharing ("GM2SD") exact format ("A:%i:%i:%s:%i"): zone, dbIndexes[nodeType], coord, nodeID
+		local dbIndex = GM2_DB_INDEXES[dbType] or 5
+		local gm2Payload = string.format("A:%d:%d:%s:%d", uiMapID, dbIndex, tostring(coord), gmNodeID)
 		safeSendAddonMessage("GM2SD", gm2Payload, chatType, target)
 	end
 end
@@ -1079,7 +1103,7 @@ function Integrations.OnExternalAddonMessage(prefix, msg, how, who)
 		local version, zoneStr, nodeTypeStr, coordsStr, nodeIDStr = msg:match("^(%d+)\t(%d+)\t([^\t]+)\t(%d+)\t(%d+)$")
 		if version == "1" then
 			gmMapID = tonumber(zoneStr)
-			gmDbType = nodeTypeStr
+			gmDbType = GM2_DB_INDEXES[tonumber(nodeTypeStr)] or nodeTypeStr
 			gmCoord = tonumber(coordsStr)
 			gmNodeID = tonumber(nodeIDStr)
 			if gmMapID and gmDbType and gmCoord and gmNodeID then
@@ -1090,18 +1114,18 @@ function Integrations.OnExternalAddonMessage(prefix, msg, how, who)
 			end
 		end
 	elseif prefix == "GM2SD" or prefix == "GMSD" then
-		-- GatherMate2_Sharing format: "A:zone:nodeType:coord:nodeID" or legacy "zone:nodeType:coord:nodeID"
+		-- GatherMate_Sharing format: "A:%i:%i:%s:%i" (cmd, zone, dbIndexes[nodeType], coord, nodeID)
 		local p1, p2, p3, p4, p5 = strsplit(":", msg)
 		if p1 == "D" then
 			return -- ignore node deletion packets
 		elseif p1 == "A" then
 			gmMapID = tonumber(p2)
-			gmDbType = p3
+			gmDbType = GM2_DB_INDEXES[tonumber(p3)] or p3
 			gmCoord = tonumber(p4)
 			gmNodeID = tonumber(p5)
 		else
 			gmMapID = tonumber(p1)
-			gmDbType = p2
+			gmDbType = GM2_DB_INDEXES[tonumber(p2)] or p2
 			gmCoord = tonumber(p3)
 			gmNodeID = tonumber(p4)
 		end
