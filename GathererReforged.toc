@@ -25,6 +25,7 @@
 ## Author: gOOvER
 ## X-License: GPL-3.0
 ## X-Website: https://github.com/gOOvER/GathererReforged
+## X-Wago-ID: ZKbqYR61
 ## IconTexture: 133939
 ## AddonCompartmentFunc: Gatherer_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: Gatherer_OnAddonCompartmentEnter

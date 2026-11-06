@@ -7,6 +7,7 @@
 
   [![Release](https://github.com/gOOvER/GathererReforged/actions/workflows/release.yml/badge.svg)](https://github.com/gOOvER/GathererReforged/actions/workflows/release.yml)
   [![Code Quality](https://github.com/gOOvER/GathererReforged/actions/workflows/quality.yml/badge.svg)](https://github.com/gOOvER/GathererReforged/actions/workflows/quality.yml)
+  [![Wago Addons](https://img.shields.io/badge/Wago.io-GathererReforged-c1272d?logo=wagtail&logoColor=white)](https://addons.wago.io/addons/gathererreforged)
   [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 </div>
 
