@@ -46,7 +46,24 @@ Core\GatherMap.lua
 
 # Data & Locales
 Data\GatherNodes.lua
-Locales\GatherStrings.lua
+Locales\enUS.lua
+Locales\deDE.lua
+Locales\frFR.lua
+Locales\esES.lua
+Locales\esMX.lua
+Locales\itIT.lua
+Locales\ptBR.lua
+Locales\ptPT.lua
+Locales\ruRU.lua
+Locales\koKR.lua
+Locales\zhCN.lua
+Locales\zhTW.lua
+Locales\csCZ.lua
+Locales\daDK.lua
+Locales\elGR.lua
+Locales\nlNL.lua
+Locales\plPL.lua
+Locales\trTR.lua
 Locales\GatherLocale.lua
 
 # Core: Initialization & Events
