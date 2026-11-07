@@ -93,13 +93,27 @@ if ( GetProfessions ) then
 
 function Gatherer.Util.GetSkills()
 	if ( not Gatherer.Var.Skills ) then Gatherer.Var.Skills = {}; end
+	Gatherer.Var.Skills.HERB = nil
+	Gatherer.Var.Skills.MINE = nil
 	local ProfessionTextures = Gatherer.Constants.ProfessionTextures;
+	local ProfessionSkillLines = Gatherer.Constants.ProfessionSkillLines;
+	local herbName = Gatherer.Locale and Gatherer.Locale.TrClient and Gatherer.Locale.TrClient("TRADE_HERBALISM")
+	local mineName = Gatherer.Locale and Gatherer.Locale.TrClient and Gatherer.Locale.TrClient("TRADE_MINING")
 	
 	for _, profId in pairs({GetProfessions()}) do
 		if profId then
-			local name, texture, skillRank, maxRank = GetProfessionInfo(profId);
-			if ( texture and ProfessionTextures[texture] ) then
-				Gatherer.Var.Skills[ProfessionTextures[texture]] = math.max(skillRank or 1, 1);
+			local name, texture, skillRank, maxRank, _, _, skillLine = GetProfessionInfo(profId);
+			local gType = (skillLine and ProfessionSkillLines and ProfessionSkillLines[skillLine])
+				or (texture and ProfessionTextures and ProfessionTextures[texture])
+			if not gType and name then
+				if herbName and name == herbName then
+					gType = "HERB"
+				elseif mineName and name == mineName then
+					gType = "MINE"
+				end
+			end
+			if gType then
+				Gatherer.Var.Skills[gType] = math.max(skillRank or 1, 1);
 			end
 		end
 	end
@@ -118,6 +132,8 @@ function Gatherer.Util.GetSkills()
 	local i, j
 	
 	if ( not Gatherer.Var.Skills ) then Gatherer.Var.Skills = {}; end
+	Gatherer.Var.Skills.HERB = nil
+	Gatherer.Var.Skills.MINE = nil
 		
 	-- search the skill tree for gathering skills
 	for i=0, GetNumSkillLines(), 1 do

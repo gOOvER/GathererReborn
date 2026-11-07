@@ -143,38 +143,49 @@ function Gatherer.Event.OnEvent( event, ... )
 		Gatherer.MiniNotes.Show()
 	
 	elseif ( event == "UI_ERROR_MESSAGE" ) then
-		local err_number, msg = select(1, ...)	-- WoW 7.x changed this
+		local arg1, arg2 = ...
+		local err_number = (type(arg1) == "number") and arg1 or nil
+		local msg = (type(arg2) == "string" and arg2) or (type(arg1) == "string" and arg1) or nil
 
--- if we get rid of the message parsing, we can also remove ParseFormattedMessage and related code
---[[  Old code, no longer reliable because of string use changes
-
-		local skill = Gatherer.Util.ParseFormattedMessage(ERR_USE_LOCKED_WITH_ITEM_S, msg)
-		--if (skill) then print("skill matched err_use_locked_with_item_s") end
-		if not ( skill ) then
-			skill = Gatherer.Util.ParseFormattedMessage(ERR_USE_LOCKED_WITH_SPELL_KNOWN_SI, msg)
-			--if (skill) then print("skill matched err_use_locked_with_spell_known_si") end
+		local isLockErr = false
+		local errGType = nil
+		if err_number and (
+			(LE_GAME_ERR_USE_LOCKED_WITH_SPELL_S and err_number == LE_GAME_ERR_USE_LOCKED_WITH_SPELL_S) or
+			(LE_GAME_ERR_USE_LOCKED_WITH_SPELL_KNOWN_SI and err_number == LE_GAME_ERR_USE_LOCKED_WITH_SPELL_KNOWN_SI) or
+			(LE_GAME_ERR_USE_LOCKED_WITH_ITEM_S and err_number == LE_GAME_ERR_USE_LOCKED_WITH_ITEM_S) or
+			(LE_GAME_ERR_USE_LOCKED and err_number == LE_GAME_ERR_USE_LOCKED)
+		) then
+			isLockErr = true
 		end
-		if not ( skill ) then
-			skill = Gatherer.Util.ParseFormattedMessage(LOCKED_WITH_SPELL_KNOWN, msg)	-- Legion?
-			--if (skill) then print("skill matched locked_with_spell_known") end
-		end
--- ]] --
 
-		-- LE_GAME_ERR_USE_LOCKED_WITH_SPELL_S = 261, string/name = ERR_USE_LOCKED_WITH_SPELL_S
-		-- see https://www.townlong-yak.com/framexml/live/Helix/LuaEnum.lua
-		if (LE_GAME_ERR_USE_LOCKED_WITH_SPELL_S and err_number == LE_GAME_ERR_USE_LOCKED_WITH_SPELL_S) then
-			-- Now check to see if we're moused over a valid object
+		if type(msg) == "string" and Gatherer.Locale and Gatherer.Locale.TrClient then
+			local herbName = Gatherer.Locale.TrClient("TRADE_HERBALISM")
+			local mineName = Gatherer.Locale.TrClient("TRADE_MINING")
+			if herbName and msg:find(herbName, 1, true) then
+				isLockErr = true
+				errGType = "HERB"
+			elseif mineName and msg:find(mineName, 1, true) then
+				isLockErr = true
+				errGType = "MINE"
+			end
+		end
+
+		if not isLockErr and type(msg) == "string" and Gatherer.Util and Gatherer.Util.ParseFormattedMessage then
+			local skill = (ERR_USE_LOCKED_WITH_SPELL_S and Gatherer.Util.ParseFormattedMessage(ERR_USE_LOCKED_WITH_SPELL_S, msg))
+				or (ERR_USE_LOCKED_WITH_SPELL_KNOWN_SI and Gatherer.Util.ParseFormattedMessage(ERR_USE_LOCKED_WITH_SPELL_KNOWN_SI, msg))
+				or (ERR_USE_LOCKED_WITH_ITEM_S and Gatherer.Util.ParseFormattedMessage(ERR_USE_LOCKED_WITH_ITEM_S, msg))
+				or (LOCKED_WITH_SPELL and Gatherer.Util.ParseFormattedMessage(LOCKED_WITH_SPELL, msg))
+				or (LOCKED_WITH_SPELL_KNOWN and Gatherer.Util.ParseFormattedMessage(LOCKED_WITH_SPELL_KNOWN, msg))
+			if skill and skill ~= "" then
+				isLockErr = true
+			end
+		end
+
+		if isLockErr then
 			Gatherer.Scanner.SetTooltip()
 			local tooltip = Gatherer.Scanner.GetLastTip()
-			if not ( tooltip ) then return end
-			local tip = tooltip.tip
-
-			local objId = Gatherer.Nodes.Names[tip]
-			if ( objId ) then
-				-- We have a mouseover on a valid object that's just fired off
-				-- a "Requires" message.
-				local gType = Gatherer.Nodes.Objects[objId]
-				Gatherer.Api.AddGather(objId, gType, nil, "REQUIRE", 0, {}, false)
+			if tooltip and tooltip.tip then
+				Gatherer.Scanner.RecordUnskilledGather(tooltip.tip, errGType or tooltip.gType)
 			end
 		end
 	

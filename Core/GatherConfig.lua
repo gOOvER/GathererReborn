@@ -44,6 +44,7 @@ local function getDefault(setting)
 		if ( b == "arch" ) then return false end
 		if (c == "all" or d == "all") then return false end
 		if (d == "onlyiftracked") then return false end
+		if (d == "onlyifskilled") then return false end
 		return true
 	end
 	if (a == "plugin" and c == "enable") then return false end

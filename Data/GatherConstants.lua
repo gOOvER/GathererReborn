@@ -205,8 +205,11 @@ Gatherer.Nodes.ReMappings = {
 TrackingTextures = {
 	[136025] = "MINE",
 	[133939] = "HERB",
-	--["Interface\\Icons\\Racial_Dwarf_FindTreasure"] = "OPEN", -- racial no longer exists
 	[133888] = "FISH",
+	["Interface\\Icons\\Spell_Nature_Earthquake"] = "MINE",
+	["Interface\\Icons\\INV_Misc_Flower_02"] = "HERB",
+	["Interface\\Icons\\INV_Misc_Fish_02"] = "FISH",
+	["Interface\\Icons\\Racial_Dwarf_FindTreasure"] = "OPEN",
 }
 
 -- Keys in this table must match the 'texture' (2nd) value returned by GetProfessionInfo(id)
@@ -215,6 +218,18 @@ ProfessionTextures = {
 	[136246] = "HERB",
 	[136245] = "FISH",
 	[441139] = "ARCH",
+	["Interface\\Icons\\Trade_Mining"] = "MINE",
+	["Interface\\Icons\\Trade_Herbalism"] = "HERB",
+	["Interface\\Icons\\Trade_Fishing"] = "FISH",
+	["Interface\\Icons\\Trade_Archaeology"] = "ARCH",
+}
+
+-- SkillLine IDs (7th return value of GetProfessionInfo)
+ProfessionSkillLines = {
+	[186] = "MINE",
+	[182] = "HERB",
+	[356] = "FISH",
+	[794] = "ARCH",
 }
 
 SupportedGatherTypes = {

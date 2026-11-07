@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Redesigned **Gatherables Report** and **Node Density Search** windows with category tabs, instant search, sortable columns, and waypoint support.
   - Integrated **3D Heads-Up Display (HUD)** directly into the main AddOn.
   - **Ace3** options panel (`AceConfig-3.0` / `AceGUI-3.0`), **`LibDBIcon-1.0`**, **`LibDataBroker-1.1`**, and Blizzard **Addon Compartment** support.
-- **Multi-Client & Dynamic Node Support**: Native `C_Map` mapping engine and automatic discovery of new herbs, ores, treasures, fishing schools, gas clouds, and archaeology nodes across **Retail (12.x)**, **Classic Progression**, **Classic Era**, and **WoW Forever (16001)**.
+- **Multi-Client & Dynamic Node Support**: Native `C_Map` mapping engine and automatic discovery of new herbs, ores, treasures, fishing schools, gas clouds, and archaeology nodes across **Retail (12.x)**, **Classic Progression**, **Classic Era**, and **WoW Forever (16001)**, including recording herbs and ores on click even without Herbalism or Mining learned.
 
 ### Changed
 - Rebranded and modernized Norganna's classic *Gatherer* as **Gatherer Reforged** under **GPL-3.0** (upgraded from `GPL-2.0-or-later`).

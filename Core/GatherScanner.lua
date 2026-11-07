@@ -91,21 +91,30 @@ local function detectGatherTypeFromSpell(spellID)
 end
 
 local function detectGatherTypeFromTooltip()
-	if not GameTooltip or not GameTooltip:IsShown() then return nil end
+	if not GameTooltip or not GameTooltip:IsShown() then return nil, false end
 
-	for i = 2, math.min(4, GameTooltip:NumLines() or 0) do
+	local detectedType = nil
+	local isRedRequirement = false
+
+	for i = 2, math.min(5, GameTooltip:NumLines() or 0) do
 		local lineObj = _G["GameTooltipTextLeft" .. i]
 		local ok, text = pcall(function() return lineObj and lineObj:GetText() end)
 		if ok and isSafeString(text) then
+			local rOk, r, g, b = pcall(function() return lineObj:GetTextColor() end)
+			if rOk and type(r) == "number" and type(g) == "number" and type(b) == "number" then
+				if r > 0.8 and g < 0.25 and b < 0.25 then
+					isRedRequirement = true
+				end
+			end
 			if Gatherer and Gatherer.Locale and Gatherer.Locale.TrClient then
 				local herbName = Gatherer.Locale.TrClient("TRADE_HERBALISM")
 				local mineName = Gatherer.Locale.TrClient("TRADE_MINING")
-				if herbName and text:find(herbName, 1, true) then return "HERB" end
-				if mineName and text:find(mineName, 1, true) then return "MINE" end
+				if herbName and text:find(herbName, 1, true) then detectedType = "HERB" end
+				if mineName and text:find(mineName, 1, true) then detectedType = "MINE" end
 			end
 		end
 	end
-	return nil
+	return detectedType, isRedRequirement
 end
 
 function Scanner.SetTooltip()
@@ -119,14 +128,46 @@ function Scanner.SetTooltip()
 		if not line1 then return end
 		local text = line1:GetText()
 		if isSafeString(text) then
+			local knownObjId = Gatherer and Gatherer.Nodes and Gatherer.Nodes.Names and Gatherer.Nodes.Names[text]
+			local knownType = knownObjId and Gatherer.Nodes.Objects and Gatherer.Nodes.Objects[knownObjId]
+			local tipType, isRedReq = detectGatherTypeFromTooltip()
 			lastTip.tip = text
 			lastTip.time = GetTime()
-			lastTip.gType = detectGatherTypeFromTooltip()
+			lastTip.gType = tipType or knownType
+			lastTip.isRedReq = isRedReq
 			if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[text] and lastTip.gType and Gatherer.Nodes.RegisterDynamicNode then
 				Gatherer.Nodes.RegisterDynamicNode(text, lastTip.gType)
 			end
 		end
 	end)
+end
+
+local lastUnskilledObj = nil
+local lastUnskilledTime = 0
+
+function Scanner.RecordUnskilledGather(tipName, fallbackGType)
+	if not isSafeString(tipName) then return false end
+	if UnitOnTaxi and UnitOnTaxi("player") then return false end
+	if UnitIsDeadOrGhost and UnitIsDeadOrGhost("player") then return false end
+	if not Gatherer or not Gatherer.Nodes or not Gatherer.Api or not Gatherer.Api.AddGather then return false end
+
+	local objId = Gatherer.Nodes.Names[tipName]
+	local gType = (objId and Gatherer.Nodes.Objects[objId]) or fallbackGType or lastTip.gType
+	if not objId and (gType == "HERB" or gType == "MINE") and Gatherer.Nodes.RegisterDynamicNode then
+		objId = Gatherer.Nodes.RegisterDynamicNode(tipName, gType)
+	end
+	if not objId or (gType ~= "HERB" and gType ~= "MINE" and gType ~= "OPEN") then
+		return false
+	end
+
+	local now = GetTime()
+	if lastUnskilledObj == objId and (now - lastUnskilledTime) < 3 then
+		return false
+	end
+	lastUnskilledObj = objId
+	lastUnskilledTime = now
+
+	return Gatherer.Api.AddGather(objId, gType, nil, "REQUIRE", 0, {}, false)
 end
 
 function Scanner.GetLastTip()
@@ -281,6 +322,28 @@ function Scanner.Init()
 	if GameTooltip then
 		GameTooltip:HookScript("OnShow", function()
 			Scanner.SetTooltip()
+		end)
+	end
+
+	if WorldFrame and WorldFrame.HookScript then
+		WorldFrame:HookScript("OnMouseDown", function(_, button)
+			if button ~= "LeftButton" and button ~= "RightButton" then return end
+			if not GameTooltip or not GameTooltip:IsShown() then return end
+			if UnitExists and UnitExists("mouseover") then return end
+			local owner = GameTooltip:GetOwner()
+			if owner and owner ~= UIParent and owner ~= WorldFrame then return end
+
+			Scanner.SetTooltip()
+			if lastTip.tip and (GetTime() - (lastTip.time or 0)) < 1.0 then
+				local objId = Gatherer and Gatherer.Nodes and Gatherer.Nodes.Names and Gatherer.Nodes.Names[lastTip.tip]
+				local gType = (objId and Gatherer.Nodes.Objects and Gatherer.Nodes.Objects[objId]) or lastTip.gType
+				if gType == "HERB" or gType == "MINE" then
+					local hasSkill = Gatherer and Gatherer.Var and Gatherer.Var.Skills and Gatherer.Var.Skills[gType]
+					if (not hasSkill) or lastTip.isRedReq or button == "LeftButton" then
+						Scanner.RecordUnskilledGather(lastTip.tip, gType)
+					end
+				end
+			end
 		end)
 	end
 end
