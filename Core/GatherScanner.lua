@@ -74,7 +74,7 @@ local function detectGatherTypeFromSpell(spellID)
 	local name, _, icon = GetSpellInfo(spellID)
 	if icon == 134708 or icon == 136248 or icon == 136025 then
 		return "MINE"
-	elseif icon == 136246 or icon == 133939 then
+	elseif icon == 136246 then
 		return "HERB"
 	elseif icon == 441139 then
 		return "ARCH"
@@ -321,12 +321,19 @@ local function processLoot()
 	local coinAmount = 0
 	local primaryItemID = nil
 	local lootDetectedType = nil
+	local hasQuestItem = false
 	local numSlots = GetNumLootItems and GetNumLootItems() or 0
+	local QUEST_ITEM_CLASS = 12
 
 	for slot = 1, numSlots do
 		local slotType = GetLootSlotType and GetLootSlotType(slot)
-		local texture, item, quantity, currencyID = GetLootSlotInfo(slot)
+		local texture, item, quantity, a4, a5, a6, a7 = GetLootSlotInfo(slot)
 		local link = GetLootSlotLink and GetLootSlotLink(slot)
+
+		-- Detect quest items across Classic/Wrath (6th return = isQuestItem) and Retail (7th return = isQuestItem)
+		if a6 == true or a7 == true or (LOOT_SLOT_QUEST and slotType == LOOT_SLOT_QUEST) then
+			hasQuestItem = true
+		end
 
 		local isMoney = (LOOT_SLOT_MONEY and slotType == LOOT_SLOT_MONEY)
 			or (Enum and Enum.LootSlotType and slotType == Enum.LootSlotType.Money)
@@ -335,19 +342,21 @@ local function processLoot()
 
 		if isMoney then
 			coinAmount = coinAmount + parseCopperFromMoneyString(item)
-		elseif isCurrency and currencyID then
+		elseif isCurrency and a4 then
 			table.insert(lootTable, {
-				id = currencyID,
+				id = a4,
 				count = quantity or 1,
 				type = LOOT_SLOT_CURRENCY or 3,
 			})
 		elseif link and isSafeString(link) then
 			local itemID = tonumber(link:match("item:(%d+)"))
 			if getItemInfoInstant then
-				local ok, instID, _, _, _, _, classID, subclassID = pcall(getItemInfoInstant, link)
+				local ok, instID, itemType, _, _, _, classID, subclassID = pcall(getItemInfoInstant, link)
 				if ok and instID then
 					itemID = itemID or instID
-					if classID == TRADE_GOODS_CLASS then
+					if classID == QUEST_ITEM_CLASS or (isSafeString(itemType) and itemType:lower():find("quest", 1, true)) then
+						hasQuestItem = true
+					elseif classID == TRADE_GOODS_CLASS then
 						if subclassID == SUBCLASS_HERB and not lootDetectedType then
 							lootDetectedType = "HERB"
 							primaryItemID = itemID
@@ -356,6 +365,12 @@ local function processLoot()
 							primaryItemID = itemID
 						end
 					end
+				end
+			end
+			if GetItemInfo then
+				local okInfo, _, _, _, _, _, itemTypeStr, _, _, _, _, _, classID2 = pcall(GetItemInfo, link)
+				if okInfo and (classID2 == QUEST_ITEM_CLASS or (isSafeString(itemTypeStr) and itemTypeStr:lower():find("quest", 1, true))) then
+					hasQuestItem = true
 				end
 			end
 			if itemID and not primaryItemID then
@@ -368,6 +383,17 @@ local function processLoot()
 				type = slotType,
 			})
 		end
+	end
+
+	-- Never record unknown world objects that drop quest items or lack genuine herb/ore trade goods
+	if not (resolvedId and resolvedId < 900000) then
+		if hasQuestItem or not lootDetectedType then
+			lastCast.target = nil
+			lastCast.gType = nil
+			lastCast.time = 0
+			return
+		end
+		gType = lootDetectedType
 	end
 
 	if not gType and isGameObjectLoot and lootDetectedType then
@@ -680,9 +706,6 @@ function Scanner.Init()
 					lastCast.spellID = spellID
 					lastCast.gType = spellGType
 					lastCast.time = GetTime()
-					if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[target] and (lastCast.gType == "HERB" or lastCast.gType == "MINE") and Gatherer.Nodes.RegisterDynamicNode then
-						Gatherer.Nodes.RegisterDynamicNode(target, lastCast.gType)
-					end
 				elseif not spellGType then
 					lastCast.target = nil
 					lastCast.spellID = nil

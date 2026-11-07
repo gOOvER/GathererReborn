@@ -3392,8 +3392,8 @@ do
 			Gatherer.Util.RegisterDynamicNodeName(objId, nodeName)
 		end
 
-		Gatherer_DynamicNodes = Gatherer_DynamicNodes or { version = 3 }
-		Gatherer_DynamicNodes.version = 3
+		Gatherer_DynamicNodes = Gatherer_DynamicNodes or { version = 4 }
+		Gatherer_DynamicNodes.version = 4
 		Gatherer_DynamicNodes.dynamicNodes = Gatherer_DynamicNodes.dynamicNodes or {}
 		Gatherer_DynamicNodes.dynamicNodes[nodeName] = {
 			id = objId,
@@ -3404,9 +3404,9 @@ do
 	end
 
 	function Gatherer.Nodes.LoadDynamicNodes()
-		if Gatherer_DynamicNodes and Gatherer_DynamicNodes.version ~= 3 then
-			-- Reset contaminated pre-v3 dynamic entries (e.g. mob corpses, quest objects, or unaliased classic veins)
-			Gatherer_DynamicNodes = { version = 3, dynamicNodes = {} }
+		if Gatherer_DynamicNodes and Gatherer_DynamicNodes.version ~= 4 then
+			-- Reset contaminated pre-v4 dynamic entries (e.g. mob corpses, quest objects, or unaliased classic veins)
+			Gatherer_DynamicNodes = { version = 4, dynamicNodes = {} }
 		end
 		if Gatherer_DynamicNodes and type(Gatherer_DynamicNodes.dynamicNodes) == "table" then
 			for nodeName, info in pairs(Gatherer_DynamicNodes.dynamicNodes) do
