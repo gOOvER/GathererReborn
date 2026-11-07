@@ -1398,6 +1398,32 @@ local function buildOptionsTable()
 								get = function() return GetSetting("tooltip.marketprice", true) end,
 								set = function(_, v) SetSetting("tooltip.marketprice", v) end,
 							},
+							priceSource = {
+								type = "select",
+								name = _trL("CONFIG_PRICE_SOURCE"),
+								width = "normal",
+								order = 2.5,
+								values = function()
+									if Gatherer.Integrations and Gatherer.Integrations.GetAvailablePriceSources then
+										return Gatherer.Integrations.GetAvailablePriceSources()
+									end
+									return { ["AUTO"] = _trL("CONFIG_PRICE_SOURCE_AUTO") }
+								end,
+								get = function()
+									local cur = GetSetting("tooltip.pricesource", "AUTO") or "AUTO"
+									local avail = Gatherer.Integrations and Gatherer.Integrations.GetAvailablePriceSources and Gatherer.Integrations.GetAvailablePriceSources()
+									if avail and not avail[cur] then
+										return "AUTO"
+									end
+									return cur
+								end,
+								set = function(_, v)
+									SetSetting("tooltip.pricesource", v)
+									if Gatherer.MiniIcon and Gatherer.MiniIcon.UpdateLDBText then
+										Gatherer.MiniIcon.UpdateLDBText()
+									end
+								end,
+							},
 							statsText = {
 								type = "description",
 								fontSize = "medium",

@@ -45,17 +45,65 @@ function Integrations.FormatMoney(copper)
 	return table.concat(parts, " ")
 end
 
-function Integrations.GetItemValue(itemIDOrLink)
-	if not itemIDOrLink then return 0, nil end
-	local itemID = tonumber(itemIDOrLink)
-	local itemLink = type(itemIDOrLink) == "string" and itemIDOrLink or nil
-	if not itemID and itemLink then
-		itemID = tonumber(itemLink:match("item:(%d+)"))
-	end
-	if not itemID then return 0, nil end
+local PRICE_SOURCE_ORDER = { "AUCTIONEER", "AUCTIONATOR", "TSM", "OE", "RECRYSTALLIZE", "VENDOR" }
 
-	-- 1. Auctionator API
-	if _G.Auctionator and _G.Auctionator.API and _G.Auctionator.API.v1 then
+local function isPriceSourceAvailable(sourceKey)
+	if sourceKey == "AUTO" or sourceKey == "VENDOR" then
+		return true
+	elseif sourceKey == "AUCTIONEER" then
+		return type(_G.AucAdvanced) == "table" and type(_G.AucAdvanced.API) == "table" and type(_G.AucAdvanced.API.GetMarketValue) == "function"
+	elseif sourceKey == "AUCTIONATOR" then
+		return type(_G.Auctionator) == "table" and type(_G.Auctionator.API) == "table" and type(_G.Auctionator.API.v1) == "table"
+	elseif sourceKey == "TSM" then
+		return type(_G.TSM_API) == "table" and type(_G.TSM_API.GetCustomPriceValue) == "function"
+	elseif sourceKey == "OE" then
+		return type(_G.OEMarketInfo) == "function"
+	elseif sourceKey == "RECRYSTALLIZE" then
+		return type(_G.RECrystallize_PriceCheckItemID) == "function"
+	end
+	return false
+end
+
+function Integrations.GetAvailablePriceSources()
+	local trL = Gatherer and Gatherer.Locale and Gatherer.Locale.Translate
+	local autoLabel = (trL and trL("CONFIG_PRICE_SOURCE_AUTO"))
+	if not autoLabel or autoLabel == "CONFIG_PRICE_SOURCE_AUTO" then autoLabel = "Auto" end
+	local vendorLabel = (trL and trL("CONFIG_PRICE_SOURCE_VENDOR"))
+	if not vendorLabel or vendorLabel == "CONFIG_PRICE_SOURCE_VENDOR" then vendorLabel = "Vendor" end
+
+	local sources = {
+		["AUTO"] = autoLabel,
+	}
+	if isPriceSourceAvailable("AUCTIONEER") then
+		sources["AUCTIONEER"] = "Auctioneer Reforged"
+	end
+	if isPriceSourceAvailable("AUCTIONATOR") then
+		sources["AUCTIONATOR"] = "Auctionator"
+	end
+	if isPriceSourceAvailable("TSM") then
+		sources["TSM"] = "TradeSkillMaster (TSM)"
+	end
+	if isPriceSourceAvailable("OE") then
+		sources["OE"] = "OribosExchange"
+	end
+	if isPriceSourceAvailable("RECRYSTALLIZE") then
+		sources["RECRYSTALLIZE"] = "RECrystallize"
+	end
+	sources["VENDOR"] = vendorLabel
+	return sources
+end
+
+local function queryPriceSource(sourceKey, itemID, itemLink)
+	if sourceKey == "AUCTIONEER" and isPriceSourceAvailable("AUCTIONEER") then
+		local linkOrID = itemLink or select(2, GetItemInfo(itemID)) or itemID
+		local ok, price = pcall(_G.AucAdvanced.API.GetMarketValue, linkOrID)
+		if (not ok or not price or price <= 0) and _G.AucAdvanced.Modules and _G.AucAdvanced.Modules.Util and _G.AucAdvanced.Modules.Util.Appraiser and type(_G.AucAdvanced.Modules.Util.Appraiser.GetPrice) == "function" then
+			ok, price = pcall(_G.AucAdvanced.Modules.Util.Appraiser.GetPrice, linkOrID)
+		end
+		if ok and type(price) == "number" and price > 0 then
+			return price, "Auctioneer"
+		end
+	elseif sourceKey == "AUCTIONATOR" and isPriceSourceAvailable("AUCTIONATOR") then
 		local api = _G.Auctionator.API.v1
 		if itemLink and type(api.GetAuctionPriceByItemLink) == "function" then
 			local ok, price = pcall(api.GetAuctionPriceByItemLink, "GathererReforged", itemLink)
@@ -69,10 +117,7 @@ function Integrations.GetItemValue(itemIDOrLink)
 				return price, "Auctionator"
 			end
 		end
-	end
-
-	-- 2. TradeSkillMaster (TSM) API
-	if _G.TSM_API and type(_G.TSM_API.GetCustomPriceValue) == "function" then
+	elseif sourceKey == "TSM" and isPriceSourceAvailable("TSM") then
 		local itemString = "i:" .. tostring(itemID)
 		local ok, price = pcall(_G.TSM_API.GetCustomPriceValue, "dbmarket", itemString)
 		if (not ok or not price or price <= 0) then
@@ -81,10 +126,7 @@ function Integrations.GetItemValue(itemIDOrLink)
 		if ok and type(price) == "number" and price > 0 then
 			return price, "TSM"
 		end
-	end
-
-	-- 3. OribosExchange / OEMarketInfo
-	if type(_G.OEMarketInfo) == "function" then
+	elseif sourceKey == "OE" and isPriceSourceAvailable("OE") then
 		local temp = {}
 		local ok = pcall(_G.OEMarketInfo, itemID, temp)
 		if ok and type(temp.market) == "number" and temp.market > 0 then
@@ -92,28 +134,55 @@ function Integrations.GetItemValue(itemIDOrLink)
 		elseif ok and type(temp.region) == "number" and temp.region > 0 then
 			return temp.region, "OE"
 		end
-	end
-
-	-- 4. RECrystallize
-	if type(_G.RECrystallize_PriceCheckItemID) == "function" then
+	elseif sourceKey == "RECRYSTALLIZE" and isPriceSourceAvailable("RECRYSTALLIZE") then
 		local ok, price = pcall(_G.RECrystallize_PriceCheckItemID, itemID)
 		if ok and type(price) == "number" and price > 0 then
 			return price, "RECrystallize"
 		end
-	end
-
-	-- 5. Auctioneer / AucAdvanced
-	if _G.AucAdvanced and _G.AucAdvanced.API and type(_G.AucAdvanced.API.GetMarketValue) == "function" then
-		local ok, price = pcall(_G.AucAdvanced.API.GetMarketValue, itemLink or itemID)
-		if ok and type(price) == "number" and price > 0 then
-			return price, "Auctioneer"
+	elseif sourceKey == "VENDOR" then
+		local vendorPrice = select(11, GetItemInfo(itemLink or itemID))
+		if (not vendorPrice or vendorPrice <= 0) and _G.Informant and type(_G.Informant.GetItem) == "function" then
+			local ok, info = pcall(_G.Informant.GetItem, itemID)
+			if ok and type(info) == "table" and type(info.sell) == "number" then
+				vendorPrice = info.sell
+			end
+		end
+		if type(vendorPrice) == "number" and vendorPrice > 0 then
+			return vendorPrice, "Vendor"
 		end
 	end
+	return nil, nil
+end
 
-	-- 6. Vendor sell price fallback
-	local vendorPrice = select(11, GetItemInfo(itemLink or itemID))
-	if type(vendorPrice) == "number" and vendorPrice > 0 then
-		return vendorPrice, "Vendor"
+function Integrations.GetItemValue(itemIDOrLink)
+	if not itemIDOrLink then return 0, nil end
+	local itemID = tonumber(itemIDOrLink)
+	local itemLink = type(itemIDOrLink) == "string" and itemIDOrLink or nil
+	if not itemID and itemLink then
+		itemID = tonumber(itemLink:match("item:(%d+)"))
+	end
+	if not itemID then return 0, nil end
+
+	local pref = (Gatherer and Gatherer.Config and Gatherer.Config.GetSetting and Gatherer.Config.GetSetting("tooltip.pricesource", "AUTO")) or "AUTO"
+	if pref ~= "AUTO" and isPriceSourceAvailable(pref) then
+		local price, src = queryPriceSource(pref, itemID, itemLink)
+		if price and price > 0 then
+			return price, src
+		end
+		if pref ~= "VENDOR" then
+			local vPrice, vSrc = queryPriceSource("VENDOR", itemID, itemLink)
+			if vPrice and vPrice > 0 then
+				return vPrice, vSrc
+			end
+		end
+		return 0, nil
+	end
+
+	for _, sourceKey in ipairs(PRICE_SOURCE_ORDER) do
+		local price, src = queryPriceSource(sourceKey, itemID, itemLink)
+		if price and price > 0 then
+			return price, src
+		end
 	end
 
 	return 0, nil
