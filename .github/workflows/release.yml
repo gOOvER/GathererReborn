@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 1.0.0 or 1.0.0-beta1). Use "auto" to read from CHANGELOG.md'
+        description: 'Version to release (e.g., 1.0.0 or 1.0.0-beta1). Use "auto" to read from CHANGELOG.md or .toc'
         required: true
         type: string
         default: 'auto'
@@ -39,7 +39,12 @@ jobs:
 
           VERSION="${{ github.event.inputs.version }}"
           if [[ -z "$VERSION" || "$VERSION" == "auto" ]]; then
-            VERSION=$(awk '/^## \[/{gsub(/\[|\]/, "", $2); print $2; exit}' CHANGELOG.md)
+            if [[ -f CHANGELOG.md ]]; then
+              VERSION=$(awk '/^## \[/{gsub(/\[|\]/, "", $2); print $2; exit}' CHANGELOG.md)
+            fi
+            if [[ -z "$VERSION" ]]; then
+              VERSION=$(grep -h -m1 '^## Version:' *.toc */*.toc 2>/dev/null | head -n 1 | sed 's/^## Version:[[:space:]]*//' | tr -d '\r')
+            fi
           fi
           TAG_NAME="v${VERSION#v}"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
@@ -52,6 +57,15 @@ jobs:
 
           if [[ "${{ github.event.inputs.create_tag }}" == "true" ]]; then
             git push -f origin "$TAG_NAME"
+          fi
+
+      - name: Ensure CHANGELOG.md exists for BigWigs Packager release notes
+        run: |
+          if [[ ! -f CHANGELOG.md ]]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            git log -n 20 --pretty=format:"- %s" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
           fi
 
       - name: Package with BigWigs Packager (Retail, Classic, BCC, Wrath, Cata, Mists, Forever)
@@ -67,10 +81,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG_NAME="${TAG_NAME:-${GITHUB_REF_NAME}}"
-          BASE_ZIP=$(ls .release/GathererReforged-*.zip | grep -v "\-nolib" | head -n 1)
+          PKG_NAME=$(awk '/^package-as:/{print $2; exit}' .pkgmeta | tr -d '\r')
+          BASE_ZIP=$(ls .release/${PKG_NAME}-*.zip 2>/dev/null | grep -v "\-nolib" | head -n 1)
           if [ -n "$BASE_ZIP" ] && [ -f "$BASE_ZIP" ] && [ -n "$TAG_NAME" ]; then
             for SUFFIX in "-mists" "-cata" "-wrath" "-bcc" "-forever" "-classic"; do
-              TARGET_ZIP=".release/GathererReforged-${TAG_NAME}${SUFFIX}.zip"
+              TARGET_ZIP=".release/${PKG_NAME}-${TAG_NAME}${SUFFIX}.zip"
               if [ ! -f "$TARGET_ZIP" ]; then
                 cp "$BASE_ZIP" "$TARGET_ZIP"
                 gh release upload "$TAG_NAME" "$TARGET_ZIP" --clobber || true
