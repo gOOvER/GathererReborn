@@ -456,6 +456,14 @@ local function isRotateMinimapEnabled()
 	return GetCVar and GetCVar("rotateMinimap") == "1" or false
 end
 
+function Map:GetMinimapRadius()
+	return getMinimapRadius()
+end
+
+function Map:IsRotateMinimapEnabled()
+	return isRotateMinimapEnabled()
+end
+
 local function positionMinimapIcon(icon, data, pm, pf, px, py, radius, rotateMinimap, facing)
 	local targetMinimap = processingFrame:GetParent() or Minimap
 	local dist, xDist, yDist = Map:ComputeDistance(pm, pf, px, py, data.mapID, data.mapFloor, data.x, data.y)

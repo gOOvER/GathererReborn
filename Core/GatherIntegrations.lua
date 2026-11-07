@@ -642,6 +642,7 @@ local GM2_NODE_MAP = {
 	[108] = { "Sagefish School", "OPEN", nil, 21071 },
 	[109] = { "School of Deviate Fish", "OPEN", nil, 6522 },
 	[110] = { "Stonescale Eel Swarm", "OPEN", nil, 13422 },
+	[113] = { "Pure Water", "OPEN", nil, 7070 },
 	[301] = { "Windy Cloud", "OPEN", nil, 22578 },
 	[302] = { "Swamp Gas", "OPEN", nil, 22577 },
 	[303] = { "Arcane Vortex", "OPEN", nil, 22576 },
@@ -649,6 +650,21 @@ local GM2_NODE_MAP = {
 	[305] = { "Steam Cloud", "OPEN", nil, 37705 },
 	[306] = { "Cinder Cloud", "OPEN", nil, 37702 },
 	[307] = { "Arctic Cloud", "OPEN", nil, 37700 },
+
+	-- WoW Forever Ores & Herbs (GatherRadar 90201..90406 IDs -> Gatherer 890201..890406)
+	[90201] = { "Cold Iron Deposit", "MINE", 890201, nil },
+	[90202] = { "Fool's Gold Vein", "MINE", 890202, nil },
+	[90203] = { "Starsilver Vein", "MINE", 890203, nil },
+	[90204] = { "Greater Moonstone Formation", "MINE", 890204, nil },
+	[90205] = { "Heavy Thorium Vein", "MINE", 890205, nil },
+	[90206] = { "Moonstone Formation", "MINE", 890206, nil },
+	[90207] = { "Chunk of Amber", "MINE", 890207, nil },
+	[90401] = { "Nightmare Moss", "HERB", 890401, nil },
+	[90402] = { "Dreamroot", "HERB", 890402, nil },
+	[90403] = { "Moonroot", "HERB", 890403, nil },
+	[90404] = { "Star Lotus", "HERB", 890404, nil },
+	[90405] = { "Doom Weed", "HERB", 890405, nil },
+	[90406] = { "Gloom Weed", "HERB", 890406, nil },
 }
 
 local DB_TYPE_TO_GTYPE = {
@@ -795,13 +811,13 @@ local function importGM2Table(dbTable, dbType, sourceLabel)
 end
 
 function Integrations.IsGatherMateAvailable()
-	if _G.GatherMate2HerbDB or _G.GatherMate2MineDB or _G.GatherMateData2HerbDB or _G.GatherMateData2MineDB then
+	if _G.GatherMate2HerbDB or _G.GatherMate2MineDB or _G.GatherMateData2HerbDB or _G.GatherMateData2MineDB or (_G.GatherRadarDB and _G.GatherRadarDB.nodes) then
 		return true
 	end
 	local getState = (C_AddOns and C_AddOns.GetAddOnEnableState) or _G.GetAddOnEnableState
 	local getInfo = (C_AddOns and C_AddOns.GetAddOnInfo) or _G.GetAddOnInfo
 	if getInfo then
-		for _, addonName in ipairs({ "GatherMate2", "GatherMate2_Data", "GatherMate2Storage_Dragonflight", "GatherMate2Storage_TheWarWithin", "GatherMate2Storage_Midnight" }) do
+		for _, addonName in ipairs({ "GatherMate2", "GatherMate2_Data", "GatherRadar", "GatherMate2Storage_Dragonflight", "GatherMate2Storage_TheWarWithin", "GatherMate2Storage_Midnight" }) do
 			local ok, name = pcall(getInfo, addonName)
 			if ok and name then
 				return true
@@ -870,6 +886,21 @@ function Integrations.ImportGatherMate2(includeDataAddon)
 			local dataTable = _G["GatherMateData2" .. prefix .. "DB"]
 			if type(dataTable) == "table" then
 				totalImported = totalImported + importGM2Table(dataTable, dbType, "IMPORTED")
+			end
+		end
+	end
+
+	-- 3. Import GatherRadar SavedVariables if present
+	if _G.GatherRadarDB and type(_G.GatherRadarDB.nodes) == "table" then
+		local grKindMap = {
+			herb = "Herb Gathering",
+			ore = "Mining",
+			treasure = "Treasure",
+			fish = "Fishing",
+		}
+		for grKind, dbType in pairs(grKindMap) do
+			if type(_G.GatherRadarDB.nodes[grKind]) == "table" then
+				totalImported = totalImported + importGM2Table(_G.GatherRadarDB.nodes[grKind], dbType, "IMPORTED")
 			end
 		end
 	end
@@ -982,10 +1013,24 @@ local EXTERNAL_PREFIXES = {
 	["GRBNode"] = "Gatherer Reborn",
 	["GM2SD"] = "GatherMate_Sharing",
 	["GMSD"] = "GatherMate_Sharing",
+	["GatherRadar"] = "GatherRadar",
 	["GATHERLITE"] = "GatherLite",
 	["GatherLite"] = "GatherLite",
 	["GatherLiteSync"] = "GatherLite",
 	["G2G"] = "GatherLite",
+}
+
+local GR_LETTER_BY_DBTYPE = {
+	["Herb Gathering"] = "h",
+	["Mining"] = "o",
+	["Treasure"] = "t",
+	["Fishing"] = "f",
+}
+local GR_DBTYPE_BY_LETTER = {
+	["h"] = "Herb Gathering",
+	["o"] = "Mining",
+	["t"] = "Treasure",
+	["f"] = "Fishing",
 }
 
 -- Exact dbIndexes table from GatherMate_Sharing.lua (lines 21-36)
@@ -1090,6 +1135,13 @@ function Integrations.BroadcastToExternalAddons(chatType, target, objectId, gath
 		local dbIndex = GM2_DB_INDEXES[dbType] or 5
 		local gm2Payload = string.format("A:%d:%d:%s:%d", uiMapID, dbIndex, tostring(coord), gmNodeID)
 		safeSendAddonMessage("GM2SD", gm2Payload, chatType, target)
+
+		-- 3. GatherRadar ("GatherRadar") format: "1|<letter>,<map>,<coord>,<id>"
+		local grLetter = GR_LETTER_BY_DBTYPE[dbType]
+		if grLetter and (chatType == "PARTY" or chatType == "RAID" or chatType == "INSTANCE_CHAT") then
+			local grPayload = string.format("1|%s,%d,%.0f,%d", grLetter, uiMapID, coord, gmNodeID)
+			safeSendAddonMessage("GatherRadar", grPayload, chatType, target)
+		end
 	end
 end
 
@@ -1161,6 +1213,30 @@ function Integrations.OnExternalAddonMessage(prefix, msg, how, who)
 			gatherX = floor(gmCoord / 1000000) / 10000
 			gatherY = floor((gmCoord % 1000000) / 100) / 10000
 			objectID, gatherType = resolveGatherMateNode(gmNodeID, gmDbType)
+		end
+	elseif prefix == "GatherRadar" then
+		-- GatherRadar format: "1|h,1411,3570284000,401;o,..."
+		local version, body = msg:match("^(%d+)|(.*)$")
+		if version == "1" and body then
+			for entry in body:gmatch("[^;]+") do
+				local letter, mapStr, coordStr, idStr = entry:match("^(%a),(%d+),(%d+),(%d+)$")
+				local grDbType = letter and GR_DBTYPE_BY_LETTER[letter]
+				local grMapID = tonumber(mapStr)
+				local grCoord = tonumber(coordStr)
+				local grNodeID = tonumber(idStr)
+				if grDbType and grMapID and grCoord and grNodeID then
+					local zToken = Gatherer.ZoneTokens.GetZoneToken(grMapID)
+					local gx = floor(grCoord / 1000000) / 10000
+					local gy = floor((grCoord % 1000000) / 100) / 10000
+					local objID, gType = resolveGatherMateNode(grNodeID, grDbType)
+					if objID and gType and zToken and gx > 0 and gx < 1 and gy > 0 and gy < 1 then
+						if Gatherer.Scanner and Gatherer.Scanner.MarkNodeLive then
+							Gatherer.Scanner.MarkNodeLive(zToken, gType, gx, gy)
+						end
+						objectID, gatherType, zoneToken, gatherX, gatherY = objID, gType, zToken, gx, gy
+					end
+				end
+			end
 		end
 	else
 		-- GatherLite format: either AceSerializer table/tuple or delimited string

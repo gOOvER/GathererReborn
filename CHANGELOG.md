@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-11-06
 
 ### Added
-- **Cross-Addon Sharing Bridge**: Live node sharing and synchronization with **Gatherer Reborn** (`GRBNode`), **GatherMate2_Sharing** (`GM2SD`/`GMSD`), and **GatherLite** (`G2G`) across Guild, Party, Raid, and Instance channels.
-- **1-Click `GatherMate2` & `GatherMate2_Data` Importer**: Direct database import for saved `GatherMate2` nodes and pre-populated Wowhead databases across all expansions (`/gatherer import`).
+- **Cross-Addon Sharing Bridge**: Live node sharing and synchronization with **Gatherer Reborn** (`GRBNode`), **GatherMate2_Sharing** (`GM2SD`/`GMSD`), **GatherRadar** (`GatherRadar`), and **GatherLite** (`G2G`) across Guild, Party, Raid, and Instance channels.
+- **Virtual Minimap Radar Scanner**: Coroutine-based Minimap radar (`Minimap:UpdateMouseoverAtPoint` + `C_TooltipInfo.GetMinimapMouseover`) that automatically detects and records tracked herbs, ores, treasures, and fishing pools from up to ~100 yards away, complete with skill-difficulty border rings and a live-radar glow indicator.
+- **1-Click `GatherMate2` & `GatherMate2_Data` Importer**: Direct database import for saved `GatherMate2` / `GatherRadar` nodes and pre-populated Wowhead databases across all expansions (`/gatherer import`).
 - **Live Market Values**: Displays current Auction House prices from **Auctionator**, **TradeSkillMaster (TSM)**, **OribosExchange**, **RECrystallize**, and **Auctioneer** in node tooltips and reports.
 - **Session & Gold-per-Hour (GPH) Tracker**: Tracks session duration, nodes/hour, loot value, and GPH in the LDB feed, Minimap tooltip, and Report sidebar (`/gatherer session`, `/gatherer reset`).
 - **Harvest Cooldown ("Respawn Timer")**: Automatically dims recently harvested nodes on the Minimap and 3D HUD for a configurable respawn duration.

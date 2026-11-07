@@ -518,6 +518,51 @@ function Gatherer.Util.GetGatherTexture( nodeID )
 	return selectedTexture, trimTexture
 end
 
+function Gatherer.Util.GetGatherDifficultyColor(nodeID, gType)
+	if not nodeID then return nil end
+	gType = gType or (Gatherer.Nodes and Gatherer.Nodes.Objects and Gatherer.Nodes.Objects[nodeID])
+	if gType ~= "HERB" and gType ~= "MINE" then return nil end
+
+	local catKey = Gatherer.Categories and Gatherer.Categories.ObjectCategories and Gatherer.Categories.ObjectCategories[nodeID]
+	local reqSkill = (Gatherer.Nodes and Gatherer.Nodes.SkillLevels and Gatherer.Nodes.SkillLevels[nodeID])
+		or (catKey and Gatherer.Constants and Gatherer.Constants.SkillLevel and Gatherer.Constants.SkillLevel[catKey])
+	if not reqSkill then return nil end
+
+	local playerSkill = Gatherer.Var and Gatherer.Var.Skills and Gatherer.Var.Skills[gType]
+	if not playerSkill or type(playerSkill) ~= "number" or playerSkill <= 0 then
+		return 0.95, 0.20, 0.20, reqSkill, 0
+	end
+
+	local over = playerSkill - reqSkill
+	if over < 0 then
+		return 0.95, 0.20, 0.20, reqSkill, playerSkill -- Red (too low skill)
+	elseif over < 25 then
+		return 1.00, 0.50, 0.25, reqSkill, playerSkill -- Orange (high skill-up chance)
+	elseif over < 50 then
+		return 1.00, 0.88, 0.15, reqSkill, playerSkill -- Yellow (medium skill-up chance)
+	elseif over < 100 then
+		return 0.25, 0.82, 0.25, reqSkill, playerSkill -- Green (low skill-up chance)
+	else
+		return 0.62, 0.64, 0.68, reqSkill, playerSkill -- Gray (trivial)
+	end
+end
+
+function Gatherer.Util.GetNodeDifficultyColor(mapZone, gatherType, index)
+	if gatherType ~= "HERB" and gatherType ~= "MINE" then return nil end
+	local bestGatherID = nil
+	local maxCount = -1
+	for _, gatherID, count in Gatherer.Storage.GetNodeGatherNames(mapZone, gatherType, index) do
+		if count > maxCount then
+			bestGatherID = gatherID
+			maxCount = count
+		end
+	end
+	if bestGatherID then
+		return Gatherer.Util.GetGatherDifficultyColor(bestGatherID, gatherType)
+	end
+	return nil
+end
+
 -- convert list of zoneID1, zoneName1, zoneID2, zoneName2, etc.
 -- into just a list of zone names
 local function stripZoneIDs(...)

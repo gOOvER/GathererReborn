@@ -3075,6 +3075,58 @@ Gatherer.Nodes.PrimaryItems = {
 
 -- Dynamic "Forever" Node Discovery & Modern Expansion Nodes (BfA, SL, DF, TWW, Midnight+)
 do
+	local lowerNames = {}
+	local herbLowerNames = {}
+	local partialCache = {}
+
+	local function indexNodeName(name, objId, gType)
+		if type(name) ~= "string" or name == "" or not objId then return end
+		local low = name:lower()
+		if not lowerNames[low] then
+			lowerNames[low] = objId
+		end
+		if gType == "HERB" and #low >= 4 then
+			herbLowerNames[low] = objId
+		end
+	end
+
+	for name, objId in pairs(Gatherer.Nodes.Names) do
+		indexNodeName(name, objId, Gatherer.Nodes.Objects[objId])
+	end
+
+	-- Built-in WoW Forever custom ores & herbs (IDs 890201..890406 mapped compatible with GatherRadar 90201..90406)
+	Gatherer.Nodes.SkillLevels = Gatherer.Nodes.SkillLevels or {}
+	local foreverBuiltins = {
+		{ 890201, "Cold Iron Deposit", "MINE", 125, "ORE_COLDIRON" },
+		{ 890202, "Fool's Gold Vein", "MINE", 175, "ORE_FOOLSGOLD" },
+		{ 890203, "Starsilver Vein", "MINE", 245, "ORE_STARSILVER" },
+		{ 890204, "Greater Moonstone Formation", "MINE", 245, "ORE_GREATERMOONSTONE" },
+		{ 890205, "Heavy Thorium Vein", "MINE", 300, "ORE_HEAVYTHORIUM" },
+		{ 890206, "Moonstone Formation", "MINE", 1, "ORE_MOONSTONE" },
+		{ 890207, "Chunk of Amber", "MINE", 1, "ORE_AMBER" },
+		{ 890401, "Nightmare Moss", "HERB", 125, "HERB_NIGHTMAREMOSS" },
+		{ 890402, "Dreamroot", "HERB", 205, "HERB_DREAMROOT" },
+		{ 890403, "Moonroot", "HERB", 250, "HERB_MOONROOT" },
+		{ 890404, "Star Lotus", "HERB", 250, "HERB_STARLOTUS" },
+		{ 890405, "Doom Weed", "HERB", 1, "HERB_DOOMWEED" },
+		{ 890406, "Gloom Weed", "HERB", 1, "HERB_GLOOMWEED" },
+	}
+	for _, entry in ipairs(foreverBuiltins) do
+		local id, name, gType, skillReq, catKey = entry[1], entry[2], entry[3], entry[4], entry[5]
+		if not Gatherer.Nodes.Names[name] then
+			Gatherer.Nodes.Names[name] = id
+		end
+		Gatherer.Nodes.Objects[id] = gType
+		Gatherer.Nodes.SkillLevels[id] = skillReq
+		indexNodeName(name, id, gType)
+		if Gatherer.Categories and Gatherer.Categories.ObjectCategories and not Gatherer.Categories.ObjectCategories[id] then
+			Gatherer.Categories.ObjectCategories[id] = catKey
+			if Gatherer.Categories.CategoryNames and not Gatherer.Categories.CategoryNames[catKey] then
+				Gatherer.Categories.CategoryNames[catKey] = name
+			end
+		end
+	end
+
 	local function hashNodeName(name)
 		local h = 5381
 		for i = 1, #name do
@@ -3083,10 +3135,38 @@ do
 		return 900000 + h
 	end
 
+	-- Resolves a node name by exact match, case-insensitive match, or partial herb variant match (e.g. "Wilted Peacebloom")
+	function Gatherer.Nodes.ResolveNodeByName(nodeName)
+		if type(nodeName) ~= "string" or nodeName == "" then return nil end
+		local direct = Gatherer.Nodes.Names[nodeName]
+		if direct then return direct end
+
+		local low = nodeName:lower()
+		if lowerNames[low] then return lowerNames[low] end
+
+		if partialCache[low] ~= nil then
+			return partialCache[low] or nil
+		end
+
+		local bestId, bestLen = false, 0
+		if not low:find("[%d:/]") then
+			for herbLow, id in pairs(herbLowerNames) do
+				if #herbLow > bestLen and low:find(herbLow, 1, true) then
+					bestId, bestLen = id, #herbLow
+				end
+			end
+		end
+		partialCache[low] = bestId
+		return bestId or nil
+	end
+
 	function Gatherer.Nodes.RegisterDynamicNode(nodeName, gType, primaryItemID, explicitID)
 		if not nodeName or nodeName == "" or not gType then return nil end
-		local existing = Gatherer.Nodes.Names[nodeName]
+		local existing = Gatherer.Nodes.Names[nodeName] or lowerNames[nodeName:lower()]
 		if existing then
+			if not Gatherer.Nodes.Names[nodeName] then
+				Gatherer.Nodes.Names[nodeName] = existing
+			end
 			if primaryItemID and not Gatherer.Nodes.PrimaryItems[existing] then
 				Gatherer.Nodes.PrimaryItems[existing] = primaryItemID
 			end
@@ -3100,6 +3180,8 @@ do
 
 		Gatherer.Nodes.Names[nodeName] = objId
 		Gatherer.Nodes.Objects[objId] = gType
+		indexNodeName(nodeName, objId, gType)
+		wipe(partialCache)
 		if primaryItemID then
 			Gatherer.Nodes.PrimaryItems[objId] = primaryItemID
 		end

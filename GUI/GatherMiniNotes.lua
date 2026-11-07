@@ -82,6 +82,20 @@ local function GetMinimapNote( index )
 		note = CreateFrame("Button", "GatherNote"..index, Minimap, "GatherNoteTemplate")
 		Gatherer.MiniNotes.Notes[index] = note
 		note:SetID(index)
+
+		local ring = note:CreateTexture(nil, "BACKGROUND")
+		ring:SetPoint("CENTER", note, "CENTER", 0, 0)
+		ring:SetColorTexture(1, 1, 1, 0.85)
+		ring:Hide()
+		note.ring = ring
+
+		local liveGlow = note:CreateTexture(nil, "OVERLAY")
+		liveGlow:SetTexture("Interface\\Cooldown\\star4")
+		liveGlow:SetBlendMode("ADD")
+		liveGlow:SetPoint("CENTER", note, "CENTER", 0, 0)
+		liveGlow:SetVertexColor(0.25, 1.0, 0.65, 0.85)
+		liveGlow:Hide()
+		note.liveGlow = liveGlow
 	end
 	return note
 end
@@ -170,6 +184,8 @@ function Gatherer.MiniNotes.UpdateMinimapNotes(timeDelta, force)
 				gatherNote.zone = nodeZoneToken
 				gatherNote.index = nodeIndex
 				gatherNote.dist = nodeDist
+				gatherNote.x = nodeX
+				gatherNote.y = nodeY
 				
 				local nodeMapID, nodeMapFloor = Gatherer.ZoneTokens.GetZoneMapIDAndFloor(nodeZoneToken)
 				local result = Map:PlaceIconOnMinimap(gatherNote, nodeMapID, nodeMapFloor, nodeX, nodeY)
@@ -375,6 +391,32 @@ function Gatherer.MiniNotes.UpdateMinimapNotes(timeDelta, force)
 					gatherNoteTexture:SetVertexColor(r, g, b);
 				end
 				gatherNoteTexture:SetAlpha(opacity)
+
+				-- Skill difficulty border ring & Live Radar highlight
+				if gatherNote.ring then
+					local dr, dg, db = nil, nil, nil
+					if selectedTexture ~= SHADED_TEXTURE and Gatherer.Util and Gatherer.Util.GetNodeDifficultyColor then
+						dr, dg, db = Gatherer.Util.GetNodeDifficultyColor(nodeZone, gType, nodeIndex)
+					end
+					if dr and dg and db then
+						gatherNote.ring:SetSize(normSize + 2, normSize + 2)
+						gatherNote.ring:SetColorTexture(dr, dg, db, math.min(opacity * 0.9, 0.9))
+						gatherNote.ring:Show()
+					else
+						gatherNote.ring:Hide()
+					end
+				end
+
+				if gatherNote.liveGlow then
+					local isLive = Gatherer.Scanner and Gatherer.Scanner.IsNodeLive and Gatherer.Scanner.IsNodeLive(nodeZone, gType, gatherNote.x, gatherNote.y)
+					if isLive then
+						gatherNote.liveGlow:SetSize(normSize * 1.9, normSize * 1.9)
+						gatherNote.liveGlow:SetAlpha(math.min(opacity + 0.15, 1))
+						gatherNote.liveGlow:Show()
+					else
+						gatherNote.liveGlow:Hide()
+					end
+				end
 			end
 		end
 		
