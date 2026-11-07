@@ -1473,34 +1473,154 @@ local function buildOptionsTable()
 				name = _trL("CONFIG_SECTION_ABOUT"),
 				order = 100,
 				args = {
-					header = {
-						type = "header",
+					infoGroup = {
+						type = "group",
+						inline = true,
 						name = _trL("CONFIG_SECTION_TITLE_ABOUT"),
 						order = 1,
+						args = {
+							banner = {
+								type = "description",
+								image = 133939,
+								imageWidth = 36,
+								imageHeight = 36,
+								imageCoords = { 0.08, 0.92, 0.08, 0.92 },
+								fontSize = "medium",
+								order = 1,
+								name = function()
+									return string.format(
+										"|cffffd200Gatherer Reforged|r  |cff00ff96v%s|r\n"
+										.. "|cff8892a4Author:|r |cff00ff96gOOvER|r   |cff555c68||   |cff8892a4License:|r |cffffffffGPL-3.0|r   |cff555c68||   |cff8892a4Legacy:|r |cffb0b8c4Norganna's Gatherer (2005–2017)|r",
+										tostring(Gatherer.Var.Version or "1.0.0")
+									)
+								end,
+							},
+							desc1 = {
+								type = "description",
+								fontSize = "medium",
+								order = 2,
+								name = "\n" .. _trL("DESCRIPTION") .. "\n",
+							},
+							desc2 = {
+								type = "description",
+								order = 3,
+								name = "|cff8892a4" .. _trL("DESCRIPTION_LICENSE") .. "|r\n",
+							},
+							loadedMsg = {
+								type = "toggle",
+								name = _trL("CONFIG_ABOUT_LOADED_ENABLE"),
+								width = "full",
+								order = 4,
+								get = function() return GetSetting("about.loaded") end,
+								set = function(_, v) SetSetting("about.loaded", v) end,
+							},
+						},
 					},
-					loadedMsg = {
-						type = "toggle",
-						name = _trL("CONFIG_ABOUT_LOADED_ENABLE"),
-						width = "full",
+					statsGroup = {
+						type = "group",
+						inline = true,
+						name = _trL("CONFIG_SECTION_INTEGRATIONS") .. "  —  " .. _tr("REPORT_TITLE"),
 						order = 2,
-						get = function() return GetSetting("about.loaded") end,
-						set = function(_, v) SetSetting("about.loaded", v) end,
+						args = {
+							dbSummary = {
+								type = "description",
+								fontSize = "medium",
+								order = 1,
+								name = function()
+									local totalZones, totalHerbs, totalOres, totalTreasures, totalArch = 0, 0, 0, 0, 0
+									if Gatherer.Storage and Gatherer.Storage.GetAreaIndices and Gatherer.Storage.GetNodeCountsByGatherType then
+										for _, zone in Gatherer.Storage.GetAreaIndices() do
+											totalZones = totalZones + 1
+											local a, t, h, o = Gatherer.Storage.GetNodeCountsByGatherType(zone)
+											totalArch = totalArch + (a or 0)
+											totalTreasures = totalTreasures + (t or 0)
+											totalHerbs = totalHerbs + (h or 0)
+											totalOres = totalOres + (o or 0)
+										end
+									end
+									local totalNodes = totalHerbs + totalOres + totalTreasures + totalArch
+									local dynCount = 0
+									if type(_G.Gatherer_DynamicNodes) == "table" then
+										for _ in pairs(_G.Gatherer_DynamicNodes) do dynCount = dynCount + 1 end
+									end
+									return string.format(
+										"|T134269:14:14:0:0:64:64:5:59:5:59|t  |cffffd200%s:|r |cff00ff96%d|r     "
+										.. "|T134437:14:14:0:0:64:64:5:59:5:59|t  |cffffd200%s:|r |cffffffff%d|r     "
+										.. "|T134332:14:14:0:0:64:64:5:59:5:59|t  |cffffd200%s:|r |cffffd200%s|r\n\n"
+										.. "|T136065:14:14:0:0:64:64:5:59:5:59|t  |cffb0b8c4%s:|r |cff00ff96%d|r     "
+										.. "|T136248:14:14:0:0:64:64:5:59:5:59|t  |cffb0b8c4%s:|r |cff00ff96%d|r     "
+										.. "|T132594:14:14:0:0:64:64:5:59:5:59|t  |cffb0b8c4%s:|r |cff00ff96%d|r     "
+										.. "|T134435:14:14:0:0:64:64:5:59:5:59|t  |cffb0b8c4%s:|r |cff00ff96%d|r",
+										_tr("DENSITY_COLUMN_HEADER_NUM_NODE"), totalNodes,
+										_tr("REPORT_COLUMN_HEADER_REGION"), totalZones,
+										_trL("CONFIG_SECTION_PROFILES"), tostring(GetSetting("profile") or "Default"),
+										_trL("TRADE_HERBALISM"), totalHerbs,
+										_trL("TRADE_MINING"), totalOres,
+										_trL("CONFIG_SECTION_OPEN"), totalTreasures,
+										_trL("PROFESSIONS_ARCHAEOLOGY"), totalArch
+									)
+								end,
+							},
+						},
 					},
-					version = {
-						type = "description",
-						name = "|cffffd200" .. _tr("VERSION_MESSAGE", Gatherer.Var.Version) .. "|r\nAuthor: |cff00ff96gOOvER|r\n",
-						fontSize = "medium",
+					commandsGroup = {
+						type = "group",
+						inline = true,
+						name = "Slash-Commands & Shortcuts (/gather, /gatherer)",
 						order = 3,
+						args = {
+							cmdList = {
+								type = "description",
+								fontSize = "medium",
+								order = 1,
+								name = function()
+									Gatherer.Locale.SECTION_HIGHLIGHT_CODE = "|cff1fb3ff"
+									return table.concat({
+										"|cffffd200/gather|r  |cff667080—|r  " .. _tr("LABEL_CONFIG"),
+										"|cffffd200/gather report|r  |cff667080—|r  " .. _tr("LABEL_REPORT"),
+										"|cffffd200/gather search|r  |cff667080—|r  " .. _tr("LABEL_DENSITY_REPORT"),
+										"|cffffd200/gather import|r  |cff667080—|r  " .. _trL("CONFIG_GM2_IMPORT_FULL"),
+										"|cffffd200/gather session|r  /  |cffffd200/gather reset|r  |cff667080—|r  " .. _trL("CONFIG_SESSION_GROUP"),
+										"|cffffd200/gather minimap|r  /  |cffffd200/gather mainmap|r  /  |cffffd200/gather herbs||mining||open|r",
+										"",
+										_tr("MINIICON_ACTIONS_CLICK") .. "   |cff555c68•|r   " .. _tr("MINIICON_ACTIONS_RIGHT_CLICK"),
+										_tr("MINIICON_ACTIONS_SHIFT_CLICK") .. "   |cff555c68•|r   " .. _tr("MINIICON_ACTIONS_SHIFT_RIGHT_CLICK"),
+									}, "\n")
+								end,
+							},
+						},
 					},
-					desc1 = {
-						type = "description",
-						name = _trL("DESCRIPTION") .. "\n",
+					linksGroup = {
+						type = "group",
+						inline = true,
+						name = "GitHub, Wago.io & Support (Ctrl+C)",
 						order = 4,
-					},
-					desc2 = {
-						type = "description",
-						name = _trL("DESCRIPTION_LICENSE"),
-						order = 5,
+						args = {
+							githubUrl = {
+								type = "input",
+								name = "GitHub Repository",
+								width = "double",
+								order = 1,
+								get = function() return "https://github.com/gOOvER/GathererReforged" end,
+								set = function() end,
+							},
+							wagoUrl = {
+								type = "input",
+								name = "Wago Addons",
+								width = "double",
+								order = 2,
+								get = function() return "https://addons.wago.io/addons/gathererreforged" end,
+								set = function() end,
+							},
+							donateUrl = {
+								type = "input",
+								name = "Support & Donate (gOOvER)",
+								width = "double",
+								order = 3,
+								get = function() return "https://donate.goover.dev" end,
+								set = function() end,
+							},
+						},
 					},
 				},
 			},
