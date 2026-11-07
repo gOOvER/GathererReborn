@@ -5,7 +5,7 @@ All notable changes to **Gatherer Reforged** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-11-06
+## [1.0.0] - 2026-11-07
 
 ### Added
 - **Cross-Addon Sharing Bridge**: Live node sharing and synchronization with **Gatherer Reborn** (`GRBNode`), **GatherMate2_Sharing** (`GM2SD`/`GMSD`), **GatherRadar** (`GatherRadar`), and **GatherLite** (`G2G`) across Guild, Party, Raid, and Instance channels.

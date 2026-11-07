@@ -34,6 +34,45 @@ local UIStyle = Gatherer.UIStyle
 
 local WHITE_TEX = "Interface\\Buttons\\WHITE8X8"
 
+UIStyle._fontListeners = UIStyle._fontListeners or {}
+
+function UIStyle.GetFontSize()
+	local sz = 13
+	if Gatherer and Gatherer.Config and Gatherer.Config.GetSetting then
+		sz = tonumber(Gatherer.Config.GetSetting("ui.fontSize", 13)) or 13
+	end
+	return math.min(math.max(math.floor(sz), 10), 18)
+end
+
+function UIStyle.SetFontSize(size)
+	size = math.min(math.max(math.floor(tonumber(size) or 13), 10), 18)
+	if Gatherer and Gatherer.Config and Gatherer.Config.SetSetting then
+		Gatherer.Config.SetSetting("ui.fontSize", size)
+	end
+	for _, fn in ipairs(UIStyle._fontListeners) do
+		pcall(fn, size)
+	end
+	return size
+end
+
+function UIStyle.RegisterFontListener(fn)
+	if type(fn) == "function" then
+		table.insert(UIStyle._fontListeners, fn)
+	end
+end
+
+function UIStyle.ApplyFont(fontString, delta, overrideFlags)
+	if not fontString or not fontString.GetFont or not fontString.SetFont then return end
+	local fontPath, _, fontFlags = fontString:GetFont()
+	if not fontPath then
+		fontPath, _, fontFlags = GameFontNormal:GetFont()
+	end
+	if fontPath then
+		local targetSize = math.max(9, UIStyle.GetFontSize() + (delta or 0))
+		fontString:SetFont(fontPath, targetSize, overrideFlags ~= nil and overrideFlags or (fontFlags or ""))
+	end
+end
+
 function UIStyle.ApplyBox(f, bgR, bgG, bgB, bgA, brR, brG, brB, brA)
 	if not f.SetBackdrop then return end
 	f:SetBackdrop({
@@ -99,6 +138,45 @@ function UIStyle.CreateHeader(parent, titleText, iconTexture, onClose)
 	closeBtn:SetScript("OnClick", onClose)
 	header.CloseButton = closeBtn
 
+	-- Font Size Controls (A- | 13pt | A+)
+	local fontPlusBtn = UIStyle.CreateButton(header, 28, 24, "A+", "default")
+	fontPlusBtn:SetPoint("RIGHT", closeBtn, "LEFT", -8, 0)
+	header.FontPlusBtn = fontPlusBtn
+
+	local fontIndicator = CreateFrame("Frame", nil, header, BackdropTemplateMixin and "BackdropTemplate" or nil)
+	fontIndicator:SetSize(38, 24)
+	fontIndicator:SetPoint("RIGHT", fontPlusBtn, "LEFT", -3, 0)
+	UIStyle.ApplyBox(fontIndicator, 0.08, 0.10, 0.13, 1, 0.22, 0.25, 0.32, 1)
+	local fontLabel = fontIndicator:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	fontLabel:SetPoint("CENTER", 0, 0)
+	fontLabel:SetTextColor(0.95, 0.80, 0.28)
+	fontLabel:SetText(UIStyle.GetFontSize() .. "pt")
+	header.FontLabel = fontLabel
+
+	local fontMinusBtn = UIStyle.CreateButton(header, 28, 24, "A-", "default")
+	fontMinusBtn:SetPoint("RIGHT", fontIndicator, "LEFT", -3, 0)
+	header.FontMinusBtn = fontMinusBtn
+
+	badge:ClearAllPoints()
+	badge:SetPoint("RIGHT", fontMinusBtn, "LEFT", -10, 0)
+
+	fontMinusBtn:SetScript("OnClick", function()
+		UIStyle.SetFontSize(UIStyle.GetFontSize() - 1)
+	end)
+	fontPlusBtn:SetScript("OnClick", function()
+		UIStyle.SetFontSize(UIStyle.GetFontSize() + 1)
+	end)
+
+	UIStyle.RegisterFontListener(function(newSize)
+		if header.FontLabel then
+			header.FontLabel:SetText(newSize .. "pt")
+		end
+		UIStyle.ApplyFont(title, 2)
+		UIStyle.ApplyFont(badge, 0)
+	end)
+	UIStyle.ApplyFont(title, 2)
+	UIStyle.ApplyFont(badge, 0)
+
 	header:EnableMouse(true)
 	header:SetScript("OnMouseDown", function()
 		if parent:IsMovable() then parent:StartMoving() end
@@ -156,18 +234,40 @@ function UIStyle.CreateButton(parent, width, height, text, variant, iconTexture)
 
 	UIStyle.ApplyBox(btn, s.bg[1], s.bg[2], s.bg[3], s.bg[4], s.br[1], s.br[2], s.br[3], s.br[4])
 
-	local label = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	btn._minWidth = width or 60
+	btn._baseHeight = height or 26
+
+	local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	label:SetPoint("CENTER", btn, "CENTER", 0, 0)
+	UIStyle.ApplyFont(label, 0)
 	label:SetText(UIStyle.FormatIconText(iconTexture, text))
 	label:SetTextColor(s.txt[1], s.txt[2], s.txt[3])
 	btn.Label = label
 
+	function btn:UpdateSize()
+		UIStyle.ApplyFont(label, 0)
+		local textW = label:GetStringWidth() or 0
+		if textW > 0 then
+			self:SetWidth(math.max(self._minWidth or 60, math.ceil(textW + 24)))
+		elseif self._minWidth then
+			self:SetWidth(self._minWidth)
+		end
+		self:SetHeight(math.max(self._baseHeight or 26, UIStyle.GetFontSize() + 13))
+	end
+
 	function btn:SetText(t)
 		label:SetText(UIStyle.FormatIconText(self._iconTexture, t))
+		self:UpdateSize()
 	end
 	function btn:GetFontString()
 		return label
 	end
+	btn:UpdateSize()
+	UIStyle.RegisterFontListener(function()
+		if btn and btn.UpdateSize then
+			btn:UpdateSize()
+		end
+	end)
 
 	local function refreshState(self, hovered)
 		if not self:IsEnabled() then

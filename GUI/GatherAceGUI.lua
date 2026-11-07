@@ -1666,10 +1666,45 @@ local CONFIG_SECTIONS = {
 local function styleAceWidgetsRecursive(widget)
 	if not widget then return end
 	local UIStyle = Gatherer.UIStyle
-	if UIStyle and widget.type == "InlineGroup" and widget.border then
-		UIStyle.ApplyBox(widget.border, 0.10, 0.12, 0.16, 0.92, 0.22, 0.26, 0.34, 1)
-		if widget.titletext then
-			widget.titletext:SetTextColor(0.95, 0.80, 0.28)
+	if UIStyle then
+		local fontSize = UIStyle.GetFontSize()
+		if widget.type == "InlineGroup" and widget.border then
+			UIStyle.ApplyBox(widget.border, 0.10, 0.12, 0.16, 0.92, 0.22, 0.26, 0.34, 1)
+			if widget.titletext then
+				widget.titletext:SetTextColor(0.95, 0.80, 0.28)
+				UIStyle.ApplyFont(widget.titletext, 1)
+			end
+		elseif widget.type == "Heading" and widget.label then
+			UIStyle.ApplyFont(widget.label, 1)
+		elseif (widget.type == "Label" or widget.type == "InteractiveLabel") and widget.label then
+			UIStyle.ApplyFont(widget.label, 0)
+		elseif widget.type == "CheckBox" and widget.text then
+			UIStyle.ApplyFont(widget.text, 0)
+			if widget.SetHeight then
+				widget:SetHeight(math.max(24, fontSize + 11))
+			end
+		elseif widget.type == "Button" and widget.frame then
+			local fs = widget.text or (widget.frame.GetFontString and widget.frame:GetFontString())
+			if fs then
+				UIStyle.ApplyFont(fs, 0)
+				local strW = fs:GetStringWidth() or 0
+				local curW = widget.frame:GetWidth() or 100
+				if strW > 0 and (strW + 28) > curW then
+					widget.frame:SetWidth(math.ceil(strW + 28))
+				end
+			end
+		elseif widget.type == "EditBox" then
+			if widget.label then UIStyle.ApplyFont(widget.label, -1) end
+			if widget.editbox then UIStyle.ApplyFont(widget.editbox, 0) end
+		elseif widget.type == "MultiLineEditBox" then
+			if widget.label then UIStyle.ApplyFont(widget.label, 0) end
+			if widget.editBox then UIStyle.ApplyFont(widget.editBox, 0) end
+		elseif widget.type == "Dropdown" then
+			if widget.label then UIStyle.ApplyFont(widget.label, -1) end
+			if widget.text then UIStyle.ApplyFont(widget.text, 0) end
+		elseif widget.type == "Slider" then
+			if widget.label then UIStyle.ApplyFont(widget.label, 0) end
+			if widget.editbox then UIStyle.ApplyFont(widget.editbox, 0) end
 		end
 	end
 	if type(widget.children) == "table" then
@@ -1677,27 +1712,50 @@ local function styleAceWidgetsRecursive(widget)
 			styleAceWidgetsRecursive(child)
 		end
 	end
+	if widget.PerformLayout then
+		pcall(function() widget:PerformLayout() end)
+	end
 end
 
 local function renderActiveCategory()
 	if not configFrame or not configFrame:IsShown() or not hostGroup then return end
 	ensureRegistered()
+	local UIStyle = Gatherer.UIStyle
 
 	for _, sec in ipairs(CONFIG_SECTIONS) do
 		local btn = configFrame.NavButtons[sec.key]
 		if btn then
+			if UIStyle then
+				UIStyle.ApplyFont(btn.Label, 0)
+			end
 			local isSelected = (sec.key == activeCategory)
 			btn.isSelected = isSelected
 			btn:UpdateVisual(false)
 			if isSelected then
 				configFrame.Content.HeaderIcon:SetTexture(sec.icon)
 				configFrame.Content.HeaderTitle:SetText(sec.label())
+				if UIStyle then
+					UIStyle.ApplyFont(configFrame.Content.HeaderTitle, 1)
+				end
 			end
 		end
 	end
 
 	if configFrame.ProfileBadge then
+		if UIStyle then UIStyle.ApplyFont(configFrame.ProfileBadge, 0) end
 		configFrame.ProfileBadge:SetText("|cff778292" .. _trL("CONFIG_SECTION_PROFILES") .. ":|r |cffffd200" .. tostring(GetSetting("profile") or "Default") .. "|r")
+	end
+
+	if configFrame.ReportBtn and configFrame.SearchBtn and configFrame.ProfileBadge then
+		configFrame.ReportBtn:UpdateSize()
+		configFrame.SearchBtn:UpdateSize()
+		configFrame.SearchBtn:ClearAllPoints()
+		configFrame.SearchBtn:SetPoint("LEFT", configFrame.ReportBtn, "RIGHT", 8, 0)
+		configFrame.ProfileBadge:ClearAllPoints()
+		configFrame.ProfileBadge:SetPoint("LEFT", configFrame.SearchBtn, "RIGHT", 18, 0)
+	end
+	if configFrame.DoneBtn then
+		configFrame.DoneBtn:UpdateSize()
 	end
 
 	AceConfigDialog:Open("GathererReforged", hostGroup, activeCategory)
@@ -1884,6 +1942,12 @@ local function ensureConfigFrame()
 
 	frame:SetScript("OnShow", function()
 		renderActiveCategory()
+	end)
+
+	UIStyle.RegisterFontListener(function()
+		if frame:IsShown() then
+			renderActiveCategory()
+		end
 	end)
 
 	configFrame = frame
