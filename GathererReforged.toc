@@ -97,8 +97,7 @@ Core\GatherPlugins.lua
 Core\GatherIntegrations.lua
 Data\GatherSpecialCases.lua
 
-# GUI: Ace3 Options, Map/Minimap Notes, HUD, Tooltips, Reports & Search
-GUI\GatherAceGUI.lua
+# GUI: Map/Minimap Notes, HUD, Tooltips, Reports, Search & Modern Ace3 Options
 GUI\GatherMapNotes.xml
 GUI\GatherMiniIcon.lua
 GUI\GatherMiniNotes.xml
@@ -108,3 +107,4 @@ GUI\GatherTooltip.lua
 GUI\GatherReport.lua
 GUI\ReportFilters.lua
 GUI\GathererNodeSearch.lua
+GUI\GatherAceGUI.lua

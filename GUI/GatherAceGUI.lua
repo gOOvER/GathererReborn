@@ -10,14 +10,16 @@
 local AceConfig = LibStub and LibStub("AceConfig-3.0", true)
 local AceConfigDialog = LibStub and LibStub("AceConfigDialog-3.0", true)
 local AceConfigRegistry = LibStub and LibStub("AceConfigRegistry-3.0", true)
+local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 
-if not (AceConfig and AceConfigDialog and AceConfigRegistry) then
+if not (AceConfig and AceConfigDialog and AceConfigRegistry and AceGUI) then
 	return
 end
 
 local _tr = Gatherer.Locale.Tr
 local _trC = Gatherer.Locale.TrClient
 local _trL = Gatherer.Locale.TrLocale
+local refreshCustomConfigFrame
 
 local GetSetting = function(key, default)
 	return Gatherer.Config.GetSetting(key, default)
@@ -26,6 +28,24 @@ end
 local SetSetting = function(key, value)
 	Gatherer.Config.SetSetting(key, value)
 	AceConfigRegistry:NotifyChange("GathererReforged")
+	if refreshCustomConfigFrame then
+		refreshCustomConfigFrame()
+	end
+end
+
+-- Formats locale strings containing %d / %0.1f / %% with the current setting value
+local function sliderLabel(localeKey, settingKey, defaultVal)
+	return function()
+		local val = tonumber(GetSetting(settingKey, defaultVal)) or defaultVal or 0
+		local raw = _trL(localeKey)
+		if type(raw) == "string" and raw:find("%%") then
+			local ok, formatted = pcall(string.format, raw, val)
+			if ok and formatted then
+				return formatted
+			end
+		end
+		return raw
+	end
 end
 
 -- Helper for RGB / RGBA string settings ("r,g,b" or "r,g,b,a")
@@ -200,7 +220,7 @@ local function buildOptionsTable()
 							},
 							count = {
 								type = "range",
-								name = _trL("CONFIG_WORLDMAP_MAX_NOTES"),
+								name = sliderLabel("CONFIG_WORLDMAP_MAX_NOTES", "mainmap.count", 600),
 								min = 10, max = 2500, step = 10,
 								order = 2,
 								get = function() return tonumber(GetSetting("mainmap.count", 600)) or 600 end,
@@ -208,7 +228,7 @@ local function buildOptionsTable()
 							},
 							opacity = {
 								type = "range",
-								name = _trL("CONFIG_WORLDMAP_NOTE_OPACITY"),
+								name = sliderLabel("CONFIG_WORLDMAP_NOTE_OPACITY", "mainmap.opacity", 80),
 								min = 10, max = 100, step = 2,
 								order = 3,
 								get = function() return tonumber(GetSetting("mainmap.opacity", 80)) or 80 end,
@@ -216,7 +236,7 @@ local function buildOptionsTable()
 							},
 							iconsize = {
 								type = "range",
-								name = _trL("CONFIG_WORLDMAP_ICON_SIZE"),
+								name = sliderLabel("CONFIG_WORLDMAP_ICON_SIZE", "mainmap.iconsize", 16),
 								min = 4, max = 64, step = 1,
 								order = 4,
 								get = function() return tonumber(GetSetting("mainmap.iconsize", 16)) or 16 end,
@@ -275,7 +295,7 @@ local function buildOptionsTable()
 							},
 							angle = {
 								type = "range",
-								name = _trL("CONFIG_MINIICON_ANGLE"),
+								name = sliderLabel("CONFIG_MINIICON_ANGLE", "miniicon.angle", 220),
 								min = 0, max = 360, step = 1,
 								order = 2,
 								get = function() return tonumber(GetSetting("miniicon.angle", 220)) or 220 end,
@@ -283,7 +303,7 @@ local function buildOptionsTable()
 							},
 							distance = {
 								type = "range",
-								name = _trL("CONFIG_MINIICON_DISTANCE"),
+								name = sliderLabel("CONFIG_MINIICON_DISTANCE", "miniicon.distance", 12),
 								min = -80, max = 80, step = 1,
 								order = 3,
 								get = function() return tonumber(GetSetting("miniicon.distance", 12)) or 12 end,
@@ -474,7 +494,7 @@ local function buildOptionsTable()
 							},
 							count = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_MAX_NOTES"),
+								name = sliderLabel("CONFIG_MINIMAP_MAX_NOTES", "minimap.count", 20),
 								min = 1, max = 50, step = 1,
 								order = 2,
 								get = function() return tonumber(GetSetting("minimap.count", 20)) or 20 end,
@@ -482,7 +502,7 @@ local function buildOptionsTable()
 							},
 							opacity = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_NOTE_OPACITY"),
+								name = sliderLabel("CONFIG_MINIMAP_NOTE_OPACITY", "minimap.opacity", 80),
 								min = 0, max = 100, step = 1,
 								order = 3,
 								get = function() return tonumber(GetSetting("minimap.opacity", 80)) or 80 end,
@@ -490,7 +510,7 @@ local function buildOptionsTable()
 							},
 							iconsize = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_ICON_SIZE"),
+								name = sliderLabel("CONFIG_MINIMAP_ICON_SIZE", "minimap.iconsize", 12),
 								min = 4, max = 64, step = 1,
 								order = 4,
 								get = function() return tonumber(GetSetting("minimap.iconsize", 12)) or 12 end,
@@ -498,7 +518,7 @@ local function buildOptionsTable()
 							},
 							distance = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_DISTANCE"),
+								name = sliderLabel("CONFIG_MINIMAP_DISTANCE", "minimap.distance", 800),
 								min = 100, max = 5000, step = 50,
 								order = 5,
 								get = function() return tonumber(GetSetting("minimap.distance", 800)) or 800 end,
@@ -565,7 +585,7 @@ local function buildOptionsTable()
 							},
 							fadeDist = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_FADE_DIST"),
+								name = sliderLabel("CONFIG_MINIMAP_FADE_DIST", "fade.distance", 500),
 								min = 10, max = 1000, step = 10,
 								order = 2,
 								get = function() return tonumber(GetSetting("fade.distance", 500)) or 500 end,
@@ -573,7 +593,7 @@ local function buildOptionsTable()
 							},
 							fadePercent = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_FADE_PERCENT"),
+								name = sliderLabel("CONFIG_MINIMAP_FADE_PERCENT", "fade.percent", 50),
 								min = 0, max = 100, step = 1,
 								order = 3,
 								get = function() return tonumber(GetSetting("fade.percent", 50)) or 50 end,
@@ -617,7 +637,7 @@ local function buildOptionsTable()
 							},
 							trackDist = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_TRACKING_DISTANCE"),
+								name = sliderLabel("CONFIG_MINIMAP_TRACKING_DISTANCE", "track.distance", 100),
 								min = 50, max = 150, step = 1,
 								order = 9,
 								get = function() return tonumber(GetSetting("track.distance", 100)) or 100 end,
@@ -625,7 +645,7 @@ local function buildOptionsTable()
 							},
 							trackOpacity = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_TRACKING_OPACITY"),
+								name = sliderLabel("CONFIG_MINIMAP_TRACKING_OPACITY", "track.opacity", 80),
 								min = 0, max = 100, step = 1,
 								order = 10,
 								get = function() return tonumber(GetSetting("track.opacity", 80)) or 80 end,
@@ -648,7 +668,7 @@ local function buildOptionsTable()
 							},
 							inspectDist = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_INSPECT_DIST"),
+								name = sliderLabel("CONFIG_MINIMAP_INSPECT_DIST", "inspect.distance", 25),
 								min = 1, max = 100, step = 1,
 								order = 13,
 								get = function() return tonumber(GetSetting("inspect.distance", 25)) or 25 end,
@@ -656,7 +676,7 @@ local function buildOptionsTable()
 							},
 							inspectPercent = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_INSPECT_FADING"),
+								name = sliderLabel("CONFIG_MINIMAP_INSPECT_FADING", "inspect.percent", 80),
 								min = 0, max = 100, step = 1,
 								order = 14,
 								get = function() return tonumber(GetSetting("inspect.percent", 80)) or 80 end,
@@ -664,7 +684,7 @@ local function buildOptionsTable()
 							},
 							inspectTime = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_INSPECT_TIMEOUT"),
+								name = sliderLabel("CONFIG_MINIMAP_INSPECT_TIMEOUT", "inspect.time", 120),
 								min = 10, max = 900, step = 10,
 								order = 15,
 								get = function() return tonumber(GetSetting("inspect.time", 120)) or 120 end,
@@ -687,7 +707,7 @@ local function buildOptionsTable()
 							},
 							anonOpacity = {
 								type = "range",
-								name = _trL("CONFIG_MINIMAP_ANON_OPACITY"),
+								name = sliderLabel("CONFIG_MINIMAP_ANON_OPACITY", "anon.opacity", 60),
 								min = 0, max = 100, step = 1,
 								order = 18,
 								get = function() return tonumber(GetSetting("anon.opacity", 60)) or 60 end,
@@ -738,7 +758,7 @@ local function buildOptionsTable()
 					},
 					count = {
 						type = "range",
-						name = _trL("CONFIG_ARCH_MAX_NOTES"),
+						name = sliderLabel("CONFIG_ARCH_MAX_NOTES", "arch.minimap.count", 20),
 						min = 1, max = 50, step = 1,
 						order = 3,
 						get = function() return tonumber(GetSetting("arch.minimap.count", 20)) or 20 end,
@@ -964,7 +984,7 @@ local function buildOptionsTable()
 							},
 							radius = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.radius"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.radius", "plugin.gatherer_hud.radius", 500),
 								min = 25, max = 800, step = 25,
 								order = 2,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.radius", 500)) or 500 end,
@@ -972,7 +992,7 @@ local function buildOptionsTable()
 							},
 							iconsize = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.iconsize"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.iconsize", "plugin.gatherer_hud.iconsize", 40),
 								min = 5, max = 80, step = 1,
 								order = 3,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.iconsize", 40)) or 40 end,
@@ -980,7 +1000,7 @@ local function buildOptionsTable()
 							},
 							offsetH = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.offset.horizontal"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.offset.horizontal", "plugin.gatherer_hud.offset.horizontal", 0),
 								min = -800, max = 800, step = 10,
 								order = 4,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.offset.horizontal", 0)) or 0 end,
@@ -988,7 +1008,7 @@ local function buildOptionsTable()
 							},
 							offsetV = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.offset.vertical"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.offset.vertical", "plugin.gatherer_hud.offset.vertical", -200),
 								min = -800, max = 800, step = 10,
 								order = 5,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.offset.vertical", -200)) or -200 end,
@@ -996,7 +1016,7 @@ local function buildOptionsTable()
 							},
 							alpha = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.alpha"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.alpha", "plugin.gatherer_hud.alpha", 70),
 								min = 1, max = 100, step = 1,
 								order = 6,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.alpha", 70)) or 70 end,
@@ -1004,7 +1024,7 @@ local function buildOptionsTable()
 							},
 							yards = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.yards"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.yards", "plugin.gatherer_hud.yards", 1200),
 								min = 100, max = 2000, step = 100,
 								order = 7,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.yards", 1200)) or 1200 end,
@@ -1012,7 +1032,7 @@ local function buildOptionsTable()
 							},
 							fade = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.fade"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.fade", "plugin.gatherer_hud.fade", 45),
 								min = 1, max = 100, step = 1,
 								order = 8,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.fade", 45)) or 45 end,
@@ -1020,7 +1040,7 @@ local function buildOptionsTable()
 							},
 							angle = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.angle"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.angle", "plugin.gatherer_hud.angle", 40),
 								min = 1, max = 90, step = 1,
 								order = 9,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.angle", 40)) or 40 end,
@@ -1028,7 +1048,7 @@ local function buildOptionsTable()
 							},
 							perspective = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.perspective"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.perspective", "plugin.gatherer_hud.perspective", 10),
 								min = 2, max = 10, step = 0.1,
 								order = 10,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.perspective", 10)) or 10 end,
@@ -1036,7 +1056,7 @@ local function buildOptionsTable()
 							},
 							framerate = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.min_fullframerate"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.min_fullframerate", "plugin.gatherer_hud.min_fullframerate", 100),
 								min = 0, max = 100, step = 1,
 								order = 11,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.min_fullframerate", 100)) or 100 end,
@@ -1183,7 +1203,7 @@ local function buildOptionsTable()
 							},
 							partySize = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.party.size"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.party.size", "plugin.gatherer_hud.party.size", 40),
 								min = 5, max = 80, step = 1,
 								order = 9,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.party.size", 40)) or 40 end,
@@ -1191,7 +1211,7 @@ local function buildOptionsTable()
 							},
 							heatCooldown = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.heat.cooldown"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.heat.cooldown", "plugin.gatherer_hud.heat.cooldown", 600),
 								min = 10, max = 4800, step = 10,
 								order = 10,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.heat.cooldown", 600)) or 600 end,
@@ -1206,7 +1226,7 @@ local function buildOptionsTable()
 							},
 							heatSize = {
 								type = "range",
-								name = _trL("HUD_CONFIG_plugin.gatherer_hud.heat.size"),
+								name = sliderLabel("HUD_CONFIG_plugin.gatherer_hud.heat.size", "plugin.gatherer_hud.heat.size", 120),
 								min = 0, max = 300, step = 10,
 								order = 12,
 								get = function() return tonumber(GetSetting("plugin.gatherer_hud.heat.size", 120)) or 120 end,
@@ -1426,7 +1446,7 @@ local function buildOptionsTable()
 							},
 							time = {
 								type = "range",
-								name = _trL("CONFIG_COOLDOWN_TIME"),
+								name = sliderLabel("CONFIG_COOLDOWN_TIME", "cooldown.time", 300),
 								min = 30, max = 1200, step = 15,
 								order = 2,
 								get = function() return tonumber(GetSetting("cooldown.time", 300)) or 300 end,
@@ -1434,7 +1454,7 @@ local function buildOptionsTable()
 							},
 							opacity = {
 								type = "range",
-								name = _trL("CONFIG_COOLDOWN_OPACITY"),
+								name = sliderLabel("CONFIG_COOLDOWN_OPACITY", "cooldown.opacity", 35),
 								min = 10, max = 90, step = 5,
 								order = 3,
 								get = function() return tonumber(GetSetting("cooldown.opacity", 35)) or 35 end,
@@ -1502,10 +1522,270 @@ local function ensureRegistered()
 	end)
 end
 
--- Override Gatherer.Config Show / Hide / ToggleOptions to use AceConfigDialog-3.0
+--------------------------------------------------------------------------------
+-- Modern Dark-Gold Standalone Options Window (GathererConfigFrame)
+--------------------------------------------------------------------------------
+local configFrame = nil
+local hostGroup = nil
+local activeCategory = "general"
+
+local CONFIG_SECTIONS = {
+	{ key = "general",      icon = 134269, label = function() return _trL("CONFIG_SECTION_GENERAL") end },
+	{ key = "minimap",      icon = 134437, label = function() return _trL("CONFIG_SECTION_MINIMAP") end },
+	{ key = "mining",       icon = 136248, label = function() return _trL("TRADE_MINING") end },
+	{ key = "herbalism",    icon = 136065, label = function() return _trL("TRADE_HERBALISM") end },
+	{ key = "treasure",     icon = 132594, label = function() return _trL("CONFIG_SECTION_OPEN") end },
+	{ key = "archaeology",  icon = 134435, label = function() return _trL("PROFESSIONS_ARCHAEOLOGY") end },
+	{ key = "sharing",      icon = 133464, label = function() return _trL("CONFIG_SECTION_SHARING") end },
+	{ key = "hud",          icon = 135769, label = function() return "HUD" end },
+	{ key = "integrations", icon = 132596, label = function() return _trL("CONFIG_SECTION_INTEGRATIONS") end },
+	{ key = "profiles",     icon = 134332, label = function() return _trL("CONFIG_SECTION_PROFILES") end },
+	{ key = "about",        icon = 133738, label = function() return _trL("CONFIG_SECTION_ABOUT") end },
+}
+
+local function styleAceWidgetsRecursive(widget)
+	if not widget then return end
+	local UIStyle = Gatherer.UIStyle
+	if UIStyle and widget.type == "InlineGroup" and widget.border then
+		UIStyle.ApplyBox(widget.border, 0.10, 0.12, 0.16, 0.92, 0.22, 0.26, 0.34, 1)
+		if widget.titletext then
+			widget.titletext:SetTextColor(0.95, 0.80, 0.28)
+		end
+	end
+	if type(widget.children) == "table" then
+		for _, child in ipairs(widget.children) do
+			styleAceWidgetsRecursive(child)
+		end
+	end
+end
+
+local function renderActiveCategory()
+	if not configFrame or not configFrame:IsShown() or not hostGroup then return end
+	ensureRegistered()
+
+	for _, sec in ipairs(CONFIG_SECTIONS) do
+		local btn = configFrame.NavButtons[sec.key]
+		if btn then
+			local isSelected = (sec.key == activeCategory)
+			btn.isSelected = isSelected
+			btn:UpdateVisual(false)
+			if isSelected then
+				configFrame.Content.HeaderIcon:SetTexture(sec.icon)
+				configFrame.Content.HeaderTitle:SetText(sec.label())
+			end
+		end
+	end
+
+	if configFrame.ProfileBadge then
+		configFrame.ProfileBadge:SetText("|cff778292" .. _trL("CONFIG_SECTION_PROFILES") .. ":|r |cffffd200" .. tostring(GetSetting("profile") or "Default") .. "|r")
+	end
+
+	AceConfigDialog:Open("GathererReforged", hostGroup, activeCategory)
+	styleAceWidgetsRecursive(hostGroup)
+end
+
+refreshCustomConfigFrame = function()
+	if configFrame and configFrame:IsShown() then
+		renderActiveCategory()
+	end
+end
+
+local function ensureConfigFrame()
+	if configFrame then return configFrame end
+	local UIStyle = Gatherer.UIStyle
+	if not UIStyle then return nil end
+
+	local frame = CreateFrame("Frame", "GathererConfigFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+	frame:Hide()
+	frame:SetSize(960, 620)
+	frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+	frame:SetFrameStrata("DIALOG")
+	frame:SetToplevel(true)
+	frame:SetMovable(true)
+	frame:SetClampedToScreen(true)
+	frame:EnableMouse(true)
+	UIStyle.ApplyBox(frame, 0.07, 0.08, 0.11, 0.97, 0.26, 0.30, 0.38, 1)
+	table.insert(UISpecialFrames, "GathererConfigFrame")
+
+	-- 1. Top Header Bar
+	frame.Header = UIStyle.CreateHeader(
+		frame,
+		"Gatherer Reforged  |cff667080—|r  |cffffffff" .. _tr("LABEL_CONFIG") .. "|r",
+		133939,
+		function() Gatherer.Config.Hide() end
+	)
+	frame.Header.Badge:SetText("|cff00ff96v" .. tostring(Gatherer.Var.Version or "1.0.0") .. "|r")
+
+	-- 2. Bottom Footer Bar
+	frame.Footer = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
+	frame.Footer:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 10)
+	frame.Footer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 10)
+	frame.Footer:SetHeight(36)
+	UIStyle.ApplyBox(frame.Footer, 0.10, 0.12, 0.15, 1, 0.20, 0.23, 0.29, 1)
+
+	frame.ReportBtn = UIStyle.CreateButton(frame.Footer, 165, 24, _tr("LABEL_REPORT"), "default", 134327)
+	frame.ReportBtn:SetPoint("LEFT", frame.Footer, "LEFT", 8, 0)
+	frame.ReportBtn:SetScript("OnClick", function()
+		Gatherer.Config.Hide()
+		if Gatherer.Report and Gatherer.Report.Show then
+			Gatherer.Report.Show()
+		end
+	end)
+
+	frame.SearchBtn = UIStyle.CreateButton(frame.Footer, 165, 24, _tr("LABEL_DENSITY_REPORT"), "default", 134436)
+	frame.SearchBtn:SetPoint("LEFT", frame.ReportBtn, "RIGHT", 8, 0)
+	frame.SearchBtn:SetScript("OnClick", function()
+		Gatherer.Config.Hide()
+		if Gatherer.NodeSearch and Gatherer.NodeSearch.Show then
+			Gatherer.NodeSearch.Show()
+		end
+	end)
+
+	frame.ProfileBadge = frame.Footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	frame.ProfileBadge:SetPoint("LEFT", frame.SearchBtn, "RIGHT", 18, 0)
+
+	frame.DoneBtn = UIStyle.CreateButton(frame.Footer, 100, 24, _tr("DONE"), "primary")
+	frame.DoneBtn:SetPoint("RIGHT", frame.Footer, "RIGHT", -8, 0)
+	frame.DoneBtn:SetScript("OnClick", function() Gatherer.Config.Hide() end)
+
+	-- 3. Left Vertical Category Sidebar
+	frame.Sidebar = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
+	frame.Sidebar:SetPoint("TOPLEFT", frame.Header, "BOTTOMLEFT", 10, -8)
+	frame.Sidebar:SetPoint("BOTTOMLEFT", frame.Footer, "TOPLEFT", 0, 8)
+	frame.Sidebar:SetWidth(210)
+	UIStyle.ApplyBox(frame.Sidebar, 0.09, 0.11, 0.14, 1, 0.22, 0.25, 0.32, 1)
+
+	local navTitle = frame.Sidebar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	navTitle:SetPoint("TOPLEFT", frame.Sidebar, "TOPLEFT", 12, -12)
+	navTitle:SetText(_trL("CONFIG_SECTION_HEADER_CORE"))
+	navTitle:SetTextColor(0.92, 0.78, 0.28)
+
+	local navDiv = frame.Sidebar:CreateTexture(nil, "ARTWORK")
+	navDiv:SetPoint("TOPLEFT", navTitle, "BOTTOMLEFT", 0, -4)
+	navDiv:SetPoint("RIGHT", frame.Sidebar, "RIGHT", -12, 0)
+	navDiv:SetHeight(1)
+	navDiv:SetColorTexture(0.22, 0.25, 0.32, 1)
+
+	frame.NavButtons = {}
+	local prevBtn = nil
+	for _, sec in ipairs(CONFIG_SECTIONS) do
+		local nBtn = CreateFrame("Button", nil, frame.Sidebar, BackdropTemplateMixin and "BackdropTemplate" or nil)
+		nBtn:SetHeight(32)
+		if not prevBtn then
+			nBtn:SetPoint("TOPLEFT", frame.Sidebar, "TOPLEFT", 8, -36)
+			nBtn:SetPoint("TOPRIGHT", frame.Sidebar, "TOPRIGHT", -8, -36)
+		else
+			nBtn:SetPoint("TOPLEFT", prevBtn, "BOTTOMLEFT", 0, -4)
+			nBtn:SetPoint("TOPRIGHT", prevBtn, "BOTTOMRIGHT", 0, -4)
+		end
+		prevBtn = nBtn
+
+		local markBar = nBtn:CreateTexture(nil, "OVERLAY")
+		markBar:SetPoint("TOPLEFT", nBtn, "TOPLEFT", 1, -1)
+		markBar:SetPoint("BOTTOMLEFT", nBtn, "BOTTOMLEFT", 1, 1)
+		markBar:SetWidth(3)
+		markBar:SetColorTexture(0.95, 0.78, 0.20, 1)
+		nBtn.MarkBar = markBar
+
+		local ic = nBtn:CreateTexture(nil, "ARTWORK")
+		ic:SetSize(16, 16)
+		ic:SetPoint("LEFT", nBtn, "LEFT", 12, 0)
+		ic:SetTexture(sec.icon)
+		ic:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+		nBtn.Icon = ic
+
+		local lbl = nBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		lbl:SetPoint("LEFT", ic, "RIGHT", 9, 0)
+		lbl:SetPoint("RIGHT", nBtn, "RIGHT", -6, 0)
+		lbl:SetJustifyH("LEFT")
+		lbl:SetText(sec.label())
+		nBtn.Label = lbl
+
+		function nBtn:UpdateVisual(hovered)
+			if self.isSelected then
+				UIStyle.ApplyBox(self, 0.24, 0.20, 0.09, 0.98, 0.85, 0.68, 0.18, 1)
+				self.Label:SetTextColor(1, 0.88, 0.30)
+				self.MarkBar:Show()
+			elseif hovered then
+				UIStyle.ApplyBox(self, 0.16, 0.20, 0.27, 0.95, 0.38, 0.44, 0.56, 1)
+				self.Label:SetTextColor(1, 1, 1)
+				self.MarkBar:Hide()
+			else
+				UIStyle.ApplyBox(self, 0.12, 0.14, 0.18, 0.90, 0.18, 0.21, 0.27, 1)
+				self.Label:SetTextColor(0.78, 0.82, 0.88)
+				self.MarkBar:Hide()
+			end
+		end
+
+		nBtn:SetScript("OnEnter", function(self) self:UpdateVisual(true) end)
+		nBtn:SetScript("OnLeave", function(self) self:UpdateVisual(false) end)
+		nBtn:SetScript("OnClick", function()
+			activeCategory = sec.key
+			renderActiveCategory()
+		end)
+
+		frame.NavButtons[sec.key] = nBtn
+	end
+
+	-- 4. Right Content Area
+	frame.Content = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
+	frame.Content:SetPoint("TOPLEFT", frame.Sidebar, "TOPRIGHT", 10, 0)
+	frame.Content:SetPoint("BOTTOMRIGHT", frame.Footer, "TOPRIGHT", 0, 8)
+	UIStyle.ApplyBox(frame.Content, 0.08, 0.09, 0.12, 1, 0.22, 0.25, 0.32, 1)
+
+	frame.Content.Header = CreateFrame("Frame", nil, frame.Content, BackdropTemplateMixin and "BackdropTemplate" or nil)
+	frame.Content.Header:SetPoint("TOPLEFT", frame.Content, "TOPLEFT", 1, -1)
+	frame.Content.Header:SetPoint("TOPRIGHT", frame.Content, "TOPRIGHT", -1, -1)
+	frame.Content.Header:SetHeight(32)
+	UIStyle.ApplyBox(frame.Content.Header, 0.12, 0.14, 0.19, 1, 0.22, 0.25, 0.32, 1)
+
+	local hIcon = frame.Content.Header:CreateTexture(nil, "ARTWORK")
+	hIcon:SetSize(18, 18)
+	hIcon:SetPoint("LEFT", frame.Content.Header, "LEFT", 12, 0)
+	hIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	frame.Content.HeaderIcon = hIcon
+
+	local hTitle = frame.Content.Header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	hTitle:SetPoint("LEFT", hIcon, "RIGHT", 8, 0)
+	hTitle:SetTextColor(1, 0.85, 0.25)
+	frame.Content.HeaderTitle = hTitle
+
+	frame.Content.Host = CreateFrame("Frame", nil, frame.Content)
+	frame.Content.Host:SetPoint("TOPLEFT", frame.Content.Header, "BOTTOMLEFT", 10, -8)
+	frame.Content.Host:SetPoint("BOTTOMRIGHT", frame.Content, "BOTTOMRIGHT", -10, 10)
+
+	hostGroup = AceGUI:Create("SimpleGroup")
+	hostGroup.type = "GathererOptionsContainer"
+	hostGroup:SetLayout("Fill")
+	hostGroup.frame:SetParent(frame.Content.Host)
+	hostGroup.frame:ClearAllPoints()
+	hostGroup.frame:SetAllPoints(frame.Content.Host)
+	hostGroup.frame:Show()
+
+	frame:SetScript("OnShow", function()
+		renderActiveCategory()
+	end)
+
+	configFrame = frame
+	return configFrame
+end
+
+-- Override Gatherer.Config Show / Hide / ToggleOptions to use our Modern Dark-Gold Window
 function Gatherer.Config.Show()
 	ensureRegistered()
-	AceConfigDialog:Open("GathererReforged")
+	if Gatherer.Report and Gatherer.Report.Hide then
+		Gatherer.Report.Hide()
+	end
+	if Gatherer.NodeSearch and Gatherer.NodeSearch.Hide then
+		Gatherer.NodeSearch.Hide()
+	end
+	local frame = ensureConfigFrame()
+	if frame then
+		frame:Show()
+		renderActiveCategory()
+	else
+		AceConfigDialog:Open("GathererReforged")
+	end
 end
 
 function Gatherer.Config.ShowOptions()
@@ -1513,6 +1793,9 @@ function Gatherer.Config.ShowOptions()
 end
 
 function Gatherer.Config.Hide()
+	if configFrame and configFrame:IsShown() then
+		configFrame:Hide()
+	end
 	if registered then
 		AceConfigDialog:Close("GathererReforged")
 	end
@@ -1524,7 +1807,14 @@ end
 
 function Gatherer.Config.ToggleOptions()
 	ensureRegistered()
-	if AceConfigDialog.OpenFrames and AceConfigDialog.OpenFrames["GathererReforged"] then
+	local frame = ensureConfigFrame()
+	if frame then
+		if frame:IsShown() then
+			Gatherer.Config.Hide()
+		else
+			Gatherer.Config.Show()
+		end
+	elseif AceConfigDialog.OpenFrames and AceConfigDialog.OpenFrames["GathererReforged"] then
 		AceConfigDialog:Close("GathererReforged")
 	else
 		AceConfigDialog:Open("GathererReforged")
