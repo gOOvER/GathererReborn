@@ -2985,6 +2985,7 @@ Gatherer.Nodes.PrimaryItems = {
 	[2040] = 3858, -- Mithril Deposit
 	[2047] = 7911, -- Truesilver Deposit
 	[2653] = 4278, -- Lesser Bloodstone Deposit
+	[19903] = 5833, -- Indurium Mineral Vein
 	[73940] = 2775, -- Ooze Covered Silver Vein
 	[73941] = 2776, -- Ooze Covered Gold Vein
 	[123309] = 7911, -- Ooze Covered Truesilver Deposit
@@ -3071,22 +3072,197 @@ Gatherer.Nodes.PrimaryItems = {
 	[269278] = 124105, -- Fel-encrusted Herb
 	[269887] = 124105, -- Fel-encrusted Herb Cluster
 	[272782] = 151565, -- Astral Glory
+	-- WoW Forever Custom Ores & Herbs primary items for icon lookup
+	[890201] = 2772, -- Cold Iron Deposit -> Iron Ore icon
+	[890202] = 2776, -- Fool's Gold Vein -> Gold Ore icon
+	[890203] = 7911, -- Starsilver Vein -> Truesilver Ore icon
+	[890204] = 3858, -- Greater Moonstone Formation -> Mithril Ore icon
+	[890205] = 10620, -- Heavy Thorium Vein -> Thorium Ore icon
+	[890206] = 2775, -- Moonstone Formation -> Silver Ore icon
+	[890207] = 2776, -- Chunk of Amber -> Gold Ore icon
+	[890401] = 3369, -- Nightmare Moss -> Grave Moss icon
+	[890402] = 3357, -- Dreamroot -> Liferoot icon
+	[890403] = 2449, -- Moonroot -> Earthroot icon
+	[890404] = 8831, -- Star Lotus -> Purple Lotus icon
+	[890405] = 22785, -- Doom Weed -> Felweed icon
+	[890406] = 8839, -- Gloom Weed -> Blindweed icon
 }
 
 -- Dynamic "Forever" Node Discovery & Modern Expansion Nodes (BfA, SL, DF, TWW, Midnight+)
 do
+	-- Classic & WoW Forever pre-Cataclysm localized node name aliases across all locales
+	local classicAliases = {
+		deDE = {
+			["Kupfervorkommen"] = 1731,
+			["Mageres Kupfervorkommen"] = 1731,
+			["Zinnvorkommen"] = 1732,
+			["Mageres Zinnvorkommen"] = 1732,
+			["Silbervorkommen"] = 1733,
+			["Mageres Silbervorkommen"] = 1733,
+			["Goldvorkommen"] = 1734,
+			["Mageres Goldvorkommen"] = 1734,
+			["Mageres Eisenvorkommen"] = 1735,
+			["Mageres Mithrilvorkommen"] = 2040,
+			["Mageres Echtsilbervorkommen"] = 2047,
+			["Kleines Thoriumvorkommen"] = 324,
+			["Mageres Thoriumvorkommen"] = 324,
+			["Reiches Thoriumvorkommen"] = 175404,
+			["Brühschlammbedecktes Thoriumvorkommen"] = 123848,
+			["Brühschlammbedecktes reiches Thoriumvorkommen"] = 177388,
+			["Induriummineralvorkommen"] = 19903,
+			["Winterbiss"] = 2044,
+			["Pestblüte"] = 176587,
+			["Arthas’ Tränen"] = 142141,
+			["Große Dunkelholztruhe"] = 131979,
+			["Blutblütensprösslinge"] = 164958,
+			["Verbeulte Truhe"] = 2843,
+			["Kalteisenvorkommen"] = 890201,
+			["Kalteisenablagerung"] = 890201,
+			["Katzengoldvorkommen"] = 890202,
+			["Katzengoldader"] = 890202,
+			["Narrengoldvorkommen"] = 890202,
+			["Sternensilbervorkommen"] = 890203,
+			["Sternensilberader"] = 890203,
+			["Große Mondsteinformation"] = 890204,
+			["Schweres Thoriumvorkommen"] = 890205,
+			["Schwere Thoriumader"] = 890205,
+			["Mondsteinformation"] = 890206,
+			["Bernsteinbrocken"] = 890207,
+			["Alptraummoos"] = 890401,
+			["Albtraummoos"] = 890401,
+			["Traumwurz"] = 890402,
+			["Traumwurzel"] = 890402,
+			["Mondwurz"] = 890403,
+			["Mondwurzel"] = 890403,
+			["Sternenlotus"] = 890404,
+			["Verdammniskraut"] = 890405,
+			["Düsterkraut"] = 890406,
+		},
+		enUS = {
+			["Wintersbite"] = 2044,
+			["Plaguebloom"] = 176587,
+			["Indurium Mineral Vein"] = 19903,
+			["Large Darkwood Chest"] = 131979,
+			["Sparse Copper Vein"] = 1731,
+			["Meager Copper Vein"] = 1731,
+		},
+		esES = {
+			["Filón de mitril cubierto de moco"] = 123310,
+			["Filón de veraplata cubierta de moco"] = 123309,
+			["Depósito de Hierro negro"] = 165658,
+			["Filón de mineral de incendicita"] = 1610,
+			["Filón de mineral de indurio"] = 19903,
+			["Vibrisa de Khadgar"] = 2043,
+			["Ivernalia"] = 2044,
+			["Flor de plaga"] = 176587,
+			["Flor de peste"] = 176587,
+			["Cofre maltrecho grande"] = 75293,
+			["Cofre grande de Leñoscuro"] = 131979,
+		},
+		esMX = {
+			["Filón de mitril cubierto de moco"] = 123310,
+			["Filón de veraplata cubierta de moco"] = 123309,
+			["Depósito de Hierro negro"] = 165658,
+			["Filón de mineral de incendicita"] = 1610,
+			["Filón de mineral de indurio"] = 19903,
+			["Vibrisa de Khadgar"] = 2043,
+			["Ivernalia"] = 2044,
+			["Flor de plaga"] = 176587,
+			["Flor de peste"] = 176587,
+			["Cofre maltrecho grande"] = 75293,
+			["Cofre grande de Leñoscuro"] = 131979,
+		},
+		frFR = {
+			["Filon d'indurium"] = 19903,
+			["Eglantine"] = 1621,
+			["Etouffante"] = 2045,
+			["Hivernale"] = 2044,
+			["Fleur de peste"] = 176587,
+			["Grand coffre de sombrebois"] = 131979,
+			["Pousse de Pétale-de-sang"] = 164958,
+		},
+		itIT = {
+			["Vena di Incendicite"] = 1610,
+			["Grossa Cassa di Legnoscuro"] = 131979,
+			["Sbocciapiaga"] = 176587,
+		},
+		koKR = {
+			["발연 광석 광맥"] = 1610,
+			["인듀리움 광맥"] = 19903,
+			["은엽수 덤불"] = 1617,
+			["겨울서리풀"] = 2044,
+			["역병초"] = 176587,
+			["대합"] = 2744,
+			["낡은 대형 궤짝"] = 75293,
+			["붉은꽃잎 씨앗"] = 164958,
+			["연습용 숙련 자물쇠"] = 178244,
+		},
+		ptBR = {
+			["Mineral Indurio"] = 19903,
+			["Bigode-de-hadgar"] = 2043,
+			["Wintersbite"] = 2044,
+			["Plaguebloom"] = 176587,
+			["Baú de Lenhanegra Grande"] = 131979,
+		},
+		ruRU = {
+			["Покрытая слизью серебрянная жила"] = 73940,
+			["Индарилиевая жила"] = 19903,
+			["Морозник"] = 2044,
+			["Чумоцвет"] = 176587,
+			["Большой сундук Темного Леса"] = 131979,
+		},
+		zhCN = {
+			["铜矿"] = 1731,
+			["锡矿"] = 1732,
+			["铁矿石"] = 1735,
+			["银矿"] = 1733,
+			["金矿石"] = 1734,
+			["真银矿石"] = 2047,
+			["瑟银矿脉"] = 324,
+			["富瑟银矿"] = 175404,
+			["精铁矿脉"] = 19903,
+			["冬刺草"] = 2044,
+			["瘟疫花"] = 176587,
+			["大型黑木箱"] = 131979,
+		},
+		zhTW = {
+			["精鐵礦脈"] = 19903,
+			["冬刺草"] = 2044,
+			["瘟疫花"] = 176587,
+			["大型黑木箱"] = 131979,
+		},
+	}
+
+	local function applyAliases(aliasTable)
+		if not aliasTable then return end
+		for name, id in pairs(aliasTable) do
+			if not Gatherer.Nodes.Names[name] then
+				Gatherer.Nodes.Names[name] = id
+			end
+		end
+	end
+	applyAliases(classicAliases.enUS)
+	applyAliases(classicAliases[region])
+
 	local lowerNames = {}
-	local herbLowerNames = {}
+	local partialLowerNames = {}
 	local partialCache = {}
+
+	local function stripMarkup(str)
+		if type(str) ~= "string" then return "" end
+		str = str:gsub("|A.-|a", ""):gsub("|T.-|t", ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+		return str:match("^%s*(.-)%s*$") or ""
+	end
 
 	local function indexNodeName(name, objId, gType)
 		if type(name) ~= "string" or name == "" or not objId then return end
-		local low = name:lower()
+		local low = stripMarkup(name):lower()
+		if low == "" then return end
 		if not lowerNames[low] then
 			lowerNames[low] = objId
 		end
-		if gType == "HERB" and #low >= 6 then
-			herbLowerNames[low] = objId
+		if (gType == "HERB" or gType == "MINE") and #low >= 6 then
+			partialLowerNames[low] = objId
 		end
 	end
 
@@ -3135,13 +3311,17 @@ do
 		return 900000 + h
 	end
 
-	-- Resolves a node name by exact match, case-insensitive match, or partial herb variant match (e.g. "Wilted Peacebloom")
+	-- Resolves a node name by exact match, case-insensitive match, or partial herb/ore variant match (e.g. "Mageres Kupfervorkommen", "Wilted Peacebloom")
 	function Gatherer.Nodes.ResolveNodeByName(nodeName)
 		if type(nodeName) ~= "string" or nodeName == "" then return nil end
 		local direct = Gatherer.Nodes.Names[nodeName]
 		if direct then return direct end
 
-		local low = nodeName:lower()
+		local cleaned = stripMarkup(nodeName)
+		if cleaned == "" then return nil end
+		if Gatherer.Nodes.Names[cleaned] then return Gatherer.Nodes.Names[cleaned] end
+
+		local low = cleaned:lower()
 		if lowerNames[low] then return lowerNames[low] end
 
 		if partialCache[low] ~= nil then
@@ -3150,14 +3330,14 @@ do
 
 		local bestId, bestLen = false, 0
 		if not low:find("[%d:/]") then
-			for herbLow, id in pairs(herbLowerNames) do
-				if #herbLow > bestLen and low:find(herbLow, 1, true) then
-					-- Ensure the herb name matches at a word boundary or end of string (e.g. "Wilted Peacebloom")
-					local s, e = low:find(herbLow, 1, true)
+			for nodeLow, id in pairs(partialLowerNames) do
+				if #nodeLow > bestLen and low:find(nodeLow, 1, true) then
+					-- Ensure the node name matches at a word boundary or end of string (e.g. "Mageres Kupfervorkommen", "Wilted Peacebloom")
+					local s, e = low:find(nodeLow, 1, true)
 					local prevChar = (s and s > 1) and low:sub(s - 1, s - 1) or " "
 					local nextChar = (e and e < #low) and low:sub(e + 1, e + 1) or " "
 					if prevChar == " " or prevChar == "-" or nextChar == " " then
-						bestId, bestLen = id, #herbLow
+						bestId, bestLen = id, #nodeLow
 					end
 				end
 			end
@@ -3168,7 +3348,12 @@ do
 
 	function Gatherer.Nodes.RegisterDynamicNode(nodeName, gType, primaryItemID, explicitID)
 		if not nodeName or nodeName == "" or not gType then return nil end
-		local existing = Gatherer.Nodes.Names[nodeName] or lowerNames[nodeName:lower()]
+		nodeName = stripMarkup(nodeName)
+		if nodeName == "" then return nil end
+
+		local existing = Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(nodeName)
+			or Gatherer.Nodes.Names[nodeName]
+			or lowerNames[nodeName:lower()]
 		if existing then
 			if not Gatherer.Nodes.Names[nodeName] then
 				Gatherer.Nodes.Names[nodeName] = existing
@@ -3177,6 +3362,11 @@ do
 				Gatherer.Nodes.PrimaryItems[existing] = primaryItemID
 			end
 			return existing
+		end
+
+		-- Never dynamically register unknown "OPEN" world objects (e.g. quest objects/crates) unless explicitly imported
+		if not explicitID and gType ~= "HERB" and gType ~= "MINE" then
+			return nil
 		end
 
 		local objId = explicitID or hashNodeName(nodeName)
@@ -3202,8 +3392,8 @@ do
 			Gatherer.Util.RegisterDynamicNodeName(objId, nodeName)
 		end
 
-		Gatherer_DynamicNodes = Gatherer_DynamicNodes or { version = 2 }
-		Gatherer_DynamicNodes.version = 2
+		Gatherer_DynamicNodes = Gatherer_DynamicNodes or { version = 3 }
+		Gatherer_DynamicNodes.version = 3
 		Gatherer_DynamicNodes.dynamicNodes = Gatherer_DynamicNodes.dynamicNodes or {}
 		Gatherer_DynamicNodes.dynamicNodes[nodeName] = {
 			id = objId,
@@ -3214,14 +3404,19 @@ do
 	end
 
 	function Gatherer.Nodes.LoadDynamicNodes()
-		if Gatherer_DynamicNodes and Gatherer_DynamicNodes.version ~= 2 then
-			-- Reset contaminated pre-v2 dynamic entries (e.g. mob corpses recorded before GUID filtering)
-			Gatherer_DynamicNodes = { version = 2, dynamicNodes = {} }
+		if Gatherer_DynamicNodes and Gatherer_DynamicNodes.version ~= 3 then
+			-- Reset contaminated pre-v3 dynamic entries (e.g. mob corpses, quest objects, or unaliased classic veins)
+			Gatherer_DynamicNodes = { version = 3, dynamicNodes = {} }
 		end
 		if Gatherer_DynamicNodes and type(Gatherer_DynamicNodes.dynamicNodes) == "table" then
 			for nodeName, info in pairs(Gatherer_DynamicNodes.dynamicNodes) do
 				if type(info) == "table" and info.id and info.gType then
-					Gatherer.Nodes.RegisterDynamicNode(nodeName, info.gType, info.item, info.id)
+					local builtin = Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(nodeName)
+					if builtin and builtin < 900000 then
+						Gatherer_DynamicNodes.dynamicNodes[nodeName] = nil
+					else
+						Gatherer.Nodes.RegisterDynamicNode(nodeName, info.gType, info.item, info.id)
+					end
 				end
 			end
 		end

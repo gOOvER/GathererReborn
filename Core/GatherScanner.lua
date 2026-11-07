@@ -117,6 +117,12 @@ local function detectGatherTypeFromTooltip()
 	return detectedType, isRedRequirement
 end
 
+local function cleanTooltipLine(text)
+	if not isSafeString(text) then return nil end
+	text = text:gsub("|A.-|a", ""):gsub("|T.-|t", ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+	return text:match("^%s*(.-)%s*$")
+end
+
 function Scanner.SetTooltip()
 	pcall(function()
 		if not GameTooltip or not GameTooltip:IsShown() then return end
@@ -133,7 +139,7 @@ function Scanner.SetTooltip()
 
 		local line1 = _G["GameTooltipTextLeft1"]
 		if not line1 then return end
-		local text = line1:GetText()
+		local text = cleanTooltipLine(line1:GetText())
 		if isSafeString(text) then
 			local knownObjId = Gatherer and Gatherer.Nodes and (
 				(Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(text))
@@ -145,7 +151,7 @@ function Scanner.SetTooltip()
 			lastTip.time = GetTime()
 			lastTip.gType = tipType or knownType
 			lastTip.isRedReq = isRedReq
-			if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[text] and tipType and Gatherer.Nodes.RegisterDynamicNode then
+			if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[text] and (tipType == "HERB" or tipType == "MINE") and Gatherer.Nodes.RegisterDynamicNode then
 				Gatherer.Nodes.RegisterDynamicNode(text, tipType, nil, knownObjId)
 			end
 		end
@@ -193,6 +199,7 @@ local lastUnskilledObj = nil
 local lastUnskilledTime = 0
 
 function Scanner.RecordUnskilledGather(tipName, fallbackGType)
+	tipName = cleanTooltipLine(tipName)
 	if not isSafeString(tipName) then return false end
 	if UnitOnTaxi and UnitOnTaxi("player") then return false end
 	if UnitIsDeadOrGhost and UnitIsDeadOrGhost("player") then return false end
@@ -200,7 +207,14 @@ function Scanner.RecordUnskilledGather(tipName, fallbackGType)
 
 	local objId = (Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(tipName))
 		or Gatherer.Nodes.Names[tipName]
-	local gType = (objId and Gatherer.Nodes.Objects[objId]) or fallbackGType or lastTip.gType
+	local objGType = objId and Gatherer.Nodes.Objects[objId]
+
+	-- Never record a stale HERB tooltip when a MINE error fired (or vice-versa)
+	if fallbackGType and objGType and objGType ~= fallbackGType then
+		return false
+	end
+
+	local gType = objGType or fallbackGType or lastTip.gType
 	if not objId and (gType == "HERB" or gType == "MINE") and Gatherer.Nodes.RegisterDynamicNode then
 		objId = Gatherer.Nodes.RegisterDynamicNode(tipName, gType)
 	elseif objId and not Gatherer.Nodes.Names[tipName] then
@@ -221,11 +235,8 @@ function Scanner.RecordUnskilledGather(tipName, fallbackGType)
 end
 
 function Scanner.GetLastTip()
-	if lastTip.tip and (GetTime() - (lastTip.time or 0)) < 15 then
+	if lastTip.tip and (GetTime() - (lastTip.time or 0)) < 2.0 then
 		return lastTip
-	end
-	if lastCast.target and (GetTime() - (lastCast.time or 0)) < 15 then
-		return { tip = lastCast.target, time = lastCast.time, gType = lastCast.gType }
 	end
 	return nil
 end
@@ -272,24 +283,38 @@ local function processLoot()
 
 	local nodeName = nil
 	local gType = nil
+	local hasRecentGatherCast = false
 	local now = GetTime()
 
-	if lastCast.target and (now - (lastCast.time or 0)) < 12 then
+	if lastCast.target and (now - (lastCast.time or 0)) < 8 then
 		nodeName = lastCast.target
 		gType = lastCast.gType
+		if gType == "HERB" or gType == "MINE" or gType == "OPEN" or gType == "ARCH" then
+			hasRecentGatherCast = true
+		end
 	end
-	if not nodeName and lastTip.tip and (now - (lastTip.time or 0)) < 12 then
+	if not nodeName and lastTip.tip and (now - (lastTip.time or 0)) < 3 then
 		nodeName = lastTip.tip
 		gType = gType or lastTip.gType
 	end
+	nodeName = cleanTooltipLine(nodeName)
 	if not nodeName then return end
 
 	-- Additional fallback guard for clients without GetLootSourceInfo: reject dead unit targets/mouseovers
 	if not isGameObjectLoot and UnitExists then
-		if (UnitExists("target") and UnitIsDead and UnitIsDead("target") and UnitName("target") == nodeName)
-			or (UnitExists("mouseover") and UnitName("mouseover") == nodeName) then
+		if (UnitExists("target") and UnitIsDead and UnitIsDead("target"))
+			or (UnitExists("mouseover") and UnitIsDead and UnitIsDead("mouseover")) then
 			return
 		end
+	end
+
+	local resolvedId = Gatherer and Gatherer.Nodes and (
+		(Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(nodeName))
+		or (Gatherer.Nodes.Names and Gatherer.Nodes.Names[nodeName])
+	)
+	-- On clients without GetLootSourceInfo, require either a known built-in node (< 900000) or an explicit recent HERB/MINE spellcast
+	if not isGameObjectLoot and not (resolvedId and resolvedId < 900000) and not (hasRecentGatherCast and (gType == "HERB" or gType == "MINE")) then
+		return
 	end
 
 	local lootTable = {}
@@ -347,16 +372,12 @@ local function processLoot()
 
 	if not gType and isGameObjectLoot and lootDetectedType then
 		gType = lootDetectedType
-	elseif not gType and isGameObjectLoot and Gatherer and Gatherer.Nodes then
-		local resolved = Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(nodeName)
-		if resolved then
-			gType = Gatherer.Nodes.Objects[resolved]
-		end
+	elseif not gType and isGameObjectLoot and resolvedId then
+		gType = Gatherer.Nodes.Objects[resolvedId]
 	end
 
 	if Gatherer and Gatherer.Nodes then
-		local objId = (Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(nodeName))
-			or Gatherer.Nodes.Names[nodeName]
+		local objId = resolvedId
 		if objId then
 			if not Gatherer.Nodes.Names[nodeName] then
 				Gatherer.Nodes.Names[nodeName] = objId
@@ -365,10 +386,20 @@ local function processLoot()
 			if primaryItemID and Gatherer.Nodes.PrimaryItems and not Gatherer.Nodes.PrimaryItems[objId] then
 				Gatherer.Nodes.PrimaryItems[objId] = primaryItemID
 			end
-		elseif gType and Gatherer.Nodes.RegisterDynamicNode then
+		elseif (gType == "HERB" or gType == "MINE") and Gatherer.Nodes.RegisterDynamicNode then
 			objId = Gatherer.Nodes.RegisterDynamicNode(nodeName, gType, primaryItemID)
+		else
+			return
 		end
 	end
+
+	-- Clear cast/tip state after processing so subsequent mob loots cannot reuse it
+	lastCast.target = nil
+	lastCast.gType = nil
+	lastCast.time = 0
+	lastTip.tip = nil
+	lastTip.gType = nil
+	lastTip.time = 0
 
 	if not gType then return end
 
@@ -404,12 +435,6 @@ local radarWait = 1.5
 local radarProbes = 0
 local lastRadarX, lastRadarY, lastRadarFacing, lastRadarRadius
 local radarSeenIds = {}
-
-local function cleanTooltipLine(text)
-	if not isSafeString(text) then return nil end
-	text = text:gsub("|A.-|a", ""):gsub("|T.-|t", ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-	return text:match("^%s*(.-)%s*$")
-end
 
 local function probeMinimapPoint(left, bottom, scale, x, y)
 	wipe(radarSeenIds)
@@ -649,20 +674,32 @@ function Scanner.Init()
 					spellID = isSafeValue(oldSpellID) and tonumber(oldSpellID) or nil
 				end
 				local spellGType = detectGatherTypeFromSpell(spellID)
+				target = cleanTooltipLine(target)
 				if isSafeString(target) and spellGType then
 					lastCast.target = target
 					lastCast.spellID = spellID
 					lastCast.gType = spellGType
 					lastCast.time = GetTime()
-					if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[target] and lastCast.gType and Gatherer.Nodes.RegisterDynamicNode then
+					if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[target] and (lastCast.gType == "HERB" or lastCast.gType == "MINE") and Gatherer.Nodes.RegisterDynamicNode then
 						Gatherer.Nodes.RegisterDynamicNode(target, lastCast.gType)
 					end
+				elseif not spellGType then
+					lastCast.target = nil
+					lastCast.spellID = nil
+					lastCast.gType = nil
+					lastCast.time = 0
 				end
 			end
 		elseif event == "LOOT_READY" or event == "LOOT_OPENED" then
 			processLoot()
 		elseif event == "LOOT_CLOSED" then
 			lootProcessed = false
+			lastCast.target = nil
+			lastCast.gType = nil
+			lastCast.time = 0
+			lastTip.tip = nil
+			lastTip.gType = nil
+			lastTip.time = 0
 		elseif event == "UPDATE_MOUSEOVER_UNIT" then
 			Scanner.SetTooltip()
 		end
@@ -688,7 +725,10 @@ function Scanner.Init()
 
 			Scanner.SetTooltip()
 			if lastTip.tip and (GetTime() - (lastTip.time or 0)) < 1.0 then
-				local objId = Gatherer and Gatherer.Nodes and Gatherer.Nodes.Names and Gatherer.Nodes.Names[lastTip.tip]
+				local objId = Gatherer and Gatherer.Nodes and (
+					(Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(lastTip.tip))
+					or (Gatherer.Nodes.Names and Gatherer.Nodes.Names[lastTip.tip])
+				)
 				local gType = (objId and Gatherer.Nodes.Objects and Gatherer.Nodes.Objects[objId]) or lastTip.gType
 				if gType == "HERB" or gType == "MINE" then
 					local hasSkill = Gatherer and Gatherer.Var and Gatherer.Var.Skills and Gatherer.Var.Skills[gType]

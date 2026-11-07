@@ -28,6 +28,7 @@ Gatherer.Icons = {
 	[2040] = "Mine\\Mithril", -- Mithril Deposit
 	[2047] = "Mine\\TrueSilver", -- Truesilver Deposit
 	[2653] = "Mine\\LesserBloodstone", -- Lesser Bloodstone Deposit
+	[19903] = "Mine\\Iron", -- Indurium Mineral Vein
 	[73940] = "Mine\\Silver", -- Ooze Covered Silver Vein
 	[73941] = "Mine\\Gold", -- Ooze Covered Gold Vein
 	[123309] = "Mine\\TrueSilver", -- Ooze Covered Truesilver Deposit
@@ -218,4 +219,18 @@ Gatherer.Icons = {
 	[221672] = "Open\\Chest", -- Smoldering Chest
 	[221673] = "Open\\Chest", -- Blazing Chest
 	[222684] = "Herb\\GraveMoss", -- Glinting Sand
+	-- WoW Forever Custom Ores & Herbs
+	[890201] = "Mine\\Iron", -- Cold Iron Deposit
+	[890202] = "Mine\\Gold", -- Fool's Gold Vein
+	[890203] = "Mine\\TrueSilver", -- Starsilver Vein
+	[890204] = "Mine\\Mithril", -- Greater Moonstone Formation
+	[890205] = "Mine\\RichThorium", -- Heavy Thorium Vein
+	[890206] = "Mine\\Silver", -- Moonstone Formation
+	[890207] = "Mine\\Gold", -- Chunk of Amber
+	[890401] = "Herb\\GraveMoss", -- Nightmare Moss
+	[890402] = "Herb\\Liferoot", -- Dreamroot
+	[890403] = "Herb\\Earthroot", -- Moonroot
+	[890404] = "Herb\\PurpleLotus", -- Star Lotus
+	[890405] = "Herb\\Felweed", -- Doom Weed
+	[890406] = "Herb\\Blindweed", -- Gloom Weed
 }

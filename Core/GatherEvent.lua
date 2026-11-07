@@ -57,9 +57,6 @@ function Gatherer.Event.OnLoad()
 	if ( Gatherer.Nodes.LoadDynamicNodes ) then
 		Gatherer.Nodes.LoadDynamicNodes()
 	end
-	if ( Gatherer.Storage and Gatherer.Storage.PurgeInvalidDynamicNodes ) then
-		Gatherer.Storage.PurgeInvalidDynamicNodes()
-	end
 
 	Gatherer.SpecialCases.ProcessSpecialCases()
 	
@@ -69,6 +66,9 @@ function Gatherer.Event.OnLoad()
 	
 	Gatherer.Config.Load()
 	Gatherer.DropRates.Load()
+	if ( Gatherer.Storage and Gatherer.Storage.PurgeInvalidDynamicNodes ) then
+		Gatherer.Storage.PurgeInvalidDynamicNodes()
+	end
 	Gatherer.Var.Loaded = true
 	
 	Gatherer.MapNotes.Update()
@@ -221,7 +221,7 @@ function Gatherer.Event.OnLoot(lootType, lootTable, coinAmount, extraData)
 		local node = "Unknown"
 		if (extraData and extraData.tip) then node = extraData.tip end
 
-		local object = Gatherer.Nodes.Names[node]
+		local object = (Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(node)) or Gatherer.Nodes.Names[node]
 		if (not object) then return end
 		
 		local objectType = Gatherer.Nodes.Objects[object]

@@ -319,16 +319,44 @@ function lib.ClearDatabase()
 	Gatherer.Report.NeedsUpdate()
 end
 
+local LEGACY_DYNAMIC_MIGRATIONS = {
+	[1484080] = 1731, -- "Kupfervorkommen" -> Copper Vein
+	[1220852] = 1731, -- "Mageres Kupfervorkommen" -> Copper Vein
+	[904027]  = 2843, -- "Verbeulte Truhe" -> Battered Chest
+	[1091167] = 1617, -- "|T...|t Silberblatt" -> Silverleaf
+	[1174838] = 1618, -- "|T...|t Friedensblume" -> Peacebloom
+}
+
 function lib.PurgeInvalidDynamicNodes()
 	if not data then return 0 end
 	local removed = 0
+	local dropData = Gatherer.DropRates and Gatherer.DropRates.Data
+
 	for zoneToken, zoneData in pairs(data) do
 		if zoneToken ~= "dbVersion" and zoneToken ~= "setAsideDatabases" and type(zoneData) == "table" then
+			local zoneDrops = type(dropData) == "table" and dropData[zoneToken]
 			for gType, gtypeData in pairs(zoneData) do
 				if type(gtypeData) == "table" then
 					for i = #gtypeData, 1, -1 do
 						local nodeData = gtypeData[i]
 						if type(nodeData) == "table" then
+							-- 1. Migrate legacy dynamic hashes of known nodes (e.g. "Kupfervorkommen" -> 1731)
+							for oldID, newID in pairs(LEGACY_DYNAMIC_MIGRATIONS) do
+								if type(nodeData[oldID]) == "table" then
+									if not nodeData[newID] then
+										nodeData[newID] = nodeData[oldID]
+									else
+										nodeData[newID][1] = (tonumber(nodeData[newID][1]) or 0) + (tonumber(nodeData[oldID][1]) or 0)
+										if (tonumber(nodeData[oldID][2]) or 0) > (tonumber(nodeData[newID][2]) or 0) then
+											nodeData[newID][2] = nodeData[oldID][2]
+										end
+									end
+									nodeData[oldID] = nil
+									removed = removed + 1
+								end
+							end
+
+							-- 2. Purge any remaining invalid dynamic IDs (>= 900000 not in Gatherer.Nodes.Objects)
 							local hasValidGather = false
 							for gatherID, gatherVal in pairs(nodeData) do
 								if type(gatherVal) == "table" then
@@ -350,6 +378,68 @@ function lib.PurgeInvalidDynamicNodes()
 					end
 				end
 			end
+
+			-- 3. Remove false "REQUIRE" (count == 0) HERB entries accidentally recorded at a MINE node's coordinates
+			if type(zoneData["HERB"]) == "table" and type(zoneData["MINE"]) == "table" then
+				local herbList = zoneData["HERB"]
+				local mineList = zoneData["MINE"]
+				for i = #herbList, 1, -1 do
+					local hNode = herbList[i]
+					local hx, hy = hNode and hNode[1], hNode and hNode[2]
+					if type(hx) == "number" and type(hy) == "number" then
+						local nearMine = false
+						for j = 1, #mineList do
+							local mNode = mineList[j]
+							local mx, my = mNode and mNode[1], mNode and mNode[2]
+							if type(mx) == "number" and type(my) == "number" and math.abs(hx - mx) < 0.0025 and math.abs(hy - my) < 0.0025 then
+								nearMine = true
+								break
+							end
+						end
+						if nearMine then
+							local hasHarvestedHerb = false
+							for gID, gVal in pairs(hNode) do
+								if type(gVal) == "table" then
+									if (tonumber(gVal[1]) or 0) == 0 and gVal[3] == "REQUIRE" then
+										hNode[gID] = nil
+										removed = removed + 1
+									else
+										hasHarvestedHerb = true
+									end
+								end
+							end
+							if not hasHarvestedHerb then
+								table.remove(herbList, i)
+							end
+						end
+					end
+				end
+				if #herbList == 0 then
+					zoneData["HERB"] = nil
+				end
+			end
+
+			-- 4. Clean up Gatherer_DropRates for this zone
+			if type(zoneDrops) == "table" then
+				for oldID, newID in pairs(LEGACY_DYNAMIC_MIGRATIONS) do
+					if type(zoneDrops[oldID]) == "table" then
+						if not zoneDrops[newID] then
+							zoneDrops[newID] = zoneDrops[oldID]
+						else
+							for itemKey, cnt in pairs(zoneDrops[oldID]) do
+								zoneDrops[newID][itemKey] = (tonumber(zoneDrops[newID][itemKey]) or 0) + (tonumber(cnt) or 0)
+							end
+						end
+						zoneDrops[oldID] = nil
+					end
+				end
+				for dropNodeID in pairs(zoneDrops) do
+					if type(dropNodeID) == "number" and dropNodeID >= 900000 and not (Gatherer.Nodes and Gatherer.Nodes.Objects and Gatherer.Nodes.Objects[dropNodeID]) then
+						zoneDrops[dropNodeID] = nil
+					end
+				end
+			end
+
 			if not next(zoneData) then
 				data[zoneToken] = nil
 			end
