@@ -755,7 +755,7 @@ function Scanner.Init()
 				local gType = (objId and Gatherer.Nodes.Objects and Gatherer.Nodes.Objects[objId]) or lastTip.gType
 				if gType == "HERB" or gType == "MINE" then
 					local hasSkill = Gatherer and Gatherer.Var and Gatherer.Var.Skills and Gatherer.Var.Skills[gType]
-					if (not hasSkill) or lastTip.isRedReq or button == "LeftButton" then
+					if (not hasSkill) or lastTip.isRedReq then
 						Scanner.RecordUnskilledGather(lastTip.tip, gType)
 					end
 				end

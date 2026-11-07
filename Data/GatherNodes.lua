@@ -3233,6 +3233,56 @@ do
 		},
 	}
 
+	-- Canonical localized display names per ObjectID (populated before variant aliases)
+	Gatherer.Nodes.PrimaryNames = {}
+	for name, id in pairs(Gatherer.Nodes.Names) do
+		if not Gatherer.Nodes.PrimaryNames[id] then
+			Gatherer.Nodes.PrimaryNames[id] = name
+		end
+	end
+
+	local primaryLocaleOverrides = {
+		deDE = {
+			[1731] = "Kupfervorkommen",
+			[1732] = "Zinnvorkommen",
+			[1733] = "Silbervorkommen",
+			[1734] = "Goldvorkommen",
+			[324] = "Kleines Thoriumvorkommen",
+			[175404] = "Reiches Thoriumvorkommen",
+			[123848] = "Brühschlammbedecktes Thoriumvorkommen",
+			[177388] = "Brühschlammbedecktes reiches Thoriumvorkommen",
+			[19903] = "Induriummineralvorkommen",
+			[2044] = "Winterbiss",
+			[176587] = "Pestblüte",
+			[131979] = "Große Dunkelholztruhe",
+			[164958] = "Blutblütensprösslinge",
+			[890201] = "Kalteisenvorkommen",
+			[890202] = "Katzengoldvorkommen",
+			[890203] = "Sternensilbervorkommen",
+			[890204] = "Große Mondsteinformation",
+			[890205] = "Schweres Thoriumvorkommen",
+			[890206] = "Mondsteinformation",
+			[890207] = "Bernsteinbrocken",
+			[890401] = "Alptraummoos",
+			[890402] = "Traumwurz",
+			[890403] = "Mondwurz",
+			[890404] = "Sternenlotus",
+			[890405] = "Verdammniskraut",
+			[890406] = "Düsterkraut",
+		},
+	}
+	if primaryLocaleOverrides[region] then
+		for id, locName in pairs(primaryLocaleOverrides[region]) do
+			Gatherer.Nodes.PrimaryNames[id] = locName
+		end
+	elseif classicAliases[region] then
+		for locName, id in pairs(classicAliases[region]) do
+			if not Gatherer.Nodes.PrimaryNames[id] then
+				Gatherer.Nodes.PrimaryNames[id] = locName
+			end
+		end
+	end
+
 	local function applyAliases(aliasTable)
 		if not aliasTable then return end
 		for name, id in pairs(aliasTable) do
@@ -3241,8 +3291,11 @@ do
 			end
 		end
 	end
-	applyAliases(classicAliases.enUS)
-	applyAliases(classicAliases[region])
+	if region == "enUS" then
+		applyAliases(classicAliases.enUS)
+	else
+		applyAliases(classicAliases[region])
+	end
 
 	local lowerNames = {}
 	local partialLowerNames = {}
@@ -3269,6 +3322,11 @@ do
 	for name, objId in pairs(Gatherer.Nodes.Names) do
 		indexNodeName(name, objId, Gatherer.Nodes.Objects[objId])
 	end
+	if region ~= "enUS" and classicAliases.enUS then
+		for name, objId in pairs(classicAliases.enUS) do
+			indexNodeName(name, objId, Gatherer.Nodes.Objects[objId])
+		end
+	end
 
 	-- Built-in WoW Forever custom ores & herbs (IDs 890201..890406 mapped compatible with GatherRadar 90201..90406)
 	Gatherer.Nodes.SkillLevels = Gatherer.Nodes.SkillLevels or {}
@@ -3288,17 +3346,20 @@ do
 		{ 890406, "Gloom Weed", "HERB", 1, "HERB_GLOOMWEED" },
 	}
 	for _, entry in ipairs(foreverBuiltins) do
-		local id, name, gType, skillReq, catKey = entry[1], entry[2], entry[3], entry[4], entry[5]
-		if not Gatherer.Nodes.Names[name] then
-			Gatherer.Nodes.Names[name] = id
+		local id, enName, gType, skillReq, catKey = entry[1], entry[2], entry[3], entry[4], entry[5]
+		local displayName = Gatherer.Nodes.PrimaryNames[id] or enName
+		Gatherer.Nodes.PrimaryNames[id] = displayName
+		if not Gatherer.Nodes.Names[displayName] then
+			Gatherer.Nodes.Names[displayName] = id
 		end
 		Gatherer.Nodes.Objects[id] = gType
 		Gatherer.Nodes.SkillLevels[id] = skillReq
-		indexNodeName(name, id, gType)
+		indexNodeName(displayName, id, gType)
+		indexNodeName(enName, id, gType)
 		if Gatherer.Categories and Gatherer.Categories.ObjectCategories and not Gatherer.Categories.ObjectCategories[id] then
 			Gatherer.Categories.ObjectCategories[id] = catKey
 			if Gatherer.Categories.CategoryNames and not Gatherer.Categories.CategoryNames[catKey] then
-				Gatherer.Categories.CategoryNames[catKey] = name
+				Gatherer.Categories.CategoryNames[catKey] = displayName
 			end
 		end
 	end

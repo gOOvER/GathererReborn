@@ -224,8 +224,15 @@ end
 --******************************************************
 
 local nodeNames = {}
+if Gatherer.Nodes and Gatherer.Nodes.PrimaryNames then
+	for objid, name in pairs(Gatherer.Nodes.PrimaryNames) do
+		nodeNames[objid] = name
+	end
+end
 for name, objid in pairs(Gatherer.Nodes.Names) do
-	nodeNames[objid] = name
+	if not nodeNames[objid] then
+		nodeNames[objid] = name
+	end
 end
 function Gatherer.Util.RegisterDynamicNodeName(objectID, name)
 	if objectID and name then
@@ -233,7 +240,9 @@ function Gatherer.Util.RegisterDynamicNodeName(objectID, name)
 	end
 end
 function Gatherer.Util.GetNodeName(objectID)
-	return nodeNames[objectID] or ("Unknown: "..tostring(objectID))
+	return (Gatherer.Nodes and Gatherer.Nodes.PrimaryNames and Gatherer.Nodes.PrimaryNames[objectID])
+		or nodeNames[objectID]
+		or ("Unknown: "..tostring(objectID))
 end
 
 function Gatherer.Util.BuildLoot(coins, ...)
@@ -483,6 +492,14 @@ function Gatherer.Util.GetGatherTexture( nodeID )
 		trimTexture = selectedTexture and true or false
 	end
 
+	if ( not selectedTexture and Gatherer.Icons[nodeID] ) then
+		local iconKey = Gatherer.Icons[nodeID]
+		if BuiltinCategoryIcons[iconKey] then
+			selectedTexture = BuiltinCategoryIcons[iconKey]
+			trimTexture = true
+		end
+	end
+
 	if not ( selectedTexture ) then
 		local prime, pcount = Gatherer.DropRates.GetPrimaryItem(nodeID)
 		if ( prime ) then
@@ -497,14 +514,6 @@ function Gatherer.Util.GetGatherTexture( nodeID )
 			end
 			selectedTexture = nodeTexture
 			trimTexture = selectedTexture and true or false
-		end
-	end
-
-	if ( not selectedTexture and Gatherer.Icons[nodeID] ) then
-		local iconKey = Gatherer.Icons[nodeID]
-		if BuiltinCategoryIcons[iconKey] then
-			selectedTexture = BuiltinCategoryIcons[iconKey]
-			trimTexture = true
 		end
 	end
 

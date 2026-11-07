@@ -357,10 +357,14 @@ function lib.PurgeInvalidDynamicNodes()
 							end
 
 							-- 2. Purge any remaining invalid dynamic IDs (>= 900000 not in Gatherer.Nodes.Objects)
+							--    and false "REQUIRE" (count == 0) entries for nodes already harvested in this zone
 							local hasValidGather = false
 							for gatherID, gatherVal in pairs(nodeData) do
 								if type(gatherVal) == "table" then
-									if type(gatherID) == "number" and gatherID >= 900000 and not (Gatherer.Nodes and Gatherer.Nodes.Objects and Gatherer.Nodes.Objects[gatherID]) then
+									local isInvalidDynamic = type(gatherID) == "number" and gatherID >= 900000 and not (Gatherer.Nodes and Gatherer.Nodes.Objects and Gatherer.Nodes.Objects[gatherID])
+									local isFalseRequire = (tonumber(gatherVal[1]) or 0) == 0 and gatherVal[3] == "REQUIRE"
+										and type(zoneDrops) == "table" and type(zoneDrops[gatherID]) == "table" and (tonumber(zoneDrops[gatherID].total) or 0) > 0
+									if isInvalidDynamic or isFalseRequire then
 										nodeData[gatherID] = nil
 										removed = removed + 1
 									else

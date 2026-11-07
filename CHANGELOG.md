@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Ecosystem Integrations**: Native support for **MapWise**, **Routes**, **FarmHud**, **ElvUI**, **Leatrix Maps**, and **TomTom** / Blizzard waypoints (`Shift+Right-Click` or `Alt+Left-Click` on World Map pins).
 - **Modernized UI & Built-in 3D HUD**:
   - Redesigned **Gatherables Report** and **Node Density Search** windows with category tabs, instant search, sortable columns, and waypoint support.
+  - Added live **UI Font Size (`10pt – 18pt`)** scaling (`A-` | `13pt` | `A+` header buttons in `GathererConfigFrame`, `GathererReportFrame`, and `GathererNodeSearchFrame`) with automatic button width calculation (`btn:UpdateSize()`) so localized labels never overflow.
   - Integrated **3D Heads-Up Display (HUD)** directly into the main AddOn.
   - **Ace3** options panel (`AceConfig-3.0` / `AceGUI-3.0`), **`LibDBIcon-1.0`**, **`LibDataBroker-1.1`**, and Blizzard **Addon Compartment** support.
 - **Multi-Client & Dynamic Node Support**: Native `C_Map` mapping engine and automatic discovery of new herbs, ores, treasures, fishing schools, gas clouds, and archaeology nodes across **Retail (12.x)**, **Classic Progression**, **Classic Era**, and **WoW Forever (16001)**, including recording herbs and ores on click even without Herbalism or Mining learned.
@@ -28,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Resolved WoW 12.x `<secret string>` taint errors during tooltip and world object scanning.
-- Added pre-Cataclysm Classic and *WoW Forever* localized node aliases across all locales (e.g., German `"Kupfervorkommen"`, `"Mageres Kupfervorkommen"`, `"Zinnvorkommen"`, `"Winterbiss"`, `"Pestblüte"`) and word-boundary partial matching for prefixed ore veins so ores always resolve to their proper icons.
+- Added pre-Cataclysm Classic and *WoW Forever* localized node aliases and canonical `PrimaryNames` across all locales (e.g., German `"Kupfervorkommen"`, `"Zinnvorkommen"`, `"Winterbiss"`, `"Pestblüte"`) so localized clients always display native node names instead of English variant aliases, and prioritized built-in `Gatherer.Icons` over `Gatherer_DropRates` in `GetGatherTexture` so treasure chests and barrels always show their container icons instead of random looted item icons.
 - Strict `GameObject-` GUID, spell, and tooltip-type validation in the loot and unskilled-click scanners, plus automatic database cleanup/migration after `GatherItems` loads, preventing mob corpses, quest objects, or stale herb tooltips from ever being recorded on ore veins.
 - Fixed modern WoW API compatibility across `C_Map`, `C_AddOns`, `C_Minimap`, `C_ChatInfo`, `BackdropTemplate`, and `StaticPopupDialogs`.
 - Fixed 3D HUD combat detection, icon trimming, and indoor/instance facing handling.
