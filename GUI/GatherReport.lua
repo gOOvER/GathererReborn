@@ -84,7 +84,7 @@ function UIStyle.CreateHeader(parent, titleText, iconTexture, onClose)
 	UIStyle.ApplyBox(closeBtn, 0.16, 0.18, 0.23, 1, 0.28, 0.31, 0.38, 1)
 	local closeTxt = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	closeTxt:SetPoint("CENTER", 0, 0)
-	closeTxt:SetText("✕")
+	closeTxt:SetText("X")
 	closeTxt:SetTextColor(0.78, 0.82, 0.88)
 	closeBtn:SetScript("OnEnter", function(self)
 		self:SetBackdropColor(0.65, 0.18, 0.22, 1)
@@ -113,10 +113,20 @@ function UIStyle.CreateHeader(parent, titleText, iconTexture, onClose)
 	return header
 end
 
-function UIStyle.CreateButton(parent, width, height, text, variant)
+function UIStyle.FormatIconText(iconTexture, text)
+	if not iconTexture then return text or "" end
+	if type(iconTexture) == "number" or not tostring(iconTexture):find("UI%-GroupLoot") then
+		return string.format("|T%s:13:13:0:0:64:64:5:59:5:59|t  %s", tostring(iconTexture), text or "")
+	else
+		return string.format("|T%s:13:13:0:0|t  %s", tostring(iconTexture), text or "")
+	end
+end
+
+function UIStyle.CreateButton(parent, width, height, text, variant, iconTexture)
 	local btn = CreateFrame("Button", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	if width then btn:SetWidth(width) end
 	btn:SetHeight(height or 26)
+	btn._iconTexture = iconTexture
 
 	local schemes = {
 		default = {
@@ -148,12 +158,12 @@ function UIStyle.CreateButton(parent, width, height, text, variant)
 
 	local label = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	label:SetPoint("CENTER", btn, "CENTER", 0, 0)
-	label:SetText(text or "")
+	label:SetText(UIStyle.FormatIconText(iconTexture, text))
 	label:SetTextColor(s.txt[1], s.txt[2], s.txt[3])
 	btn.Label = label
 
 	function btn:SetText(t)
-		label:SetText(t or "")
+		label:SetText(UIStyle.FormatIconText(self._iconTexture, t))
 	end
 	function btn:GetFontString()
 		return label
@@ -188,21 +198,32 @@ function UIStyle.CreateFilterPill(parent, text, defaultActive, onToggle)
 	pill:SetHeight(24)
 	pill.active = (defaultActive ~= false)
 
+	local dotBorder = pill:CreateTexture(nil, "BORDER")
+	dotBorder:SetSize(8, 8)
+	dotBorder:SetPoint("LEFT", pill, "LEFT", 9, 0)
+	dotBorder:SetColorTexture(0.05, 0.06, 0.08, 1)
+
+	local dot = pill:CreateTexture(nil, "ARTWORK")
+	dot:SetSize(6, 6)
+	dot:SetPoint("CENTER", dotBorder, "CENTER", 0, 0)
+	pill.Dot = dot
+
 	local label = pill:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	label:SetPoint("CENTER", pill, "CENTER", 0, 0)
+	label:SetPoint("LEFT", dotBorder, "RIGHT", 6, 0)
+	label:SetText(text)
 	pill.Label = label
 
 	local function updateVisual()
 		if pill.active then
 			UIStyle.ApplyBox(pill, 0.13, 0.23, 0.19, 1, 0.18, 0.68, 0.46, 1)
-			label:SetText("|cff00ff96●|r " .. text)
+			dot:SetColorTexture(0.0, 1.0, 0.59, 1)
 			label:SetTextColor(0.92, 0.98, 0.95)
 		else
 			UIStyle.ApplyBox(pill, 0.12, 0.14, 0.18, 1, 0.24, 0.27, 0.34, 1)
-			label:SetText("|cff667080○|r " .. text)
+			dot:SetColorTexture(0.32, 0.36, 0.44, 1)
 			label:SetTextColor(0.56, 0.60, 0.68)
 		end
-		local w = math.max((label:GetStringWidth() or 60) + 18, 68)
+		local w = math.max((label:GetStringWidth() or 50) + 32, 68)
 		pill:SetWidth(w)
 	end
 
@@ -462,14 +483,14 @@ frame.Footer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 10)
 frame.Footer:SetHeight(36)
 UIStyle.ApplyBox(frame.Footer, 0.10, 0.12, 0.15, 1, 0.20, 0.23, 0.29, 1)
 
-frame.NodeSearch = UIStyle.CreateButton(frame.Footer, 165, 24, "🔍 " .. _tr("LABEL_DENSITY_REPORT"), "default")
+frame.NodeSearch = UIStyle.CreateButton(frame.Footer, 165, 24, _tr("LABEL_DENSITY_REPORT"), "default", 134436)
 frame.NodeSearch:SetPoint("LEFT", frame.Footer, "LEFT", 8, 0)
 frame.NodeSearch:SetScript("OnClick", function()
 	frame:Hide()
 	Gatherer.NodeSearch.Show()
 end)
 
-frame.Config = UIStyle.CreateButton(frame.Footer, 145, 24, "⚙ " .. _tr("LABEL_CONFIG"), "default")
+frame.Config = UIStyle.CreateButton(frame.Footer, 145, 24, _tr("LABEL_CONFIG"), "default", 136243)
 frame.Config:SetPoint("LEFT", frame.NodeSearch, "RIGHT", 8, 0)
 frame.Config:SetScript("OnClick", function()
 	public.Hide()
@@ -563,7 +584,7 @@ local emptySub = frame.Results.EmptyState:CreateFontString(nil, "OVERLAY", "Game
 emptySub:SetPoint("TOP", emptyTitle, "BOTTOM", 0, -8)
 emptySub:SetText(_tr("UI_EMPTY_SUB"))
 
-local emptyImportBtn = UIStyle.CreateButton(frame.Results.EmptyState, 280, 28, _tr("UI_IMPORT_GM2_BTN"), "primary")
+local emptyImportBtn = UIStyle.CreateButton(frame.Results.EmptyState, 280, 28, _tr("UI_IMPORT_GM2_BTN"), "primary", 132596)
 emptyImportBtn:SetPoint("TOP", emptySub, "BOTTOM", 0, -16)
 emptyImportBtn:SetScript("OnClick", function()
 	if Gatherer.Integrations and Gatherer.Integrations.ImportGatherMate2 then
@@ -809,7 +830,7 @@ function public.ConfirmNodeTransmit(who, howmany)
 	end
 end
 
-frame.Actions.SendSelected = UIStyle.CreateButton(frame.Actions, nil, 26, "📤 " .. _tr("REPORT_SEND_MARKED"), "primary")
+frame.Actions.SendSelected = UIStyle.CreateButton(frame.Actions, nil, 26, _tr("REPORT_SEND_MARKED"), "primary", 133464)
 frame.Actions.SendSelected:SetPoint("TOPLEFT", frame.Actions.SendEdit, "BOTTOMLEFT", 0, -6)
 frame.Actions.SendSelected:SetPoint("RIGHT", frame.Actions, "RIGHT", -12, 0)
 frame.Actions.SendSelected:SetScript("OnClick", function(me)
@@ -853,7 +874,7 @@ function public.ConfirmNodeDeletes()
 	end
 end
 
-frame.Actions.DeleteSelected = UIStyle.CreateButton(frame.Actions, nil, 26, "🗑 " .. _tr("REPORT_DELETE_MARKED"), "danger")
+frame.Actions.DeleteSelected = UIStyle.CreateButton(frame.Actions, nil, 26, _tr("REPORT_DELETE_MARKED"), "danger", "Interface\\Buttons\\UI-GroupLoot-Pass-Up")
 frame.Actions.DeleteSelected:SetPoint("TOPLEFT", frame.Actions.SendSelected, "BOTTOMLEFT", 0, -8)
 frame.Actions.DeleteSelected:SetPoint("RIGHT", frame.Actions, "RIGHT", -12, 0)
 frame.Actions.DeleteSelected:SetScript("OnClick", function(me)
@@ -877,7 +898,7 @@ frame.Actions.SessionSummary:SetPoint("RIGHT", frame.Actions, "RIGHT", -12, 0)
 frame.Actions.SessionSummary:SetJustifyH("LEFT")
 frame.Actions.SessionSummary:SetSpacing(3)
 
-frame.Actions.ImportGM2Btn = UIStyle.CreateButton(frame.Actions, nil, 25, _tr("UI_IMPORT_GM2_SHORT"), "default")
+frame.Actions.ImportGM2Btn = UIStyle.CreateButton(frame.Actions, nil, 25, _tr("UI_IMPORT_GM2_SHORT"), "default", 132596)
 frame.Actions.ImportGM2Btn:SetPoint("TOPLEFT", frame.Actions, "TOPLEFT", 12, -412)
 frame.Actions.ImportGM2Btn:SetPoint("RIGHT", frame.Actions, "RIGHT", -12, 0)
 frame.Actions.ImportGM2Btn:SetScript("OnClick", function()

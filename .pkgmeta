@@ -44,3 +44,12 @@ externals:
 
 manual-changelog: CHANGELOG.md
 license-output: LICENSE
+
+ignore:
+    - .github
+    - .gitignore
+    - .gitattributes
+    - .luacheckrc
+    - .pkgmeta
+    - CHANGELOG.md
+    - README.md
