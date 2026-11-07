@@ -64,19 +64,54 @@ local function click(obj, button)
 	end
 end
 
+local function addActionDoubleLine(tooltip, rawLine)
+	if not rawLine then return end
+	local left, right = rawLine:match("^(.-|r):?%s*(.+)$")
+	if not left then
+		left, right = rawLine:match("^([^:]+):%s*(.+)$")
+	end
+	if left and right and tooltip.AddDoubleLine then
+		left = left:gsub(":$", "")
+		right = right:gsub("^:%s*", "")
+		tooltip:AddDoubleLine(left, "   " .. right, 0.12, 0.70, 1.0, 0.90, 0.93, 0.98)
+	else
+		tooltip:AddLine(rawLine, 0.90, 0.93, 0.98)
+	end
+end
+
 local function drawTooltip(self)
 	if not self or not self.AddLine then return end
 	Gatherer.Locale.SECTION_HIGHLIGHT_CODE = "|cff1fb3ff"
-	self:AddLine("Gatherer Reforged", 1, 1, 0.5, 1)
-	self:AddLine(_tr("DESCRIPTION"), 1, 1, 0.5, 1)
-	self:AddLine(_tr("MINIICON_ACTIONS_CLICK"), 1, 1, 0.5, 1)
-	self:AddLine(_tr("MINIICON_ACTIONS_SHIFT_CLICK"), 1, 1, 0.5, 1)
-	self:AddLine(_tr("MINIICON_ACTIONS_RIGHT_CLICK"), 1, 1, 0.5, 1)
-	self:AddLine(_tr("MINIICON_ACTIONS_SHIFT_RIGHT_CLICK"), 1, 1, 0.5, 1)
-	self:AddLine("|cff1fb3ffAlt-Click:|r " .. _tr("CONFIG_SESSION_RESET"), 1, 1, 0.5, 1)
+
+	local ver = tostring((Gatherer.Var and Gatherer.Var.Version) or "1.0.0")
+	if self.AddDoubleLine then
+		self:AddDoubleLine("|T133939:16:16:0:0:64:64:5:59:5:59|t  |cffffd200Gatherer Reforged|r", "|cff00ff96v" .. ver .. "|r")
+	else
+		self:AddLine("|cffffd200Gatherer Reforged v" .. ver .. "|r")
+	end
+
+	self:AddLine(" ")
+	if self.AddDoubleLine then
+		local mmOn = Gatherer.Config.GetSetting("minimap.enable")
+		local wmOn = Gatherer.Config.GetSetting("mainmap.enable")
+		local hudOn = Gatherer.Config.GetSetting("plugin.gatherer_hud.enable")
+		local onTxt = "|cff00ff96" .. _tr("ENABLE") .. "|r"
+		local offTxt = "|cff778292" .. _tr("DISABLE") .. "|r"
+		self:AddDoubleLine("|cffb0b8c4" .. _tr("CONFIG_SECTION_MINIMAP") .. ":|r", mmOn and onTxt or offTxt)
+		self:AddDoubleLine("|cffb0b8c4" .. _tr("CONFIG_GENERAL_WORLDMAP_LABEL") .. ":|r", wmOn and onTxt or offTxt)
+		self:AddDoubleLine("|cffb0b8c43D HUD:|r", hudOn and onTxt or offTxt)
+	end
+
 	if Gatherer.Integrations and Gatherer.Integrations.Session and Gatherer.Integrations.Session.AddTooltipLines then
 		Gatherer.Integrations.Session.AddTooltipLines(self)
 	end
+
+	self:AddLine(" ")
+	addActionDoubleLine(self, _tr("MINIICON_ACTIONS_CLICK"))
+	addActionDoubleLine(self, _tr("MINIICON_ACTIONS_SHIFT_CLICK"))
+	addActionDoubleLine(self, _tr("MINIICON_ACTIONS_RIGHT_CLICK"))
+	addActionDoubleLine(self, _tr("MINIICON_ACTIONS_SHIFT_RIGHT_CLICK"))
+	addActionDoubleLine(self, "|cff1fb3ffAlt-Click:|r " .. _tr("CONFIG_SESSION_RESET"))
 end
 
 local function onEnter(self)

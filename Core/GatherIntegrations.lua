@@ -284,7 +284,24 @@ function Integrations.Session.AddTooltipLines(tooltip)
 			Integrations.FormatMoney(summary.totalValue),
 			Integrations.FormatMoney(summary.goldPerHour))
 		for line in summaryText:gmatch("[^\n]+") do
-			tooltip:AddLine(line, 0.9, 0.9, 0.9)
+			-- Split multi-pair lines ("Label1: Val1   Label2: Val2") or single "Label: Val" into clean AddDoubleLine rows
+			local pairCount = 0
+			for seg in line:gmatch("(|cff8892a4.-:%s*|r%s*[^|]+)") do
+				local k, v = seg:match("^(|cff8892a4.-:|r)%s*(.-)%s*$")
+				if k and v and tooltip.AddDoubleLine then
+					tooltip:AddDoubleLine(k, v, 0.75, 0.80, 0.88, 1, 1, 1)
+					pairCount = pairCount + 1
+				end
+			end
+			if pairCount == 0 then
+				local k, v = line:match("^(.-:|r)%s*(.+)$")
+				if not k then k, v = line:match("^([^:]+:)%s*(.+)$") end
+				if k and v and tooltip.AddDoubleLine then
+					tooltip:AddDoubleLine(k, "   " .. v, 0.75, 0.80, 0.88, 1, 1, 1)
+				else
+					tooltip:AddLine(line, 0.9, 0.9, 0.9)
+				end
+			end
 		end
 	end
 

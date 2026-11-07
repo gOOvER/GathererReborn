@@ -186,12 +186,24 @@ function Gatherer.MapNotes.CreateWorldMapButton()
 		GameTooltip:SetFrameStrata("TOOLTIP")
 		GameTooltip:ClearLines()
 		Gatherer.Locale.SECTION_HIGHLIGHT_CODE = "|cff1fb3ff"
-		GameTooltip:AddLine("Gatherer Reforged", 1, 0.82, 0)
+		local ver = tostring((Gatherer.Var and Gatherer.Var.Version) or "1.0.0")
+		GameTooltip:AddDoubleLine("|T133939:16:16:0:0:64:64:5:59:5:59|t  |cffffd200Gatherer Reforged|r", "|cff00ff96v" .. ver .. "|r")
+		GameTooltip:AddLine(" ")
 		local enabled = Gatherer.Config.GetSetting("mainmap.enable")
-		GameTooltip:AddLine(_tr("MAP_NOTES_SHOW") .. ": " .. (enabled and ("|cff00ff00" .. _tr("ENABLE") .. "|r") or ("|cffff4040" .. _tr("DISABLE") .. "|r")), 1, 1, 1)
-		GameTooltip:AddLine(_tr("MINIICON_ACTIONS_CLICK"), 0.85, 0.85, 0.85)
-		GameTooltip:AddLine(_tr("MINIICON_ACTIONS_RIGHT_CLICK"), 0.85, 0.85, 0.85)
-		GameTooltip:AddLine(_tr("MINIICON_ACTIONS_SHIFT_RIGHT_CLICK"), 0.85, 0.85, 0.85)
+		GameTooltip:AddDoubleLine("|cffb0b8c4" .. _tr("MAP_NOTES_SHOW") .. ":|r", enabled and ("|cff00ff96" .. _tr("ENABLE") .. "|r") or ("|cffff5050" .. _tr("DISABLE") .. "|r"))
+		GameTooltip:AddLine(" ")
+		for _, rawLine in ipairs({
+			_tr("MINIICON_ACTIONS_CLICK"),
+			_tr("MINIICON_ACTIONS_RIGHT_CLICK"),
+			_tr("MINIICON_ACTIONS_SHIFT_RIGHT_CLICK"),
+		}) do
+			local left, right = rawLine:match("^(.-|r):?%s*(.+)$")
+			if left and right then
+				GameTooltip:AddDoubleLine(left:gsub(":$", ""), "   " .. right:gsub("^:%s*", ""), 0.12, 0.70, 1.0, 0.90, 0.93, 0.98)
+			else
+				GameTooltip:AddLine(rawLine, 0.90, 0.93, 0.98)
+			end
+		end
 		GameTooltip:Show()
 	end)
 
