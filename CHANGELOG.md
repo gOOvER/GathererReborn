@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Resolved WoW 12.x `<secret string>` taint errors during tooltip and world object scanning.
+- Strict `GameObject-` GUID and spell validation in the loot scanner to prevent mob corpses from ever being recorded as gathering nodes.
 - Fixed modern WoW API compatibility across `C_Map`, `C_AddOns`, `C_Minimap`, `C_ChatInfo`, `BackdropTemplate`, and `StaticPopupDialogs`.
 - Fixed 3D HUD combat detection, icon trimming, and indoor/instance facing handling.
 

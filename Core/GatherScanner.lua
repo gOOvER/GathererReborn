@@ -120,7 +120,14 @@ end
 function Scanner.SetTooltip()
 	pcall(function()
 		if not GameTooltip or not GameTooltip:IsShown() then return end
-		if UnitExists and UnitExists("mouseover") then return end
+		if UnitExists and UnitExists("mouseover") then
+			-- Clear lastTip when hovering over a unit/mob corpse so mob loots never inherit a previous node tooltip
+			lastTip.tip = nil
+			lastTip.gType = nil
+			lastTip.isRedReq = false
+			lastTip.time = 0
+			return
+		end
 		local owner = GameTooltip:GetOwner()
 		if owner and owner ~= UIParent and owner ~= WorldFrame then return end
 
@@ -138,8 +145,8 @@ function Scanner.SetTooltip()
 			lastTip.time = GetTime()
 			lastTip.gType = tipType or knownType
 			lastTip.isRedReq = isRedReq
-			if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[text] and lastTip.gType and Gatherer.Nodes.RegisterDynamicNode then
-				Gatherer.Nodes.RegisterDynamicNode(text, lastTip.gType, nil, knownObjId)
+			if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[text] and tipType and Gatherer.Nodes.RegisterDynamicNode then
+				Gatherer.Nodes.RegisterDynamicNode(text, tipType, nil, knownObjId)
 			end
 		end
 	end)
@@ -248,6 +255,21 @@ local function processLoot()
 	if lootProcessed then return end
 	lootProcessed = true
 
+	if IsFishingLoot and IsFishingLoot() then return end
+
+	-- Verify loot source GUID: reject Mob corpses ("Creature-", "Vehicle-") and bag items ("Item-")
+	local isGameObjectLoot = false
+	if GetLootSourceInfo then
+		local ok, srcGuid = pcall(GetLootSourceInfo, 1)
+		if ok and isSafeString(srcGuid) and srcGuid ~= "" then
+			if srcGuid:sub(1, 11) == "GameObject-" then
+				isGameObjectLoot = true
+			else
+				return
+			end
+		end
+	end
+
 	local nodeName = nil
 	local gType = nil
 	local now = GetTime()
@@ -262,12 +284,11 @@ local function processLoot()
 	end
 	if not nodeName then return end
 
-	-- Check if loot source is a world GameObject
-	local isGameObjectLoot = false
-	if GetLootSourceInfo then
-		local ok, srcGuid = pcall(GetLootSourceInfo, 1)
-		if ok and isSafeString(srcGuid) and srcGuid:sub(1, 11) == "GameObject-" then
-			isGameObjectLoot = true
+	-- Additional fallback guard for clients without GetLootSourceInfo: reject dead unit targets/mouseovers
+	if not isGameObjectLoot and UnitExists then
+		if (UnitExists("target") and UnitIsDead and UnitIsDead("target") and UnitName("target") == nodeName)
+			or (UnitExists("mouseover") and UnitName("mouseover") == nodeName) then
+			return
 		end
 	end
 
@@ -324,7 +345,7 @@ local function processLoot()
 		end
 	end
 
-	if not gType and lootDetectedType then
+	if not gType and isGameObjectLoot and lootDetectedType then
 		gType = lootDetectedType
 	elseif not gType and isGameObjectLoot and Gatherer and Gatherer.Nodes then
 		local resolved = Gatherer.Nodes.ResolveNodeByName and Gatherer.Nodes.ResolveNodeByName(nodeName)
@@ -627,10 +648,11 @@ function Scanner.Init()
 					end
 					spellID = isSafeValue(oldSpellID) and tonumber(oldSpellID) or nil
 				end
-				if isSafeString(target) then
+				local spellGType = detectGatherTypeFromSpell(spellID)
+				if isSafeString(target) and spellGType then
 					lastCast.target = target
 					lastCast.spellID = spellID
-					lastCast.gType = detectGatherTypeFromSpell(spellID) or lastTip.gType
+					lastCast.gType = spellGType
 					lastCast.time = GetTime()
 					if Gatherer and Gatherer.Nodes and not Gatherer.Nodes.Names[target] and lastCast.gType and Gatherer.Nodes.RegisterDynamicNode then
 						Gatherer.Nodes.RegisterDynamicNode(target, lastCast.gType)

@@ -3085,7 +3085,7 @@ do
 		if not lowerNames[low] then
 			lowerNames[low] = objId
 		end
-		if gType == "HERB" and #low >= 4 then
+		if gType == "HERB" and #low >= 6 then
 			herbLowerNames[low] = objId
 		end
 	end
@@ -3152,7 +3152,13 @@ do
 		if not low:find("[%d:/]") then
 			for herbLow, id in pairs(herbLowerNames) do
 				if #herbLow > bestLen and low:find(herbLow, 1, true) then
-					bestId, bestLen = id, #herbLow
+					-- Ensure the herb name matches at a word boundary or end of string (e.g. "Wilted Peacebloom")
+					local s, e = low:find(herbLow, 1, true)
+					local prevChar = (s and s > 1) and low:sub(s - 1, s - 1) or " "
+					local nextChar = (e and e < #low) and low:sub(e + 1, e + 1) or " "
+					if prevChar == " " or prevChar == "-" or nextChar == " " then
+						bestId, bestLen = id, #herbLow
+					end
 				end
 			end
 		end
@@ -3196,7 +3202,8 @@ do
 			Gatherer.Util.RegisterDynamicNodeName(objId, nodeName)
 		end
 
-		Gatherer_DynamicNodes = Gatherer_DynamicNodes or {}
+		Gatherer_DynamicNodes = Gatherer_DynamicNodes or { version = 2 }
+		Gatherer_DynamicNodes.version = 2
 		Gatherer_DynamicNodes.dynamicNodes = Gatherer_DynamicNodes.dynamicNodes or {}
 		Gatherer_DynamicNodes.dynamicNodes[nodeName] = {
 			id = objId,
@@ -3207,6 +3214,10 @@ do
 	end
 
 	function Gatherer.Nodes.LoadDynamicNodes()
+		if Gatherer_DynamicNodes and Gatherer_DynamicNodes.version ~= 2 then
+			-- Reset contaminated pre-v2 dynamic entries (e.g. mob corpses recorded before GUID filtering)
+			Gatherer_DynamicNodes = { version = 2, dynamicNodes = {} }
+		end
 		if Gatherer_DynamicNodes and type(Gatherer_DynamicNodes.dynamicNodes) == "table" then
 			for nodeName, info in pairs(Gatherer_DynamicNodes.dynamicNodes) do
 				if type(info) == "table" and info.id and info.gType then

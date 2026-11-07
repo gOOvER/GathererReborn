@@ -57,6 +57,9 @@ function Gatherer.Event.OnLoad()
 	if ( Gatherer.Nodes.LoadDynamicNodes ) then
 		Gatherer.Nodes.LoadDynamicNodes()
 	end
+	if ( Gatherer.Storage and Gatherer.Storage.PurgeInvalidDynamicNodes ) then
+		Gatherer.Storage.PurgeInvalidDynamicNodes()
+	end
 
 	Gatherer.SpecialCases.ProcessSpecialCases()
 	

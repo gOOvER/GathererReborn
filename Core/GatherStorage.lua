@@ -319,6 +319,48 @@ function lib.ClearDatabase()
 	Gatherer.Report.NeedsUpdate()
 end
 
+function lib.PurgeInvalidDynamicNodes()
+	if not data then return 0 end
+	local removed = 0
+	for zoneToken, zoneData in pairs(data) do
+		if zoneToken ~= "dbVersion" and zoneToken ~= "setAsideDatabases" and type(zoneData) == "table" then
+			for gType, gtypeData in pairs(zoneData) do
+				if type(gtypeData) == "table" then
+					for i = #gtypeData, 1, -1 do
+						local nodeData = gtypeData[i]
+						if type(nodeData) == "table" then
+							local hasValidGather = false
+							for gatherID, gatherVal in pairs(nodeData) do
+								if type(gatherVal) == "table" then
+									if type(gatherID) == "number" and gatherID >= 900000 and not (Gatherer.Nodes and Gatherer.Nodes.Objects and Gatherer.Nodes.Objects[gatherID]) then
+										nodeData[gatherID] = nil
+										removed = removed + 1
+									else
+										hasValidGather = true
+									end
+								end
+							end
+							if not hasValidGather then
+								table.remove(gtypeData, i)
+							end
+						end
+					end
+					if #gtypeData == 0 then
+						zoneData[gType] = nil
+					end
+				end
+			end
+			if not next(zoneData) then
+				data[zoneToken] = nil
+			end
+		end
+	end
+	if removed > 0 and Gatherer.Report and Gatherer.Report.NeedsUpdate then
+		Gatherer.Report.NeedsUpdate()
+	end
+	return removed
+end
+
 local function removeNode( gtypeData, index, gatherName, playerName )
 	local shouldRemoveNode = true
 	local gatherRemoved = true
